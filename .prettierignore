@@ -1,0 +1,9 @@
+node_modules
+dist
+coverage
+*.tsbuildinfo
+
+# No gestionamos formato de documentación ni de ficheros de herramientas externas
+.claude
+*.md
+LICENSE

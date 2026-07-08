@@ -1,0 +1,35 @@
+{
+  "name": "mutadiff",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Comparador de ejecuciones de mutation testing (PiTest / Stryker).",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "coverage": "vitest run --coverage",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "eslint . && prettier --check .",
+    "format": "prettier --write .",
+    "dev": "echo \"dev script se define en T-020 (server) y T-030 (web)\" && exit 0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^26.1.1",
+    "@vitest/coverage-v8": "^4.1.10",
+    "eslint": "^10.6.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.7.0",
+    "prettier": "^3.9.4",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.63.0",
+    "vitest": "^4.1.10"
+  }
+}
