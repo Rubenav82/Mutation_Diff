@@ -44,6 +44,16 @@ npm run mutation         # Stryker sobre packages/core (ejecutar antes de cerrar
 
 (Si algún script aún no existe, créalo en la tarea de bootstrap correspondiente.)
 
+## Estructura del monorepo (fijada en T-001)
+
+- Los paquetes se nombran **sin scope** (`core`, y luego `server`, `web`) para que funcionen los comandos documentados tipo `npm run test -w core`.
+- Cada paquete extiende la configuración raíz, no la duplica:
+  - `tsconfig.json` → `extends: ../../tsconfig.base.json` con `composite: true`, `rootDir: src`, `outDir: dist`.
+  - `vitest.config.ts` → importa `sharedTest` de `../../vitest.shared.js` y solo añade su `name`.
+- El `vitest.config.ts` raíz agrega los paquetes vía `test.projects: ['packages/*']` y centraliza la config de `coverage`.
+- Al añadir un paquete nuevo, registra su `reference` en el `tsconfig.json` raíz.
+- Toolchain: ESLint 10 (flat config en `eslint.config.js`), Prettier 3 (ignora `docs/`, `*.md` y `.claude/`), TypeScript strict con extras (`noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`), Vitest 4.
+
 ## Convenciones
 
 - Nombres de código, tipos y comentarios de API en inglés; documentación de producto (docs/) en español.

@@ -3,8 +3,8 @@
 > Trabajar SIEMPRE en orden, una tarea por sesión/commit. Marcar la casilla al completar. No avanzar con tests en rojo.
 
 ### Fase 0 — Bootstrap
-- [ ] T-001 Monorepo npm workspaces + TypeScript strict + ESLint + Prettier + Vitest config compartida.
-- [ ] T-002 CI básico (lint, typecheck, test).
+- [x] T-001 Monorepo npm workspaces + TypeScript strict + ESLint + Prettier + Vitest config compartida.
+- [x] T-002 CI básico (lint, typecheck, test).
 
 ### Fase 1 — Core (TDD puro)
 - [ ] T-010 Fixtures: 2 pares de reportes PiTest y 2 pares Stryker (mini y realista).
