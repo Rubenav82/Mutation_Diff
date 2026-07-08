@@ -4,7 +4,7 @@
 
 ### Fase 0 — Bootstrap
 - [x] T-001 Monorepo npm workspaces + TypeScript strict + ESLint + Prettier + Vitest config compartida.
-- [ ] T-002 CI básico (lint, typecheck, test).
+- [x] T-002 CI básico (lint, typecheck, test).
 
 ### Fase 1 — Core (TDD puro)
 - [ ] T-010 Fixtures: 2 pares de reportes PiTest y 2 pares Stryker (mini y realista).
