@@ -1,0 +1,55 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm show *)",
+      "mcp__playwright",
+      "Bash(npm run *)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npm install 2>/dev/null || true",
+            "statusMessage": "Instalando dependencias..."
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/block-dangerous-cmds.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/format-code.sh",
+            "statusMessage": "Formateando código..."
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/run-tests.sh",
+            "statusMessage": "Ejecutando tests..."
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/validate-json.sh",
+            "statusMessage": "Validando JSON..."
+          }
+        ]
+      }
+    ]
+  }
+}
