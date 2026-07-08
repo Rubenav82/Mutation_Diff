@@ -1,0 +1,61 @@
+# CLAUDE.md — MutaDiff
+
+Aplicación web para comparar dos ejecuciones de mutation testing (PiTest o Stryker) y detectar regresiones de score/cobertura y clases sin tests, con reporte HTML exportable.
+
+## Documentación obligatoria
+
+Antes de implementar CUALQUIER tarea, lee en este orden:
+
+1. `docs/constitution.md` — principios innegociables del proyecto.
+2. `docs/spec.md` — historias de usuario y criterios de aceptación.
+3. `docs/plan.md` — arquitectura, modelo de dominio, API y UI.
+4. `docs/tasks.md` — backlog ordenado; es la única fuente de verdad del estado.
+
+Si una petición contradice la especificación, señálalo antes de codificar. Si implementas algo que cambia una decisión de diseño, actualiza el documento afectado en el mismo commit.
+
+## Flujo de trabajo (obligatorio)
+
+- Trabaja **una tarea de `docs/tasks.md` a la vez**, en el orden definido.
+- **TDD estricto**: (1) escribe el test y verifica que falla, (2) implementación mínima para pasarlo, (3) refactoriza con tests en verde. Nunca escribas código de producción sin un test rojo previo.
+- Al terminar una tarea: ejecuta la suite completa, marca la casilla `[x]` en `docs/tasks.md` y propón un commit con mensaje `feat(T-0XX): descripción` (o `test:`, `chore:` según corresponda). Un commit por tarea.
+- No avances a la siguiente tarea con tests en rojo, errores de typecheck o lint.
+- No añadas dependencias fuera de las listadas en `docs/plan.md` §2.1 sin justificarlo y preguntarme antes.
+
+## Arquitectura (resumen — detalle en docs/plan.md)
+
+Monorepo npm workspaces, TypeScript strict, ESM, Node ≥ 20:
+
+- `packages/core` — dominio puro, **sin I/O, sin Express, sin React**. Parsers (PiTest XML, Stryker JSON) → `NormalizedRun`, motor de comparación → `ComparisonResult`, generador de reporte HTML autocontenido. Aquí vive casi toda la lógica; máxima cobertura.
+- `packages/server` — Express 5: upload (multer), validación (Zod), endpoints REST, manejo de errores homogéneo. Fase 2: SQLite (better-sqlite3).
+- `packages/web` — Vite + React 18: wizard de comparación, dashboard, tablas (TanStack Table), export HTML.
+
+Regla de dependencias: `web → server → core`. `core` no importa nada de los otros paquetes.
+
+## Comandos
+
+```bash
+npm test                 # toda la suite (Vitest)
+npm run test -w core     # tests de un workspace
+npm run typecheck        # tsc --noEmit en todos los workspaces
+npm run lint             # ESLint + Prettier check
+npm run dev              # server + web en modo desarrollo
+npm run mutation         # Stryker sobre packages/core (ejecutar antes de cerrar cada fase)
+```
+
+(Si algún script aún no existe, créalo en la tarea de bootstrap correspondiente.)
+
+## Convenciones
+
+- Nombres de código, tipos y comentarios de API en inglés; documentación de producto (docs/) en español.
+- Los tests viven junto al código: `foo.ts` → `foo.test.ts`. Fixtures reales en `packages/core/test/fixtures/` (pitest/ y stryker/).
+- Ninguna respuesta de la API expone stack traces; errores con shape `{ error: { code, message } }`.
+- Los datos de los reportes del usuario nunca se envían a servicios externos.
+- El reporte HTML exportado debe ser un único fichero autocontenido (CSS/JS inline, datos embebidos).
+
+## Definición de hecho (por tarea)
+
+1. Tests nuevos escritos primero y en verde, suite completa en verde.
+2. Typecheck y lint sin errores.
+3. Criterios de aceptación de la HU asociada cumplidos (docs/spec.md §1.4).
+4. Casilla marcada en docs/tasks.md y, si aplica, docs actualizados.
+5. Sin `any` sin justificar, sin código muerto, sin console.log de depuración.
