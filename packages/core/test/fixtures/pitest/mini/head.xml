@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mutations>
+    <mutation detected='true' status='KILLED' numberOfTestsRun='1'>
+        <sourceFile>Calculator.java</sourceFile>
+        <mutatedClass>com.example.Calculator</mutatedClass>
+        <mutatedMethod>add</mutatedMethod>
+        <methodDescription>(II)I</methodDescription>
+        <lineNumber>10</lineNumber>
+        <mutator>org.pitest.mutationtest.engine.gregor.mutators.MathMutator</mutator>
+        <indexes><index>3</index></indexes>
+        <blocks><block>0</block></blocks>
+        <killingTest>com.example.CalculatorTest.testAdd(com.example.CalculatorTest)</killingTest>
+        <description>Replaced integer addition with subtraction</description>
+    </mutation>
+    <mutation detected='true' status='KILLED' numberOfTestsRun='1'>
+        <sourceFile>Calculator.java</sourceFile>
+        <mutatedClass>com.example.Calculator</mutatedClass>
+        <mutatedMethod>subtract</mutatedMethod>
+        <methodDescription>(II)I</methodDescription>
+        <lineNumber>15</lineNumber>
+        <mutator>org.pitest.mutationtest.engine.gregor.mutators.MathMutator</mutator>
+        <indexes><index>3</index></indexes>
+        <blocks><block>0</block></blocks>
+        <killingTest>com.example.CalculatorTest.testSubtract(com.example.CalculatorTest)</killingTest>
+        <description>Replaced integer subtraction with addition</description>
+    </mutation>
+    <mutation detected='false' status='SURVIVED' numberOfTestsRun='1'>
+        <sourceFile>StringUtils.java</sourceFile>
+        <mutatedClass>com.example.StringUtils</mutatedClass>
+        <mutatedMethod>isBlank</mutatedMethod>
+        <methodDescription>(Ljava/lang/String;)Z</methodDescription>
+        <lineNumber>8</lineNumber>
+        <mutator>org.pitest.mutationtest.engine.gregor.mutators.NegateConditionalsMutator</mutator>
+        <indexes><index>1</index></indexes>
+        <blocks><block>0</block></blocks>
+        <description>negated conditional</description>
+    </mutation>
+    <mutation detected='true' status='KILLED' numberOfTestsRun='1'>
+        <sourceFile>MathHelper.java</sourceFile>
+        <mutatedClass>com.example.MathHelper</mutatedClass>
+        <mutatedMethod>square</mutatedMethod>
+        <methodDescription>(I)I</methodDescription>
+        <lineNumber>12</lineNumber>
+        <mutator>org.pitest.mutationtest.engine.gregor.mutators.MathMutator</mutator>
+        <indexes><index>2</index></indexes>
+        <blocks><block>0</block></blocks>
+        <killingTest>com.example.MathHelperTest.testSquare(com.example.MathHelperTest)</killingTest>
+        <description>Replaced integer multiplication with division</description>
+    </mutation>
+    <mutation detected='false' status='NO_COVERAGE' numberOfTestsRun='0'>
+        <sourceFile>NewFeature.java</sourceFile>
+        <mutatedClass>com.example.NewFeature</mutatedClass>
+        <mutatedMethod>compute</mutatedMethod>
+        <methodDescription>(I)I</methodDescription>
+        <lineNumber>5</lineNumber>
+        <mutator>org.pitest.mutationtest.engine.gregor.mutators.ReturnValsMutator</mutator>
+        <indexes><index>0</index></indexes>
+        <blocks><block>0</block></blocks>
+        <description>replaced return value with 0</description>
+    </mutation>
+    <mutation detected='false' status='NO_COVERAGE' numberOfTestsRun='0'>
+        <sourceFile>NewFeature.java</sourceFile>
+        <mutatedClass>com.example.NewFeature</mutatedClass>
+        <mutatedMethod>compute</mutatedMethod>
+        <methodDescription>(I)I</methodDescription>
+        <lineNumber>6</lineNumber>
+        <mutator>org.pitest.mutationtest.engine.gregor.mutators.ConditionalsBoundaryMutator</mutator>
+        <indexes><index>1</index></indexes>
+        <blocks><block>1</block></blocks>
+        <description>changed conditional boundary</description>
+    </mutation>
+</mutations>

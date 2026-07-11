@@ -53,6 +53,21 @@ npm run mutation         # Stryker sobre packages/core (ejecutar antes de cerrar
 - El `vitest.config.ts` raíz agrega los paquetes vía `test.projects: ['packages/*']` y centraliza la config de `coverage`.
 - Al añadir un paquete nuevo, registra su `reference` en el `tsconfig.json` raíz.
 - Toolchain: ESLint 10 (flat config en `eslint.config.js`), Prettier 3 (ignora `docs/`, `*.md` y `.claude/`), TypeScript strict con extras (`noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`), Vitest 4.
+- `tsconfig.base.json` fija `"types": ["node"]` explícitamente: sin esto, `tsc` no resuelve `node:*` ni `import.meta.url` de forma fiable en los workspaces anidados.
+- `.gitattributes` fuerza `eol=lf` en todo el repo: Windows con `core.autocrlf=true` reescribe a CRLF en cada checkout y rompe `prettier --check` en todos los ficheros de texto. Si vuelve a aparecer ese patrón de fallo masivo de lint, revisa esto antes que el contenido de los ficheros.
+
+## Fixtures de `packages/core/test/fixtures/` (fijadas en T-010)
+
+Cada herramienta tiene un par `mini/` (pequeño, verificable a mano) y `realistic/` (varias clases/ficheros, más variedad de estados). Dentro de cada par, `base.*`/`head.*` están diseñados para ejercitar, ya en T-014/T-015, los cinco tipos de `UnitChangeKind` más el umbral de cobertura:
+
+- **unchanged**: `com.example.MathHelper` (PiTest) / `src/mathHelper.js` y `src/billing/util/currencyFormatter.js` (Stryker).
+- **improved**: `com.example.Calculator` / `com.acme.billing.InvoiceService` y `PaymentGateway` (PiTest); `src/calculator.js` / `invoiceService.js` y `paymentGateway.js` (Stryker).
+- **regressed**: `com.example.StringUtils` / `com.acme.billing.TaxCalculator` (PiTest); `stringUtils.js` / `taxCalculator.js` (Stryker).
+- **added**: `com.example.NewFeature` / `com.acme.billing.RefundService` (PiTest); `newFeature.js` / `refundService.js` (Stryker) — `RefundService`/`refundService.js` queda además al 75% de `NO_COVERAGE`, útil como caso límite del umbral configurable de "sin cobertura" (CA-HU-05).
+- **removed**: `com.example.Legacy` / `com.acme.notifications.LegacyNotifier` (PiTest); `legacy.js` / `legacyNotifier.js` (Stryker).
+- **uncovered ya en base**: `com.acme.notifications.EmailSender` (PiTest) / `emailSender.js` (Stryker), 100% `NO_COVERAGE` en ambas ejecuciones.
+
+Las fixtures Stryker realistas usan `schemaVersion: "2.0"` con bloque `testFiles`; las mini usan `"1.6"` sin él. Los campos que importan al dominio (`status`, `mutatorName`, `location.start.line`) son estables entre 1.x/2.x; si T-012 encuentra diferencias reales de schema no cubiertas aquí, ampliar las fixtures en esa misma tarea en vez de asumir.
 
 ## Convenciones
 

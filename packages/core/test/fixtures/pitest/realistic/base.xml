@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mutations>
+    <!-- com.acme.billing.InvoiceService: 6 mutants, 4 killed / 2 survived -> score 66.7% -->
+    <mutation detected='true' status='KILLED' numberOfTestsRun='2'>
+        <sourceFile>InvoiceService.java</sourceFile>
+        <mutatedClass>com.acme.billing.InvoiceService</mutatedClass>
+        <mutatedMethod>calculateTotal</mutatedMethod>
+        <methodDescription>(Ljava/util/List;)D</methodDescription>
+        <lineNumber>22</lineNumber>
+        <mutator>org.pitest.mutationtest.engine.gregor.mutators.MathMutator</mutator>
+        <indexes><index>4</index></indexes>
+        <blocks><block>0</block></blocks>
+        <killingTest>com.acme.billing.InvoiceServiceTest.testCalculateTotal(com.acme.billing.InvoiceServiceTest)</killingTest>
+        <description>Replaced double addition with subtraction</description>
+    </mutation>
+    <mutation detected='true' status='KILLED' numberOfTestsRun='2'>
+        <sourceFile>InvoiceService.java</sourceFile>
+        <mutatedClass>com.acme.billing.InvoiceService</mutatedClass>
+        <mutatedMethod>calculateTotal</mutatedMethod>
+        <methodDescription>(Ljava/util/List;)D</methodDescription>
+        <lineNumber>23</lineNumber>
+        <mutator>org.pitest.mutationtest.engine.gregor.mutators.ConditionalsBoundaryMutator</mutator>
+        <indexes><index>6</index></indexes>
+        <blocks><block>1</block></blocks>
+        <killingTest>com.acme.billing.InvoiceServiceTest.testCalculateTotalBoundary(com.acme.billing.InvoiceServiceTest)</killingTest>
+        <description>changed conditional boundary</description>
+    </mutation>
+    <mutation detected='true' status='KILLED' numberOfTestsRun='1'>
+        <sourceFile>InvoiceService.java</sourceFile>
+        <mutatedClass>com.acme.billing.InvoiceService</mutatedClass>
+        <mutatedMethod>applyDiscount</mutatedMethod>
+        <methodDescription>(D)D</methodDescription>
+        <lineNumber>34</lineNumber>
+        <mutator>org.pitest.mutationtest.engine.gregor.mutators.MathMutator</mutator>
+        <indexes><index>2</index></indexes>
+        <blocks><block>0</block></blocks>
+        <killingTest>com.acme.billing.InvoiceServiceTest.testApplyDiscount(com.acme.billing.InvoiceServiceTest)</killingTest>
+        <description>Replaced double multiplication with division</description>
+    </mutation>
+    <mutation detected='true' status='KILLED' numberOfTestsRun='1'>
+        <sourceFile>InvoiceService.java</sourceFile>
+        <mutatedClass>com.acme.billing.InvoiceService</mutatedClass>
+        <mutatedMethod>validate</mutatedMethod>
+        <methodDescription>(Lcom/acme/billing/Invoice;)Z</methodDescription>
+        <lineNumber>41</lineNumber>
+        <mutator>org.pitest.mutationtest.engine.gregor.mutators.NegateConditionalsMutator</mutator>
+        <indexes><index>3</index></indexes>
+        <blocks><block>0</block></blocks>
+        <killingTest>com.acme.billing.InvoiceServiceTest.testValidateRejectsNegative(com.acme.billing.InvoiceServiceTest)</killingTest>
+        <description>negated conditional</description>
+    </mutation>
+    <mutation detected='false' status='SURVIVED' numberOfTestsRun='1'>
+        <sourceFile>InvoiceService.java</sourceFile>
+        <mutatedClass>com.acme.billing.InvoiceService</mutatedClass>
+        <mutatedMethod>generatePdf</mutatedMethod>
+        <methodDescription>()Ljava/lang/String;</methodDescription>
+        <lineNumber>55</lineNumber>
+        <mutator>org.pitest.mutationtest.engine.gregor.mutators.ReturnValsMutator</mutator>
+        <indexes><index>0</index></indexes>
+        <blocks><block>0</block></blocks>
+        <description>replaced return value with null</description>
+    </mutation>
+    <mutation detected='false' status='SURVIVED' numberOfTestsRun='1'>
+        <sourceFile>InvoiceService.java</sourceFile>
+        <mutatedClass>com.acme.billing.InvoiceService</mutatedClass>
+        <mutatedMethod>sendToCustomer</mutatedMethod>
+        <methodDescription>(Lcom/acme/billing/Invoice;)V</methodDescription>
+        <lineNumber>63</lineNumber>
+        <mutator>org.pitest.mutationtest.engine.gregor.mutators.VoidMethodCallMutator</mutator>
+        <indexes><index>2</index></indexes>
+        <blocks><block>1</block></blocks>
+        <description>removed call to com/acme/billing/Mailer::send</description>
+    </mutation>
+
+    <!-- com.acme.billing.TaxCalculator: 4 mutants, 3 killed / 1 timed out -> score 100% (killed+timeout) -->
+    <mutation detected='true' status='KILLED' numberOfTestsRun='1'>
+        <sourceFile>TaxCalculator.java</sourceFile>
+        <mutatedClass>com.acme.billing.TaxCalculator</mutatedClass>
+        <mutatedMethod>computeTax</mutatedMethod>
+        <methodDescription>(D)D</methodDescription>
+        <lineNumber>14</lineNumber>
+        <mutator>org.pitest.mutationtest.engine.gregor.mutators.MathMutator</mutator>
+        <indexes><index>1</index></indexes>
+        <blocks><block>0</block></blocks>
+        <killingTest>com.acme.billing.TaxCalculatorTest.testComputeTax(com.acme.billing.TaxCalculatorTest)</killingTest>
+        <description>Replaced double multiplication with division</description>
+    </mutation>
+    <mutation detected='true' status='KILLED' numberOfTestsRun='1'>
+        <sourceFile>TaxCalculator.java</sourceFile>
+        <mutatedClass>com.acme.billing.TaxCalculator</mutatedClass>
+        <mutatedMethod>computeTax</mutatedMethod>
+        <methodDescription>(D)D</methodDescription>
+        <lineNumber>15</lineNumber>
+        <mutator>org.pitest.mutationtest.engine.gregor.mutators.ConditionalsBoundaryMutator</mutator>
+        <indexes><index>2</index></indexes>
+        <blocks><block>0</block></blocks>
+        <killingTest>com.acme.billing.TaxCalculatorTest.testComputeTaxBoundary(com.acme.billing.TaxCalculatorTest)</killingTest>
+        <description>changed conditional boundary</description>
+    </mutation>
+    <mutation detected='true' status='KILLED' numberOfTestsRun='1'>
+        <sourceFile>TaxCalculator.java</sourceFile>
+        <mutatedClass>com.acme.billing.TaxCalculator</mutatedClass>
+        <mutatedMethod>roundToCents</mutatedMethod>
+        <methodDescription>(D)D</methodDescription>
+        <lineNumber>28</lineNumber>
+        <mutator>org.pitest.mutationtest.engine.gregor.mutators.IncrementsMutator</mutator>
+        <indexes><index>1</index></indexes>
+        <blocks><block>0</block></blocks>
+        <killingTest>com.acme.billing.TaxCalculatorTest.testRoundToCents(com.acme.billing.TaxCalculatorTest)</killingTest>
+        <description>Changed increment from 1 to -1</description>
+    </mutation>
+    <mutation detected='false' status='TIMED_OUT' numberOfTestsRun='1'>
+        <sourceFile>TaxCalculator.java</sourceFile>
+        <mutatedClass>com.acme.billing.TaxCalculator</mutatedClass>
+        <mutatedMethod>applyRegionalRate</mutatedMethod>
+        <methodDescription>(Ljava/lang/String;D)D</methodDescription>
+        <lineNumber>36</lineNumber>
+        <mutator>org.pitest.mutationtest.engine.gregor.mutators.NegateConditionalsMutator</mutator>
+        <indexes><index>0</index></indexes>
+        <blocks><block>0</block></blocks>
+        <description>negated conditional</description>
+    </mutation>
+
+    <!-- com.acme.billing.util.CurrencyFormatter: 3 mutants, all killed -> score 100% -->
+    <mutation detected='true' status='KILLED' numberOfTestsRun='1'>
+        <sourceFile>CurrencyFormatter.java</sourceFile>
+        <mutatedClass>com.acme.billing.util.CurrencyFormatter</mutatedClass>
+        <mutatedMethod>format</mutatedMethod>
+        <methodDescription>(D)Ljava/lang/String;</methodDescription>
+        <lineNumber>9</lineNumber>
+        <mutator>org.pitest.mutationtest.engine.gregor.mutators.ReturnValsMutator</mutator>
+        <indexes><index>0</index></indexes>
+        <blocks><block>0</block></blocks>
+        <killingTest>com.acme.billing.util.CurrencyFormatterTest.testFormat(com.acme.billing.util.CurrencyFormatterTest)</killingTest>
+        <description>replaced return value with ""</description>
+    </mutation>
+    <mutation detected='true' status='KILLED' numberOfTestsRun='1'>
+        <sourceFile>CurrencyFormatter.java</sourceFile>
+        <mutatedClass>com.acme.billing.util.CurrencyFormatter</mutatedClass>
+        <mutatedMethod>format</mutatedMethod>
+        <methodDescription>(D)Ljava/lang/String;</methodDescription>
+        <lineNumber>10</lineNumber>
+        <mutator>org.pitest.mutationtest.engine.gregor.mutators.ConditionalsBoundaryMutator</mutator>
+        <indexes><index>1</index></indexes>
+        <blocks><block>0</block></blocks>
+        <killingTest>com.acme.billing.util.CurrencyFormatterTest.testFormatBoundary(com.acme.billing.util.CurrencyFormatterTest)</killingTest>
+        <description>changed conditional boundary</description>
+    </mutation>
+    <mutation detected='true' status='KILLED' numberOfTestsRun='1'>
+        <sourceFile>CurrencyFormatter.java</sourceFile>
+        <mutatedClass>com.acme.billing.util.CurrencyFormatter</mutatedClass>
+        <mutatedMethod>withSymbol</mutatedMethod>
+        <methodDescription>(Ljava/lang/String;)Ljava/lang/String;</methodDescription>
+        <lineNumber>18</lineNumber>
+        <mutator>org.pitest.mutationtest.engine.gregor.mutators.VoidMethodCallMutator</mutator>
+        <indexes><index>2</index></indexes>
+        <blocks><block>0</block></blocks>
+        <killingTest>com.acme.billing.util.CurrencyFormatterTest.testWithSymbol(com.acme.billing.util.CurrencyFormatterTest)</killingTest>
+        <description>removed call to java/lang/StringBuilder::append</description>
+    </mutation>
+
+    <!-- com.acme.billing.PaymentGateway: 5 mutants, 2 killed / 1 survived / 1 no_coverage / 1 run_error -> validTotal=4, score 50% -->
+    <mutation detected='true' status='KILLED' numberOfTestsRun='1'>
+        <sourceFile>PaymentGateway.java</sourceFile>
+        <mutatedClass>com.acme.billing.PaymentGateway</mutatedClass>
+        <mutatedMethod>charge</mutatedMethod>
+        <methodDescription>(Lcom/acme/billing/Invoice;)Lcom/acme/billing/PaymentResult;</methodDescription>
+        <lineNumber>19</lineNumber>
+        <mutator>org.pitest.mutationtest.engine.gregor.mutators.NegateConditionalsMutator</mutator>
+        <indexes><index>1</index></indexes>
+        <blocks><block>0</block></blocks>
+        <killingTest>com.acme.billing.PaymentGatewayTest.testChargeRejectsInvalidCard(com.acme.billing.PaymentGatewayTest)</killingTest>
+        <description>negated conditional</description>
+    </mutation>
+    <mutation detected='true' status='KILLED' numberOfTestsRun='1'>
+        <sourceFile>PaymentGateway.java</sourceFile>
+        <mutatedClass>com.acme.billing.PaymentGateway</mutatedClass>
+        <mutatedMethod>charge</mutatedMethod>
+        <methodDescription>(Lcom/acme/billing/Invoice;)Lcom/acme/billing/PaymentResult;</methodDescription>
+        <lineNumber>25</lineNumber>
+        <mutator>org.pitest.mutationtest.engine.gregor.mutators.ReturnValsMutator</mutator>
+        <indexes><index>3</index></indexes>
+        <blocks><block>1</block></blocks>
+        <killingTest>com.acme.billing.PaymentGatewayTest.testChargeSuccess(com.acme.billing.PaymentGatewayTest)</killingTest>
+        <description>replaced return value with null</description>
+    </mutation>
+    <mutation detected='false' status='SURVIVED' numberOfTestsRun='1'>
+        <sourceFile>PaymentGateway.java</sourceFile>
+        <mutatedClass>com.acme.billing.PaymentGateway</mutatedClass>
+        <mutatedMethod>refund</mutatedMethod>
+        <methodDescription>(Ljava/lang/String;)V</methodDescription>
+        <lineNumber>41</lineNumber>
+        <mutator>org.pitest.mutationtest.engine.gregor.mutators.VoidMethodCallMutator</mutator>
+        <indexes><index>0</index></indexes>
+        <blocks><block>0</block></blocks>
+        <description>removed call to com/acme/billing/PaymentProvider::refund</description>
+    </mutation>
+    <mutation detected='false' status='NO_COVERAGE' numberOfTestsRun='0'>
+        <sourceFile>PaymentGateway.java</sourceFile>
+        <mutatedClass>com.acme.billing.PaymentGateway</mutatedClass>
+        <mutatedMethod>retryWithBackoff</mutatedMethod>
+        <methodDescription>(I)V</methodDescription>
+        <lineNumber>50</lineNumber>
+        <mutator>org.pitest.mutationtest.engine.gregor.mutators.IncrementsMutator</mutator>
+        <indexes><index>1</index></indexes>
+        <blocks><block>0</block></blocks>
+        <description>Changed increment from 1 to -1</description>
+    </mutation>
+    <mutation detected='false' status='RUN_ERROR' numberOfTestsRun='1'>
+        <sourceFile>PaymentGateway.java</sourceFile>
+        <mutatedClass>com.acme.billing.PaymentGateway</mutatedClass>
+        <mutatedMethod>parseResponse</mutatedMethod>
+        <methodDescription>(Ljava/lang/String;)Lcom/acme/billing/PaymentResult;</methodDescription>
+        <lineNumber>58</lineNumber>
+        <mutator>org.pitest.mutationtest.engine.gregor.mutators.ConditionalsBoundaryMutator</mutator>
+        <indexes><index>2</index></indexes>
+        <blocks><block>0</block></blocks>
+        <description>changed conditional boundary</description>
+    </mutation>
+
+    <!-- com.acme.notifications.EmailSender: 2 mutants, both no_coverage -> score 0%, fully uncovered -->
+    <mutation detected='false' status='NO_COVERAGE' numberOfTestsRun='0'>
+        <sourceFile>EmailSender.java</sourceFile>
+        <mutatedClass>com.acme.notifications.EmailSender</mutatedClass>
+        <mutatedMethod>send</mutatedMethod>
+        <methodDescription>(Ljava/lang/String;Ljava/lang/String;)V</methodDescription>
+        <lineNumber>17</lineNumber>
+        <mutator>org.pitest.mutationtest.engine.gregor.mutators.VoidMethodCallMutator</mutator>
+        <indexes><index>0</index></indexes>
+        <blocks><block>0</block></blocks>
+        <description>removed call to javax/mail/Transport::send</description>
+    </mutation>
+    <mutation detected='false' status='NO_COVERAGE' numberOfTestsRun='0'>
+        <sourceFile>EmailSender.java</sourceFile>
+        <mutatedClass>com.acme.notifications.EmailSender</mutatedClass>
+        <mutatedMethod>buildMessage</mutatedMethod>
+        <methodDescription>(Ljava/lang/String;)Ljava/lang/String;</methodDescription>
+        <lineNumber>25</lineNumber>
+        <mutator>org.pitest.mutationtest.engine.gregor.mutators.ReturnValsMutator</mutator>
+        <indexes><index>0</index></indexes>
+        <blocks><block>0</block></blocks>
+        <description>replaced return value with ""</description>
+    </mutation>
+
+    <!-- com.acme.notifications.LegacyNotifier: 2 mutants killed -> removed entirely in head.xml -->
+    <mutation detected='true' status='KILLED' numberOfTestsRun='1'>
+        <sourceFile>LegacyNotifier.java</sourceFile>
+        <mutatedClass>com.acme.notifications.LegacyNotifier</mutatedClass>
+        <mutatedMethod>notifyAll</mutatedMethod>
+        <methodDescription>()V</methodDescription>
+        <lineNumber>11</lineNumber>
+        <mutator>org.pitest.mutationtest.engine.gregor.mutators.VoidMethodCallMutator</mutator>
+        <indexes><index>0</index></indexes>
+        <blocks><block>0</block></blocks>
+        <killingTest>com.acme.notifications.LegacyNotifierTest.testNotifyAll(com.acme.notifications.LegacyNotifierTest)</killingTest>
+        <description>removed call to com/acme/notifications/Pager::notify</description>
+    </mutation>
+    <mutation detected='true' status='KILLED' numberOfTestsRun='1'>
+        <sourceFile>LegacyNotifier.java</sourceFile>
+        <mutatedClass>com.acme.notifications.LegacyNotifier</mutatedClass>
+        <mutatedMethod>isEnabled</mutatedMethod>
+        <methodDescription>()Z</methodDescription>
+        <lineNumber>6</lineNumber>
+        <mutator>org.pitest.mutationtest.engine.gregor.mutators.NegateConditionalsMutator</mutator>
+        <indexes><index>0</index></indexes>
+        <blocks><block>0</block></blocks>
+        <killingTest>com.acme.notifications.LegacyNotifierTest.testIsEnabled(com.acme.notifications.LegacyNotifierTest)</killingTest>
+        <description>negated conditional</description>
+    </mutation>
+</mutations>

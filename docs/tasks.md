@@ -7,7 +7,7 @@
 - [x] T-002 CI básico (lint, typecheck, test).
 
 ### Fase 1 — Core (TDD puro)
-- [ ] T-010 Fixtures: 2 pares de reportes PiTest y 2 pares Stryker (mini y realista).
+- [x] T-010 Fixtures: 2 pares de reportes PiTest y 2 pares Stryker (mini y realista).
 - [ ] T-011 `PitestParser` → NormalizedRun (tests primero).
 - [ ] T-012 `StrykerParser` → NormalizedRun (soportar schemaVersion 1.x y 2.x).
 - [ ] T-013 Cálculo de `UnitMetrics` y agregado global.
