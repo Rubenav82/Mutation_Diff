@@ -108,6 +108,27 @@ describe('parseStrykerReport — realistic fixtures (schemaVersion 2.0)', () => 
   });
 });
 
+describe('parseStrykerReport — empty report', () => {
+  it('returns a valid NormalizedRun with no units for an empty "files" object', () => {
+    const run = parseStrykerReport(JSON.stringify({ schemaVersion: '2.0', files: {} }), {
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
+    expect(run.units).toEqual([]);
+    expect(run.metrics).toEqual({
+      total: 0,
+      killed: 0,
+      survived: 0,
+      noCoverage: 0,
+      timeout: 0,
+      error: 0,
+      ignored: 0,
+      validTotal: 0,
+      score: 0,
+      coveredPct: 0,
+    });
+  });
+});
+
 describe('parseStrykerReport — schema version handling', () => {
   function reportWith(schemaVersion: unknown): string {
     return JSON.stringify({

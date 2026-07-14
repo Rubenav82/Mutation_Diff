@@ -48,12 +48,14 @@ export function parsePitestReport(xml: string, options: ParsePitestOptions): Nor
     fail(`malformed XML (${validation.err.msg} at line ${validation.err.line})`);
   }
 
-  const parsed = parser.parse(xml) as { mutations?: { mutation?: RawMutation[] } };
-  if (!parsed.mutations) {
+  const parsed = parser.parse(xml) as { mutations?: string | { mutation?: RawMutation[] } };
+  if (!('mutations' in parsed)) {
     fail('missing <mutations> root element');
   }
 
-  const rawMutations = parsed.mutations.mutation ?? [];
+  // An empty or self-closed <mutations/> root parses to '' rather than an object.
+  const rawMutations =
+    typeof parsed.mutations === 'string' ? [] : (parsed.mutations?.mutation ?? []);
   const mutantsByClass = new Map<string, Mutant[]>();
   let nextId = 0;
 

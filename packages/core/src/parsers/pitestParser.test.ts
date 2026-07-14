@@ -110,6 +110,34 @@ describe('parsePitestReport — realistic fixtures', () => {
   });
 });
 
+describe('parsePitestReport — empty report', () => {
+  it('returns a valid NormalizedRun with no units for an empty <mutations/> root', () => {
+    const run = parsePitestReport('<?xml version="1.0"?><mutations></mutations>', {
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
+    expect(run.units).toEqual([]);
+    expect(run.metrics).toEqual({
+      total: 0,
+      killed: 0,
+      survived: 0,
+      noCoverage: 0,
+      timeout: 0,
+      error: 0,
+      ignored: 0,
+      validTotal: 0,
+      score: 0,
+      coveredPct: 0,
+    });
+  });
+
+  it('returns a valid NormalizedRun for a self-closed <mutations/> root', () => {
+    const run = parsePitestReport('<?xml version="1.0"?><mutations/>', {
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
+    expect(run.units).toEqual([]);
+  });
+});
+
 describe('parsePitestReport — invalid input', () => {
   it('throws a readable error for malformed XML, not a raw parser stack trace', () => {
     expect(() =>
