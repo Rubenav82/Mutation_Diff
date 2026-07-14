@@ -137,6 +137,14 @@ Las fixtures Stryker realistas usan `schemaVersion: "2.0"` con bloque `testFiles
   - `package.json` raíz añade `"build": "tsc -b"`, `"pretest": "tsc -b"` y `"pretypecheck": "tsc -b"` — npm ejecuta automáticamente los hooks `pre*` antes de `test`/`typecheck`, así que ambos comandos reconstruyen el grafo de dependencias (en orden, gracias a las project references) antes de tipar/ejecutar. CI no necesitó cambios porque ya invoca `npm run typecheck` y `npm test` por separado.
   - Regla para paquetes futuros (`web`): si un paquete importa de otro paquete del monorepo, su `tsconfig.json` **debe** añadir la `reference` correspondiente, o este mismo problema reaparece silenciosamente.
 
+## `GET /api/comparisons/:id` (fijado en T-022)
+
+- `packages/server/src/store.ts`: `createComparisonStore(ttlMs, now = Date.now)` — factoría con reloj inyectable (mismo patrón que `createUpload(maxBytes)` de T-020) para poder testear la expiración por TTL sin esperas reales; `DEFAULT_COMPARISON_TTL_MS = 1 hora`, elegido porque este store es para una sesión corta (subir → ver dashboard → exportar HTML), no histórico — el histórico real es la persistencia SQLite opt-in de Fase 2 (T-050), sin relación con esto.
+- El store se crea **dentro** de `createComparisonsRouter()` (una instancia por llamada a `createApp()`), no como singleton de módulo — así cada test con su propio `createApp()` tiene estado aislado, y en producción solo hay una `createApp()` real de todas formas.
+- `POST /api/comparisons` ahora guarda el `result` en el store bajo el mismo `comparisonId` que devuelve (antes, en T-021, el id se generaba pero no se guardaba nada — ya lo advertía la nota de T-021).
+- `GET /api/comparisons/:id` devuelve el `ComparisonResult` **sin envolver** (`res.json(result)`, no `{ result }`), a diferencia del POST que sí envuelve en `{ comparisonId, result }` — es el shape literal de `docs/plan.md` §2.4, asimetría intencionada del propio spec, no una inconsistencia a corregir. Id desconocido o expirado → `404 COMPARISON_NOT_FOUND` homogéneo.
+- Autocorrección durante esta tarea: implementé la ruta GET antes de escribir su test (rompiendo el TDD estricto que exige este proyecto). Al notarlo, revertí temporalmente el handler, confirmé que los tests nuevos fallaban en rojo por la razón correcta, y volví a aplicarlo — para no repetir el fallo, escribir el test *antes* de tocar `router.get(...)`/`router.post(...)`, no solo antes de las funciones auxiliares.
+
 ## Convenciones
 
 - Nombres de código, tipos y comentarios de API en inglés; documentación de producto (docs/) en español.

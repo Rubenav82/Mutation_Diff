@@ -114,3 +114,27 @@ describe('POST /api/comparisons — validation errors', () => {
     expect(res.text).not.toMatch(/at .*:\d+:\d+/);
   });
 });
+
+describe('GET /api/comparisons/:id', () => {
+  it('returns the ComparisonResult produced by a previous POST', async () => {
+    const app = createApp();
+    const postRes = await request(app)
+      .post('/api/comparisons')
+      .field('tool', 'pitest')
+      .attach('baseFile', fixture('pitest/mini/base.xml'), 'base.xml')
+      .attach('headFile', fixture('pitest/mini/head.xml'), 'head.xml');
+    const { comparisonId } = postRes.body as { comparisonId: string };
+
+    const getRes = await request(app).get(`/api/comparisons/${comparisonId}`);
+
+    expect(getRes.status).toBe(200);
+    expect(getRes.body).toEqual(postRes.body.result);
+  });
+
+  it('returns a homogeneous 404 for an unknown comparison id', async () => {
+    const res = await request(createApp()).get('/api/comparisons/does-not-exist');
+
+    expect(res.status).toBe(404);
+    expect(res.body.error.code).toBe('COMPARISON_NOT_FOUND');
+  });
+});

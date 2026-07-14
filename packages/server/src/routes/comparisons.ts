@@ -3,6 +3,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { compareRuns, parsePitestReport, parseStrykerReport, type NormalizedRun } from 'core';
 import { ApiError } from '../errors.js';
+import { createComparisonStore, DEFAULT_COMPARISON_TTL_MS } from '../store.js';
 import { upload } from '../upload.js';
 import { validateBody } from '../validation.js';
 
@@ -26,6 +27,7 @@ function parseReport(tool: 'pitest' | 'stryker', buffer: Buffer, createdAt: stri
 
 export function createComparisonsRouter(): Router {
   const router = Router();
+  const store = createComparisonStore(DEFAULT_COMPARISON_TTL_MS);
 
   router.post(
     '/api/comparisons',
@@ -55,9 +57,23 @@ export function createComparisonsRouter(): Router {
         ...(uncoveredThreshold !== undefined ? { uncoveredThreshold } : {}),
       });
 
-      res.status(200).json({ comparisonId: randomUUID(), result });
+      const comparisonId = randomUUID();
+      store.set(comparisonId, result);
+      res.status(200).json({ comparisonId, result });
     },
   );
+
+  router.get('/api/comparisons/:id', (req, res) => {
+    const result = store.get(req.params.id);
+    if (!result) {
+      throw new ApiError(
+        404,
+        'COMPARISON_NOT_FOUND',
+        `No comparison found for id "${req.params.id}"`,
+      );
+    }
+    res.status(200).json(result);
+  });
 
   return router;
 }
