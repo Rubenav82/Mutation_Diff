@@ -12,9 +12,12 @@
     "packages/*"
   ],
   "scripts": {
+    "build": "tsc -b",
+    "pretest": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",
     "coverage": "vitest run --coverage",
+    "pretypecheck": "tsc -b",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
