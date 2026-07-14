@@ -150,6 +150,15 @@ Las fixtures Stryker realistas usan `schemaVersion: "2.0"` con bloque `testFiles
 - Reutiliza el mismo `store` de T-022 y `generateHtmlReport` de `core` (T-016): busca el `ComparisonResult` por id (404 `COMPARISON_NOT_FOUND` homogéneo si no existe, mismo mensaje/código que el GET sin `/report`), genera el HTML y lo envía con `Content-Type: text/html` y `Content-Disposition: attachment; filename="mutadiff-report-<id>.html"` para forzar la descarga en el navegador en vez de renderizarlo inline.
 - No se cachea el HTML generado ni se persiste en el store — se regenera en cada request a partir del `ComparisonResult` ya almacenado; es barato (misma función pura de T-016) y evita guardar dos copias del mismo dato con el TTL potencialmente desincronizado.
 
+## Manejo de errores homogéneo (fijado en T-024 — cierra Fase 2)
+
+Auditoría del mecanismo construido en T-020 (`ApiError`/`errorHandler`) contra los errores reales introducidos por T-021/022/023, en vez de una reimplementación: encontró y corrigió dos vías por las que un error de cliente aún llegaba como `500 INTERNAL_ERROR` en lugar de un 4xx homogéneo — ambas con test TDD (rojo confirmado en 500 antes del fix):
+
+- **`express.json()` en `app.ts` era código muerto** (T-020 lo montó como boilerplate genérico, pero ningún endpoint real consume JSON — `POST /api/comparisons` es `multipart/form-data` vía multer): además de no aportar nada, era la causa de que un body JSON malformado con `Content-Type: application/json` lanzara un `SyntaxError` sin capturar, cayendo al branch genérico 500. Eliminado directamente (root cause, no un `catch` añadido encima): sin body-parser montado, multer ignora peticiones no-multipart (`req.body` queda vacío) y `validateBody` ya lo convierte en `422 VALIDATION_ERROR` de forma homogénea, sin necesitar ninguna rama nueva.
+- **`errorHandler` solo trataba `MulterError` con `code === 'LIMIT_FILE_SIZE'`** (413 `FILE_TOO_LARGE`); cualquier otro `MulterError` (p. ej. adjuntar un fichero bajo un nombre de campo no esperado, `LIMIT_UNEXPECTED_FILE`) caía también al 500 genérico — semánticamente incorrecto para un error causado por el cliente. Generalizado: cualquier `MulterError` no reconocido específicamente mapea a `400 INVALID_UPLOAD` reutilizando `err.message` (los mensajes de Multer son strings estáticos y seguros, sin datos del usuario ni rutas — no viola "sin stack traces").
+
+No se ha tocado nada más: `ApiError`, el catch-all 404, y el fallback 500 para errores realmente no reconocidos ya eran suficientes tal cual estaban. Confirma la nota dejada en T-020: las rutas solo necesitaban lanzar `new ApiError(status, code, message)`; el único trabajo real de T-024 fue de auditoría, no de rediseño.
+
 ## Convenciones
 
 - Nombres de código, tipos y comentarios de API en inglés; documentación de producto (docs/) en español.

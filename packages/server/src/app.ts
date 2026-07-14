@@ -4,7 +4,6 @@ import { createComparisonsRouter } from './routes/comparisons.js';
 
 export function createApp(): Express {
   const app = express();
-  app.use(express.json());
   app.use(createComparisonsRouter());
 
   app.use((req, _res, next) => {

@@ -139,6 +139,32 @@ describe('GET /api/comparisons/:id', () => {
   });
 });
 
+describe('POST /api/comparisons — error homogeneity (T-024)', () => {
+  it('returns a homogeneous 4xx (not a 500) when the body is malformed JSON with a JSON content-type', async () => {
+    const res = await request(createApp())
+      .post('/api/comparisons')
+      .set('Content-Type', 'application/json')
+      .send('{not valid json');
+
+    expect(res.status).toBeGreaterThanOrEqual(400);
+    expect(res.status).toBeLessThan(500);
+    expect(res.body).toHaveProperty('error.code');
+    expect(res.text).not.toMatch(/at .*:\d+:\d+/);
+  });
+
+  it('returns a homogeneous 4xx (not a 500) when a file is attached under an unexpected field name', async () => {
+    const res = await request(createApp())
+      .post('/api/comparisons')
+      .field('tool', 'pitest')
+      .attach('unexpectedField', fixture('pitest/mini/base.xml'), 'base.xml');
+
+    expect(res.status).toBeGreaterThanOrEqual(400);
+    expect(res.status).toBeLessThan(500);
+    expect(res.body).toHaveProperty('error.code');
+    expect(res.text).not.toMatch(/at .*:\d+:\d+/);
+  });
+});
+
 describe('GET /api/comparisons/:id/report', () => {
   it('downloads a self-contained HTML report for a previous comparison', async () => {
     const app = createApp();

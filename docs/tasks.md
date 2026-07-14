@@ -20,7 +20,7 @@
 - [x] T-021 `POST /api/comparisons` con detección/validación de herramienta.
 - [x] T-022 `GET /api/comparisons/:id` (store en memoria con TTL).
 - [x] T-023 `GET /api/comparisons/:id/report` (descarga HTML).
-- [ ] T-024 Manejo de errores homogéneo (middleware, sin stack traces al cliente).
+- [x] T-024 Manejo de errores homogéneo (middleware, sin stack traces al cliente).
 
 ### Fase 3 — Web
 - [ ] T-030 Scaffolding Vite + React + router + capa API tipada.
