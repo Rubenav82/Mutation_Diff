@@ -138,3 +138,32 @@ describe('GET /api/comparisons/:id', () => {
     expect(res.body.error.code).toBe('COMPARISON_NOT_FOUND');
   });
 });
+
+describe('GET /api/comparisons/:id/report', () => {
+  it('downloads a self-contained HTML report for a previous comparison', async () => {
+    const app = createApp();
+    const postRes = await request(app)
+      .post('/api/comparisons')
+      .field('tool', 'pitest')
+      .attach('baseFile', fixture('pitest/mini/base.xml'), 'base.xml')
+      .attach('headFile', fixture('pitest/mini/head.xml'), 'head.xml');
+    const { comparisonId } = postRes.body as { comparisonId: string };
+
+    const res = await request(app).get(`/api/comparisons/${comparisonId}/report`);
+
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toMatch(/^text\/html/);
+    expect(res.headers['content-disposition']).toBe(
+      `attachment; filename="mutadiff-report-${comparisonId}.html"`,
+    );
+    expect(res.text).toContain('<html');
+    expect(res.text).toContain('com.example.StringUtils');
+  });
+
+  it('returns a homogeneous 404 for an unknown comparison id', async () => {
+    const res = await request(createApp()).get('/api/comparisons/does-not-exist/report');
+
+    expect(res.status).toBe(404);
+    expect(res.body.error.code).toBe('COMPARISON_NOT_FOUND');
+  });
+});

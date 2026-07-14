@@ -145,6 +145,11 @@ Las fixtures Stryker realistas usan `schemaVersion: "2.0"` con bloque `testFiles
 - `GET /api/comparisons/:id` devuelve el `ComparisonResult` **sin envolver** (`res.json(result)`, no `{ result }`), a diferencia del POST que sí envuelve en `{ comparisonId, result }` — es el shape literal de `docs/plan.md` §2.4, asimetría intencionada del propio spec, no una inconsistencia a corregir. Id desconocido o expirado → `404 COMPARISON_NOT_FOUND` homogéneo.
 - Autocorrección durante esta tarea: implementé la ruta GET antes de escribir su test (rompiendo el TDD estricto que exige este proyecto). Al notarlo, revertí temporalmente el handler, confirmé que los tests nuevos fallaban en rojo por la razón correcta, y volví a aplicarlo — para no repetir el fallo, escribir el test *antes* de tocar `router.get(...)`/`router.post(...)`, no solo antes de las funciones auxiliares.
 
+## `GET /api/comparisons/:id/report` (fijado en T-023)
+
+- Reutiliza el mismo `store` de T-022 y `generateHtmlReport` de `core` (T-016): busca el `ComparisonResult` por id (404 `COMPARISON_NOT_FOUND` homogéneo si no existe, mismo mensaje/código que el GET sin `/report`), genera el HTML y lo envía con `Content-Type: text/html` y `Content-Disposition: attachment; filename="mutadiff-report-<id>.html"` para forzar la descarga en el navegador en vez de renderizarlo inline.
+- No se cachea el HTML generado ni se persiste en el store — se regenera en cada request a partir del `ComparisonResult` ya almacenado; es barato (misma función pura de T-016) y evita guardar dos copias del mismo dato con el TTL potencialmente desincronizado.
+
 ## Convenciones
 
 - Nombres de código, tipos y comentarios de API en inglés; documentación de producto (docs/) en español.

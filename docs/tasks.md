@@ -19,7 +19,7 @@
 - [x] T-020 Express + multer + validación Zod + límites de tamaño.
 - [x] T-021 `POST /api/comparisons` con detección/validación de herramienta.
 - [x] T-022 `GET /api/comparisons/:id` (store en memoria con TTL).
-- [ ] T-023 `GET /api/comparisons/:id/report` (descarga HTML).
+- [x] T-023 `GET /api/comparisons/:id/report` (descarga HTML).
 - [ ] T-024 Manejo de errores homogéneo (middleware, sin stack traces al cliente).
 
 ### Fase 3 — Web

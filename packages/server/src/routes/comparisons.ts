@@ -1,7 +1,13 @@
 import { randomUUID } from 'node:crypto';
 import { Router } from 'express';
 import { z } from 'zod';
-import { compareRuns, parsePitestReport, parseStrykerReport, type NormalizedRun } from 'core';
+import {
+  compareRuns,
+  generateHtmlReport,
+  parsePitestReport,
+  parseStrykerReport,
+  type NormalizedRun,
+} from 'core';
 import { ApiError } from '../errors.js';
 import { createComparisonStore, DEFAULT_COMPARISON_TTL_MS } from '../store.js';
 import { upload } from '../upload.js';
@@ -73,6 +79,23 @@ export function createComparisonsRouter(): Router {
       );
     }
     res.status(200).json(result);
+  });
+
+  router.get('/api/comparisons/:id/report', (req, res) => {
+    const result = store.get(req.params.id);
+    if (!result) {
+      throw new ApiError(
+        404,
+        'COMPARISON_NOT_FOUND',
+        `No comparison found for id "${req.params.id}"`,
+      );
+    }
+    const html = generateHtmlReport(result);
+    res
+      .status(200)
+      .type('text/html')
+      .set('Content-Disposition', `attachment; filename="mutadiff-report-${req.params.id}.html"`)
+      .send(html);
   });
 
   return router;
