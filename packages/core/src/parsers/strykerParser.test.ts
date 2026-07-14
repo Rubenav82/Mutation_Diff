@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { parseStrykerReport } from './strykerParser.js';
 
 const fixturesDir = fileURLToPath(new URL('../../test/fixtures/stryker/', import.meta.url));
@@ -16,11 +16,16 @@ function unit(run: ReturnType<typeof parseStrykerReport>, key: string) {
 }
 
 describe('parseStrykerReport — mini fixtures (schemaVersion 1.6)', () => {
-  const base = parseStrykerReport(readFixture('mini/base.json'), {
-    createdAt: '2026-01-01T00:00:00.000Z',
-  });
-  const head = parseStrykerReport(readFixture('mini/head.json'), {
-    createdAt: '2026-01-02T00:00:00.000Z',
+  let base: ReturnType<typeof parseStrykerReport>;
+  let head: ReturnType<typeof parseStrykerReport>;
+
+  beforeAll(() => {
+    base = parseStrykerReport(readFixture('mini/base.json'), {
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
+    head = parseStrykerReport(readFixture('mini/head.json'), {
+      createdAt: '2026-01-02T00:00:00.000Z',
+    });
   });
 
   it('sets tool and passthrough metadata', () => {
@@ -47,13 +52,23 @@ describe('parseStrykerReport — mini fixtures (schemaVersion 1.6)', () => {
     expect(newFeature.mutants.every((m) => m.status === 'no_coverage')).toBe(true);
   });
 
-  it('preserves mutant line, mutator and id', () => {
+  it('preserves mutant line, mutator, description and id', () => {
     const calculator = unit(base, 'src/calculator.js');
     const first = calculator.mutants.find((m) => m.line === 2);
     expect(first).toBeDefined();
     expect(first?.status).toBe('killed');
     expect(first?.mutator).toBe('ArithmeticOperator');
+    expect(first?.description).toBe('a - b');
     expect(first?.id).toBe('1');
+  });
+
+  it('includes the optional label when provided, omits the key otherwise', () => {
+    const withLabel = parseStrykerReport(readFixture('mini/base.json'), {
+      createdAt: '2026-01-01T00:00:00.000Z',
+      label: 'release-1.2',
+    });
+    expect(withLabel.label).toBe('release-1.2');
+    expect('label' in base).toBe(false);
   });
 
   it('computes per-unit metrics from the mapped statuses', () => {
@@ -86,8 +101,12 @@ describe('parseStrykerReport — mini fixtures (schemaVersion 1.6)', () => {
 });
 
 describe('parseStrykerReport — realistic fixtures (schemaVersion 2.0)', () => {
-  const base = parseStrykerReport(readFixture('realistic/base.json'), {
-    createdAt: '2026-01-01T00:00:00.000Z',
+  let base: ReturnType<typeof parseStrykerReport>;
+
+  beforeAll(() => {
+    base = parseStrykerReport(readFixture('realistic/base.json'), {
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
   });
 
   it('maps Timeout, RuntimeError and Ignored to timeout/error/ignored', () => {
@@ -164,13 +183,92 @@ describe('parseStrykerReport — schema version handling', () => {
   it('rejects an unsupported major schemaVersion', () => {
     expect(() =>
       parseStrykerReport(reportWith('3.0'), { createdAt: '2026-01-01T00:00:00.000Z' }),
-    ).toThrow(/schemaVersion|unsupported|stryker/i);
+    ).toThrow(
+      'Invalid Stryker report: unsupported schemaVersion "3.0" (only 1.x and 2.x are supported)',
+    );
+  });
+
+  it('rejects a multi-digit major version even though it starts with a supported digit', () => {
+    // Regression test for splitting on '.' rather than taking the first character:
+    // "22.0" must NOT be accepted just because it starts with "2".
+    expect(() =>
+      parseStrykerReport(reportWith('22.0'), { createdAt: '2026-01-01T00:00:00.000Z' }),
+    ).toThrow('unsupported schemaVersion "22.0"');
   });
 
   it('rejects a report with a missing schemaVersion', () => {
     expect(() =>
       parseStrykerReport(JSON.stringify({ files: {} }), { createdAt: '2026-01-01T00:00:00.000Z' }),
-    ).toThrow(/schemaVersion|invalid|stryker/i);
+    ).toThrow('Invalid Stryker report: missing or non-string "schemaVersion"');
+  });
+});
+
+describe('parseStrykerReport — additional status mappings and defaults', () => {
+  function fileWith(mutant: Record<string, unknown>): string {
+    return JSON.stringify({
+      schemaVersion: '2.0',
+      files: { 'src/a.js': { language: 'javascript', mutants: [mutant] } },
+    });
+  }
+
+  it('maps CompileError to the "error" status', () => {
+    const run = parseStrykerReport(
+      fileWith({
+        id: '1',
+        mutatorName: 'm',
+        status: 'CompileError',
+        location: { start: { line: 1 } },
+      }),
+      { createdAt: '2026-01-01T00:00:00.000Z' },
+    );
+    expect(run.units[0]?.mutants[0]?.status).toBe('error');
+  });
+
+  it('defaults id and mutator to an empty string when absent', () => {
+    const run = parseStrykerReport(
+      fileWith({ status: 'Killed', location: { start: { line: 1 } } }),
+      {
+        createdAt: '2026-01-01T00:00:00.000Z',
+      },
+    );
+    expect(run.units[0]?.mutants[0]?.id).toBe('');
+    expect(run.units[0]?.mutants[0]?.mutator).toBe('');
+  });
+
+  it('defaults line to 0 when location or location.start is absent', () => {
+    const noLocation = parseStrykerReport(fileWith({ id: '1', status: 'Killed' }), {
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
+    expect(noLocation.units[0]?.mutants[0]?.line).toBe(0);
+
+    const noStart = parseStrykerReport(fileWith({ id: '1', status: 'Killed', location: {} }), {
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
+    expect(noStart.units[0]?.mutants[0]?.line).toBe(0);
+  });
+
+  it('omits description entirely when "replacement" is absent (not just undefined)', () => {
+    const run = parseStrykerReport(
+      fileWith({ id: '1', status: 'Killed', location: { start: { line: 1 } } }),
+      { createdAt: '2026-01-01T00:00:00.000Z' },
+    );
+    expect('description' in (run.units[0]?.mutants[0] ?? {})).toBe(false);
+  });
+
+  it('returns an empty mutants array when a file entry has no "mutants" key', () => {
+    const report = JSON.stringify({
+      schemaVersion: '2.0',
+      files: { 'src/a.js': { language: 'javascript' } },
+    });
+    const run = parseStrykerReport(report, { createdAt: '2026-01-01T00:00:00.000Z' });
+    expect(run.units[0]?.mutants).toEqual([]);
+  });
+
+  it('throws a readable error when "files" is present but not an object', () => {
+    const report = JSON.stringify({ schemaVersion: '2.0', files: 'not-an-object' });
+    expect(() => parseStrykerReport(report, { createdAt: '2026-01-01T00:00:00.000Z' })).toThrow(
+      'Invalid Stryker report: missing "files" object',
+    );
   });
 });
 
@@ -178,7 +276,7 @@ describe('parseStrykerReport — invalid input', () => {
   it('throws a readable error for malformed JSON, not a raw parser stack trace', () => {
     expect(() =>
       parseStrykerReport('{ not valid json', { createdAt: '2026-01-01T00:00:00.000Z' }),
-    ).toThrow(/invalid|malformed|stryker/i);
+    ).toThrow('Invalid Stryker report: malformed JSON');
   });
 
   it('throws a readable error when the "files" key is missing', () => {
@@ -186,7 +284,7 @@ describe('parseStrykerReport — invalid input', () => {
       parseStrykerReport(JSON.stringify({ schemaVersion: '2.0' }), {
         createdAt: '2026-01-01T00:00:00.000Z',
       }),
-    ).toThrow(/invalid|malformed|stryker|files/i);
+    ).toThrow('Invalid Stryker report: missing "files" object');
   });
 
   it('throws a readable error for an unrecognized mutant status', () => {
@@ -210,7 +308,7 @@ describe('parseStrykerReport — invalid input', () => {
       },
     });
     expect(() => parseStrykerReport(report, { createdAt: '2026-01-01T00:00:00.000Z' })).toThrow(
-      /status|stryker/i,
+      'Invalid Stryker report: unrecognized mutant status "SomeFutureStatus" in file "src/a.js"',
     );
   });
 

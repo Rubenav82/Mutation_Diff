@@ -15,32 +15,31 @@ export interface CompareOptions {
 const DEFAULT_REGRESSION_THRESHOLD = 0;
 const DEFAULT_UNCOVERED_THRESHOLD = 100;
 
-function isUncovered(metrics: UnitMetrics | undefined, threshold: number): boolean {
-  if (!metrics || metrics.total === 0) {
-    return false;
-  }
+function isUncovered(metrics: UnitMetrics, threshold: number): boolean {
+  // 0/0 is NaN, and NaN >= threshold is always false, so a zero-mutant unit
+  // is naturally never flagged without needing an explicit total === 0 guard.
   return (metrics.noCoverage / metrics.total) * 100 >= threshold;
 }
 
+// `key` is passed in rather than derived from baseUnit/headUnit: the caller (compareRuns)
+// always builds it from the union of both runs' unit keys, so at least one of baseUnit/headUnit
+// is guaranteed defined here — there is no third "neither" case to guard against.
 function classify(
+  key: string,
   baseUnit: UnitResult | undefined,
   headUnit: UnitResult | undefined,
   regressionThreshold: number,
   uncoveredThreshold: number,
 ): UnitComparison {
-  const key = (headUnit ?? baseUnit)?.key;
-  if (!key) {
-    throw new Error('Cannot classify a comparison with neither a base nor a head unit');
-  }
-
   if (!baseUnit) {
+    const head = headUnit as UnitResult;
     return {
       key,
       kind: 'added',
-      ...(headUnit ? { head: headUnit.metrics } : {}),
+      head: head.metrics,
       scoreDelta: null,
       coverageDelta: null,
-      isUncovered: isUncovered(headUnit?.metrics, uncoveredThreshold),
+      isUncovered: isUncovered(head.metrics, uncoveredThreshold),
     };
   }
 
@@ -88,7 +87,7 @@ export function compareRuns(
   const allKeys = Array.from(new Set([...baseByKey.keys(), ...headByKey.keys()])).sort();
 
   const units = allKeys.map((key) =>
-    classify(baseByKey.get(key), headByKey.get(key), regressionThreshold, uncoveredThreshold),
+    classify(key, baseByKey.get(key), headByKey.get(key), regressionThreshold, uncoveredThreshold),
   );
 
   const regressions = units

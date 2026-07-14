@@ -95,6 +95,27 @@ describe('aggregateMetrics', () => {
     expect(aggregate.score).toBeCloseTo((11 / 12) * 100);
   });
 
+  it('sums timeout, error and ignored counts across units, not just killed/survived', () => {
+    const unitA: UnitResult = {
+      key: 'A',
+      displayName: 'A',
+      mutants: [],
+      metrics: calculateUnitMetrics([mutant('timeout', '1'), mutant('error', '2')]),
+    };
+    const unitB: UnitResult = {
+      key: 'B',
+      displayName: 'B',
+      mutants: [],
+      metrics: calculateUnitMetrics([mutant('timeout', '3'), mutant('ignored', '4')]),
+    };
+
+    const aggregate = aggregateMetrics([unitA, unitB]);
+
+    expect(aggregate.timeout).toBe(2);
+    expect(aggregate.error).toBe(1);
+    expect(aggregate.ignored).toBe(1);
+  });
+
   it('returns all zeros for an empty unit list', () => {
     expect(aggregateMetrics([])).toEqual({
       total: 0,

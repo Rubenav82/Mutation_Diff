@@ -5,7 +5,13 @@ import prettier from 'eslint-config-prettier';
 
 export default tseslint.config(
   {
-    ignores: ['**/dist/**', '**/coverage/**', '**/*.tsbuildinfo'],
+    ignores: [
+      '**/dist/**',
+      '**/coverage/**',
+      '**/*.tsbuildinfo',
+      '**/.stryker-tmp/**',
+      '**/reports/**',
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { parsePitestReport } from './pitestParser.js';
 
 const fixturesDir = fileURLToPath(new URL('../../test/fixtures/pitest/', import.meta.url));
@@ -16,11 +16,16 @@ function unit(run: ReturnType<typeof parsePitestReport>, key: string) {
 }
 
 describe('parsePitestReport — mini fixtures', () => {
-  const base = parsePitestReport(readFixture('mini/base.xml'), {
-    createdAt: '2026-01-01T00:00:00.000Z',
-  });
-  const head = parsePitestReport(readFixture('mini/head.xml'), {
-    createdAt: '2026-01-02T00:00:00.000Z',
+  let base: ReturnType<typeof parsePitestReport>;
+  let head: ReturnType<typeof parsePitestReport>;
+
+  beforeAll(() => {
+    base = parsePitestReport(readFixture('mini/base.xml'), {
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
+    head = parsePitestReport(readFixture('mini/head.xml'), {
+      createdAt: '2026-01-02T00:00:00.000Z',
+    });
   });
 
   it('sets tool and passthrough metadata', () => {
@@ -47,13 +52,29 @@ describe('parsePitestReport — mini fixtures', () => {
     expect(newFeature.mutants.every((m) => m.status === 'no_coverage')).toBe(true);
   });
 
-  it('preserves mutant line, mutator and id', () => {
+  it('preserves mutant line, mutator, description and id', () => {
     const calculator = unit(base, 'com.example.Calculator');
     const addMutant = calculator.mutants.find((m) => m.line === 10);
     expect(addMutant).toBeDefined();
     expect(addMutant?.status).toBe('killed');
     expect(addMutant?.mutator).toBe('org.pitest.mutationtest.engine.gregor.mutators.MathMutator');
+    expect(addMutant?.description).toBe('Replaced integer addition with subtraction');
     expect(addMutant?.id).toBeTruthy();
+  });
+
+  it('assigns distinct, increasing ids across mutants in parse order', () => {
+    const calculator = unit(base, 'com.example.Calculator');
+    const ids = calculator.mutants.map((m) => Number(m.id));
+    expect(ids[1]).toBe((ids[0] ?? 0) + 1);
+  });
+
+  it('includes the optional label when provided, omits the key otherwise', () => {
+    const withLabel = parsePitestReport(readFixture('mini/base.xml'), {
+      createdAt: '2026-01-01T00:00:00.000Z',
+      label: 'release-1.2',
+    });
+    expect(withLabel.label).toBe('release-1.2');
+    expect('label' in base).toBe(false);
   });
 
   it('computes per-unit metrics from the mapped statuses', () => {
@@ -91,8 +112,12 @@ describe('parsePitestReport — mini fixtures', () => {
 });
 
 describe('parsePitestReport — realistic fixtures', () => {
-  const base = parsePitestReport(readFixture('realistic/base.xml'), {
-    createdAt: '2026-01-01T00:00:00.000Z',
+  let base: ReturnType<typeof parsePitestReport>;
+
+  beforeAll(() => {
+    base = parsePitestReport(readFixture('realistic/base.xml'), {
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
   });
 
   it('maps TIMED_OUT and RUN_ERROR to timeout/error', () => {
@@ -142,7 +167,7 @@ describe('parsePitestReport — invalid input', () => {
   it('throws a readable error for malformed XML, not a raw parser stack trace', () => {
     expect(() =>
       parsePitestReport('<mutations><mutation>', { createdAt: '2026-01-01T00:00:00.000Z' }),
-    ).toThrow(/invalid|malformed|pitest/i);
+    ).toThrow(/Invalid PiTest report: malformed XML \(.+ at line \d+\)/);
   });
 
   it('throws a readable error when the root <mutations> element is missing', () => {
@@ -150,6 +175,92 @@ describe('parsePitestReport — invalid input', () => {
       parsePitestReport('<?xml version="1.0"?><notMutations></notMutations>', {
         createdAt: '2026-01-01T00:00:00.000Z',
       }),
-    ).toThrow(/invalid|malformed|pitest/i);
+    ).toThrow('Invalid PiTest report: missing <mutations> root element');
+  });
+
+  it('throws a readable error for a mutation with an unrecognized status', () => {
+    const xml = `<?xml version="1.0"?><mutations>
+      <mutation detected='false' status='SOME_FUTURE_STATUS'>
+        <mutatedClass>com.example.A</mutatedClass>
+        <mutator>m</mutator>
+        <lineNumber>1</lineNumber>
+      </mutation>
+    </mutations>`;
+    expect(() => parsePitestReport(xml, { createdAt: '2026-01-01T00:00:00.000Z' })).toThrow(
+      'Invalid PiTest report: unrecognized mutation status "SOME_FUTURE_STATUS" in class "com.example.A"',
+    );
+  });
+
+  it('throws a readable error for a mutation missing <mutatedClass>', () => {
+    const xml = `<?xml version="1.0"?><mutations>
+      <mutation detected='true' status='KILLED'>
+        <mutator>m</mutator>
+        <lineNumber>1</lineNumber>
+      </mutation>
+    </mutations>`;
+    expect(() => parsePitestReport(xml, { createdAt: '2026-01-01T00:00:00.000Z' })).toThrow(
+      'Invalid PiTest report: a <mutation> is missing <mutatedClass>',
+    );
+  });
+});
+
+describe('parsePitestReport — additional status mappings and defaults', () => {
+  it('maps MEMORY_ERROR and NON_VIABLE to the "error" status', () => {
+    const xml = `<?xml version="1.0"?><mutations>
+      <mutation detected='false' status='MEMORY_ERROR'>
+        <mutatedClass>com.example.A</mutatedClass>
+        <mutator>m</mutator>
+        <lineNumber>1</lineNumber>
+      </mutation>
+      <mutation detected='false' status='NON_VIABLE'>
+        <mutatedClass>com.example.A</mutatedClass>
+        <mutator>m</mutator>
+        <lineNumber>2</lineNumber>
+      </mutation>
+    </mutations>`;
+    const run = parsePitestReport(xml, { createdAt: '2026-01-01T00:00:00.000Z' });
+    expect(run.units[0]?.mutants.map((m) => m.status)).toEqual(['error', 'error']);
+  });
+
+  it('defaults mutator to an empty string when <mutator> is absent', () => {
+    const xml = `<?xml version="1.0"?><mutations>
+      <mutation detected='true' status='KILLED'>
+        <mutatedClass>com.example.A</mutatedClass>
+        <lineNumber>1</lineNumber>
+      </mutation>
+    </mutations>`;
+    const run = parsePitestReport(xml, { createdAt: '2026-01-01T00:00:00.000Z' });
+    expect(run.units[0]?.mutants[0]?.mutator).toBe('');
+  });
+
+  it('omits description entirely when <description> is absent (not just undefined)', () => {
+    const xml = `<?xml version="1.0"?><mutations>
+      <mutation detected='true' status='KILLED'>
+        <mutatedClass>com.example.A</mutatedClass>
+        <mutator>m</mutator>
+        <lineNumber>1</lineNumber>
+      </mutation>
+    </mutations>`;
+    const run = parsePitestReport(xml, { createdAt: '2026-01-01T00:00:00.000Z' });
+    expect('description' in (run.units[0]?.mutants[0] ?? {})).toBe(false);
+  });
+
+  it('correctly parses a single <mutation> (isArray forcing behaviour)', () => {
+    const xml = `<?xml version="1.0"?><mutations>
+      <mutation detected='true' status='KILLED'>
+        <mutatedClass>com.example.Solo</mutatedClass>
+        <mutator>m</mutator>
+        <lineNumber>1</lineNumber>
+      </mutation>
+    </mutations>`;
+    const run = parsePitestReport(xml, { createdAt: '2026-01-01T00:00:00.000Z' });
+    expect(run.units).toHaveLength(1);
+    expect(run.units[0]?.mutants).toHaveLength(1);
+  });
+
+  it('returns no units when <mutations> has content but no <mutation> children', () => {
+    const xml = '<?xml version="1.0"?><mutations><unrelated/></mutations>';
+    const run = parsePitestReport(xml, { createdAt: '2026-01-01T00:00:00.000Z' });
+    expect(run.units).toEqual([]);
   });
 });
