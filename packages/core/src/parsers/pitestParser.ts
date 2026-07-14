@@ -54,8 +54,9 @@ export function parsePitestReport(xml: string, options: ParsePitestOptions): Nor
   }
 
   // An empty or self-closed <mutations/> root parses to '' rather than an object.
+  // The `'mutations' in parsed` check above already guarantees it's never undefined here.
   const rawMutations =
-    typeof parsed.mutations === 'string' ? [] : (parsed.mutations?.mutation ?? []);
+    typeof parsed.mutations === 'string' ? [] : (parsed.mutations!.mutation ?? []);
   const mutantsByClass = new Map<string, Mutant[]>();
   let nextId = 0;
 

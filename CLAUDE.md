@@ -44,6 +44,20 @@ npm run mutation         # Stryker sobre packages/core (ejecutar antes de cerrar
 
 (Si algún script aún no existe, créalo en la tarea de bootstrap correspondiente.)
 
+## Mutation testing (Stryker)
+
+- Config en `stryker.config.json` **en la raíz del repo**, no dentro de `packages/core`: el vitest runner de Stryker sandboxea el directorio desde el que se ejecuta, y `packages/core/vitest.config.ts` importa `../../vitest.shared.ts`, fuera de ese sandbox si se corre desde dentro del paquete. `npm run mutation` ejecuta `stryker run` desde la raíz por eso. `mutate` está acotado a `packages/core/src` (único paquete con código por ahora); si se generaliza a más paquetes, ampliar el patrón ahí, no crear un config por paquete.
+- Umbrales en `stryker.config.json`: `low: 70` (mínimo de `docs/constitution.md` #2), `high: 85` (objetivo), `break: 70` (falla el comando por debajo de 70).
+- `.stryker-tmp/` y `reports/` están en `.gitignore` y excluidos en `eslint.config.js` (son sandbox temporal y reporte HTML generado; sin excluirlos en ESLint, lintear falla sobre código instrumentado del sandbox tras cada ejecución).
+
+**Lección de la primera pasada (score iba de 56% a 99.4% con un solo cambio estructural)**: los tests de `packages/core` computaban sus fixtures con `const base = parseXxx(...)` **a nivel superior de un `describe()`**, no dentro de un `it()` ni de un `beforeAll()`. Si esa llamada lanza (p. ej. por un mutante que rompe el parser), Vitest no registra ningún test como fallido — el fichero entero queda en "0 tests" y Stryker lo interpreta como "el mutante no rompió nada", así que el mutante sobrevive aunque el código esté realmente roto. Regla para todo test nuevo en este proyecto: si el fixture depende de una función que puede lanzar, constrúyelo dentro de un `beforeAll()` (con `let x: T` declarado fuera), nunca en un `const` a nivel de `describe()`. Ya corregido en `pitestParser.test.ts`, `strykerParser.test.ts`, `comparisonEngine.test.ts` y `htmlReportGenerator.test.ts`.
+
+**Otras lecciones de esa misma pasada**:
+- Los mensajes de error (`fail('...')` en los parsers) hay que testearlos con el string exacto (`toThrow('mensaje completo')`), no con una regex genérica tipo `/invalid|malformed|pitest/i` — esa regex sigue haciendo match aunque el mutante vacíe el contenido del mensaje, porque el prefijo constante ("Invalid PiTest report: ") ya la satisface.
+- Cualquier rama alcanzable solo a través de un valor opcional (`options.label`, un campo ausente en el JSON/XML de entrada) necesita su propio test explícito; si nunca se ejercita, Stryker lo marca `NoCoverage` y cuenta como no cubierto igual que un survived.
+- Mutation testing también encontró dos casos de código muerto real (no solo tests débiles), eliminados en vez de "testeados a la fuerza": el guard `!baseUnit && !headUnit` en `comparisonEngine.ts` (inalcanzable — `compareRuns` solo llama `classify` con claves que existen en al menos uno de los dos mapas) y el guard `metrics.total === 0` en `isUncovered` (redundante — `0/0*100 >= threshold` ya es `NaN >= threshold`, siempre `false`). Cuando un mutante sobrevive, comprobar primero si el código es genuinely inalcanzable/redundante antes de forzar un test artificial.
+- Un puñado de mutantes en la rama `typeof parsed.mutations === 'string' ? [] : ...` de `pitestParser.ts` son equivalentes de verdad (el `ternary` existe solo para que TypeScript estreche el tipo unión antes de acceder a `.mutation`; en runtime ambas ramas devuelven `[]` para los mismos valores). No merece la pena perseguirlos.
+
 ## Estructura del monorepo (fijada en T-001)
 
 - Los paquetes se nombran **sin scope** (`core`, y luego `server`, `web`) para que funcionen los comandos documentados tipo `npm run test -w core`.
