@@ -18,10 +18,13 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
-    "dev": "echo \"dev script se define en T-020 (server) y T-030 (web)\" && exit 0"
+    "dev": "echo \"dev script se define en T-020 (server) y T-030 (web)\" && exit 0",
+    "mutation": "stryker run"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@stryker-mutator/core": "^9.6.1",
+    "@stryker-mutator/vitest-runner": "^9.6.1",
     "@types/node": "^26.1.1",
     "@vitest/coverage-v8": "^4.1.10",
     "eslint": "^10.6.0",
