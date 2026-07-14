@@ -53,6 +53,50 @@ npm run mutation         # Stryker sobre packages/core (ejecutar antes de cerrar
 - El `vitest.config.ts` raíz agrega los paquetes vía `test.projects: ['packages/*']` y centraliza la config de `coverage`.
 - Al añadir un paquete nuevo, registra su `reference` en el `tsconfig.json` raíz.
 - Toolchain: ESLint 10 (flat config en `eslint.config.js`), Prettier 3 (ignora `docs/`, `*.md` y `.claude/`), TypeScript strict con extras (`noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`), Vitest 4.
+- `tsconfig.base.json` fija `"types": ["node"]` explícitamente: sin esto, `tsc` no resuelve `node:*` ni `import.meta.url` de forma fiable en los workspaces anidados.
+- `.gitattributes` fuerza `eol=lf` en todo el repo: Windows con `core.autocrlf=true` reescribe a CRLF en cada checkout y rompe `prettier --check` en todos los ficheros de texto. Si vuelve a aparecer ese patrón de fallo masivo de lint, revisa esto antes que el contenido de los ficheros.
+
+## Fixtures de `packages/core/test/fixtures/` (fijadas en T-010)
+
+Cada herramienta tiene un par `mini/` (pequeño, verificable a mano) y `realistic/` (varias clases/ficheros, más variedad de estados). Dentro de cada par, `base.*`/`head.*` están diseñados para ejercitar, ya en T-014/T-015, los cinco tipos de `UnitChangeKind` más el umbral de cobertura:
+
+- **unchanged**: `com.example.MathHelper` (PiTest) / `src/mathHelper.js` y `src/billing/util/currencyFormatter.js` (Stryker).
+- **improved**: `com.example.Calculator` / `com.acme.billing.InvoiceService` y `PaymentGateway` (PiTest); `src/calculator.js` / `invoiceService.js` y `paymentGateway.js` (Stryker).
+- **regressed**: `com.example.StringUtils` / `com.acme.billing.TaxCalculator` (PiTest); `stringUtils.js` / `taxCalculator.js` (Stryker).
+- **added**: `com.example.NewFeature` / `com.acme.billing.RefundService` (PiTest); `newFeature.js` / `refundService.js` (Stryker) — `RefundService`/`refundService.js` queda además al 75% de `NO_COVERAGE`, útil como caso límite del umbral configurable de "sin cobertura" (CA-HU-05).
+- **removed**: `com.example.Legacy` / `com.acme.notifications.LegacyNotifier` (PiTest); `legacy.js` / `legacyNotifier.js` (Stryker).
+- **uncovered ya en base**: `com.acme.notifications.EmailSender` (PiTest) / `emailSender.js` (Stryker), 100% `NO_COVERAGE` en ambas ejecuciones.
+
+Las fixtures Stryker realistas usan `schemaVersion: "2.0"` con bloque `testFiles`; las mini usan `"1.6"` sin él. Los campos que importan al dominio (`status`, `mutatorName`, `location.start.line`) son estables entre 1.x/2.x; si T-012 encuentra diferencias reales de schema no cubiertas aquí, ampliar las fixtures en esa misma tarea en vez de asumir.
+
+## Modelo de dominio y parsers (fijado en T-011)
+
+- `packages/core/src/domain/types.ts` fija los tipos de `docs/plan.md` §2.3 (`Tool`, `Mutant`, `UnitResult`, `UnitMetrics`, `NormalizedRun`); `UnitChangeKind`/`UnitComparison`/`ComparisonResult` se añaden en T-014, no antes.
+- `docs/tasks.md` separa T-011/T-012 (parsers) de T-013 ("Cálculo de UnitMetrics y agregado global"), pero `UnitResult.metrics` y `NormalizedRun.metrics` son campos obligatorios del tipo: un parser no puede devolver un `NormalizedRun` válido sin ellos. Decisión: `domain/metrics.ts` (`calculateUnitMetrics`, `aggregateMetrics`) se implementó ya en T-011, con tests propios (casos borde incl. `validTotal = 0`), y la reutilizan tanto `PitestParser` como (en T-012) `StrykerParser`. T-013 no es una reimplementación; es la tarea para ampliar los casos borde de esa lógica si aparecen (p. ej. redondeo, umbrales) según lo que exija T-014/T-015.
+- `PitestParser.parsePitestReport(xml, { createdAt, label? })`: `createdAt` es obligatorio y lo aporta la capa I/O (server/CLI) — `core` no llama a `Date.now()`, se mantiene puro y determinista/testeable.
+- Validación de XML: `XMLValidator.validate()` de `fast-xml-parser` antes de `parse()` (el parser en sí es permisivo y no lanza con XML mal formado). Estados PiTest no reconocidos (fuera de KILLED/SURVIVED/NO_COVERAGE/TIMED_OUT/RUN_ERROR/MEMORY_ERROR/NON_VIABLE) lanzan error explícito en vez de mapearse por defecto — evita clasificar mal un estado de un futuro schema no soportado.
+- `Mutant.id` es un contador secuencial asignado por el parser (PiTest no expone id de mutante); no tiene significado fuera del `NormalizedRun` en el que se generó.
+- `StrykerParser.parseStrykerReport(json, { createdAt, label? })` (T-012): mismo contrato que `PitestParser`. Soporte de `schemaVersion` 1.x/2.x implementado como validación de versión mayor (`"1"`/`"2"` antes del primer punto), no como dos rutas de parseo distintas — los campos usados (`status`, `mutatorName`, `location.start.line`, `files{}`) son estables entre subversiones, confirmado al construir las fixtures realistas en `schemaVersion: "2.0"` con bloque `testFiles` (T-010) sin que afecte al parseo. Un `schemaVersion` con major fuera de `{1,2}`, ausente o no-string lanza error explícito.
+- Los `key` de Stryker (rutas de fichero) se normalizan con `path.replace(/\\/g, '/')` antes de agruparse, para que un reporte generado en Windows compare igual que uno generado en CI Linux.
+- Campos de Stryker no usados por el modelo de dominio (`coveredBy`, `killedBy`, `testFiles`) se ignoran deliberadamente en T-011/T-012; no forman parte de `Mutant`/`UnitResult` en `docs/plan.md` §2.3.
+- **T-013** (edge case real encontrado): un `<mutations></mutations>` o `<mutations/>` vacío parsea con `fast-xml-parser` a `{ mutations: '' }` (string vacío), no a un objeto — un check `!parsed.mutations` lo trataba como "root ausente" y lanzaba error, cuando en realidad es un reporte vacío válido (caso borde listado en `docs/plan.md` §2.6). Corregido en `PitestParser` distinguiendo `'mutations' in parsed` (root realmente ausente → error) de `typeof parsed.mutations === 'string'` (root vacío → `units: []`). Stryker no tenía este bug (`files: {}` ya es un objeto válido). Si se toca la lógica de parseo de XML de nuevo, tener presente que fast-xml-parser no siempre devuelve un objeto para elementos vacíos.
+
+## ComparisonEngine (fijado en T-014, incluye T-015)
+
+- `packages/core/src/compare/comparisonEngine.ts`: `compareRuns(base, head, { regressionThreshold?, uncoveredThreshold? })`. Mismo patrón que T-011/T-013: el tipo `UnitComparison` obliga a rellenar `isUncovered` para cada unidad, así que T-015 ("Detección `isUncovered` con umbral") se implementó ya dentro de T-014 en vez de dejarlo pendiente — no hay una segunda pasada que hacer, ambas casillas de `docs/tasks.md` se marcaron juntas.
+- Clasificación (CA-HU-05, literal): `scoreDelta = head.score - base.score`; `scoreDelta > 0` → `improved`; `scoreDelta < -regressionThreshold` → `regressed`; en cualquier otro caso (incluye caídas pequeñas dentro del umbral) → `unchanged`. `regressionThreshold` por defecto `0`.
+- `isUncovered` (CA-HU-05, segunda cláusula): `(noCoverage / total) * 100 >= uncoveredThreshold` sobre las métricas de **head** (no `validTotal`: la fórmula del spec usa `total`). Umbral por defecto `100`; las unidades `removed` siempre son `isUncovered: false` (no hay `head` que evaluar). `total === 0` también da `false` (evita `NaN`).
+- `base`/`head` en `UnitComparison` son `UnitMetrics` opcionales rellenados solo para el lado que exista (unidades `added` no tienen `base`, `removed` no tienen `head`); `scoreDelta`/`coverageDelta` son `null` en ambos casos, no `0` — evita interpretar "sin datos" como "sin cambio".
+- `regressions` se ordena por `scoreDelta` ascendente (la caída más severa primero); `units` se ordena por `key` para salida determinista, aunque el modelo no lo exige explícitamente.
+- Comparar dos `NormalizedRun` con `tool` distinto (CA-HU-03) lanza error explícito en el propio motor, no solo en la capa HTTP futura (T-021 solo tendrá que mapearlo a 422).
+
+## Generador de reporte HTML (fijado en T-016 — cierra Fase 1)
+
+- `packages/core/src/report/htmlReportGenerator.ts`: `generateHtmlReport(result: ComparisonResult): string`, puro y sin I/O — escribir a disco es responsabilidad de `server`/CLI en fases posteriores.
+- CA-HU-07 exige exactamente 4 bloques (resumen, tabla completa, regresiones, sin cobertura); no se añadieron secciones de "nuevas"/"eliminadas" aparte porque el `kind` de cada fila ya lo indica en la tabla completa — evita duplicar contenido no pedido por el criterio de aceptación.
+- Sin `<script>`: la interactividad (filtrar/ordenar) es de la SPA (T-033/034), no del export estático; el informe es HTML+CSS inline puro. Si en el futuro se pide interactividad offline en el propio export, añadirla ahí, no reabrir esta decisión sin motivo.
+- Seguridad: todo texto proveniente del reporte del usuario (`unit.key`, `tool`) pasa por `escapeHtml()` antes de interpolarse — un `mutatedClass`/ruta de fichero maliciosa (p. ej. `<img src=x onerror=...>`) no puede inyectar HTML/JS en el informe exportado. Cubierto por test dedicado.
+- Test de presupuesto de tamaño (CA-HU-07, "< 2 MB para hasta 5.000 clases") implementado literalmente: genera 5000 `UnitComparison` sintéticas y verifica `Buffer.byteLength(html, 'utf-8') < 2 MB`. Si se añade markup por fila en el futuro, este test es la señal de alarma real, no una estimación a ojo.
 
 ## Convenciones
 

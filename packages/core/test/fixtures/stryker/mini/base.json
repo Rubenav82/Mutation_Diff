@@ -1,0 +1,71 @@
+{
+  "schemaVersion": "1.6",
+  "thresholds": { "high": 80, "low": 60 },
+  "files": {
+    "src/calculator.js": {
+      "language": "javascript",
+      "mutants": [
+        {
+          "id": "1",
+          "mutatorName": "ArithmeticOperator",
+          "replacement": "a - b",
+          "status": "Killed",
+          "location": { "start": { "line": 2, "column": 10 }, "end": { "line": 2, "column": 15 } },
+          "coveredBy": ["1"],
+          "killedBy": ["1"]
+        },
+        {
+          "id": "2",
+          "mutatorName": "ArithmeticOperator",
+          "replacement": "a + b",
+          "status": "Survived",
+          "location": { "start": { "line": 6, "column": 10 }, "end": { "line": 6, "column": 15 } },
+          "coveredBy": ["1"],
+          "killedBy": []
+        }
+      ]
+    },
+    "src/stringUtils.js": {
+      "language": "javascript",
+      "mutants": [
+        {
+          "id": "3",
+          "mutatorName": "BooleanLiteral",
+          "replacement": "false",
+          "status": "Killed",
+          "location": { "start": { "line": 3, "column": 5 }, "end": { "line": 3, "column": 10 } },
+          "coveredBy": ["2"],
+          "killedBy": ["2"]
+        }
+      ]
+    },
+    "src/mathHelper.js": {
+      "language": "javascript",
+      "mutants": [
+        {
+          "id": "4",
+          "mutatorName": "ArithmeticOperator",
+          "replacement": "a / b",
+          "status": "Killed",
+          "location": { "start": { "line": 4, "column": 8 }, "end": { "line": 4, "column": 13 } },
+          "coveredBy": ["3"],
+          "killedBy": ["3"]
+        }
+      ]
+    },
+    "src/legacy.js": {
+      "language": "javascript",
+      "mutants": [
+        {
+          "id": "5",
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": { "start": { "line": 8, "column": 1 }, "end": { "line": 10, "column": 2 } },
+          "coveredBy": ["4"],
+          "killedBy": ["4"]
+        }
+      ]
+    }
+  }
+}

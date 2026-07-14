@@ -7,13 +7,13 @@
 - [x] T-002 CI básico (lint, typecheck, test).
 
 ### Fase 1 — Core (TDD puro)
-- [ ] T-010 Fixtures: 2 pares de reportes PiTest y 2 pares Stryker (mini y realista).
-- [ ] T-011 `PitestParser` → NormalizedRun (tests primero).
-- [ ] T-012 `StrykerParser` → NormalizedRun (soportar schemaVersion 1.x y 2.x).
-- [ ] T-013 Cálculo de `UnitMetrics` y agregado global.
-- [ ] T-014 `ComparisonEngine`: clasificación improved/regressed/added/removed/unchanged, umbrales configurables, orden de regresiones.
-- [ ] T-015 Detección `isUncovered` con umbral.
-- [ ] T-016 Generador de reporte HTML autocontenido (plantilla + inline CSS/JS + datos embebidos).
+- [x] T-010 Fixtures: 2 pares de reportes PiTest y 2 pares Stryker (mini y realista).
+- [x] T-011 `PitestParser` → NormalizedRun (tests primero).
+- [x] T-012 `StrykerParser` → NormalizedRun (soportar schemaVersion 1.x y 2.x).
+- [x] T-013 Cálculo de `UnitMetrics` y agregado global.
+- [x] T-014 `ComparisonEngine`: clasificación improved/regressed/added/removed/unchanged, umbrales configurables, orden de regresiones.
+- [x] T-015 Detección `isUncovered` con umbral.
+- [x] T-016 Generador de reporte HTML autocontenido (plantilla + inline CSS/JS + datos embebidos).
 
 ### Fase 2 — Server
 - [ ] T-020 Express + multer + validación Zod + límites de tamaño.
@@ -38,7 +38,6 @@
 - [ ] T-042 README con quickstart y ejemplos.
 
 ### Fase 5 (v2)
-- [ ] T-045 Soporte ZIP/carpeta para PiTest: extracción, filtrado y fusión de múltiples `mutations.xml` (server + filtro en cliente con `webkitdirectory`).
 - [ ] T-050 Persistencia SQLite: tablas projects/runs, endpoints de proyectos, guardado opt-in desde el dashboard, histórico y gráfico de evolución.
 - [ ] T-051 Atribución de autor vía git log.
 - [ ] T-052 Modo CLI reutilizando `core` (para integrarlo en pipelines).
