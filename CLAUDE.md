@@ -69,6 +69,14 @@ Cada herramienta tiene un par `mini/` (pequeño, verificable a mano) y `realisti
 
 Las fixtures Stryker realistas usan `schemaVersion: "2.0"` con bloque `testFiles`; las mini usan `"1.6"` sin él. Los campos que importan al dominio (`status`, `mutatorName`, `location.start.line`) son estables entre 1.x/2.x; si T-012 encuentra diferencias reales de schema no cubiertas aquí, ampliar las fixtures en esa misma tarea en vez de asumir.
 
+## Modelo de dominio y parsers (fijado en T-011)
+
+- `packages/core/src/domain/types.ts` fija los tipos de `docs/plan.md` §2.3 (`Tool`, `Mutant`, `UnitResult`, `UnitMetrics`, `NormalizedRun`); `UnitChangeKind`/`UnitComparison`/`ComparisonResult` se añaden en T-014, no antes.
+- `docs/tasks.md` separa T-011/T-012 (parsers) de T-013 ("Cálculo de UnitMetrics y agregado global"), pero `UnitResult.metrics` y `NormalizedRun.metrics` son campos obligatorios del tipo: un parser no puede devolver un `NormalizedRun` válido sin ellos. Decisión: `domain/metrics.ts` (`calculateUnitMetrics`, `aggregateMetrics`) se implementó ya en T-011, con tests propios (casos borde incl. `validTotal = 0`), y la reutilizan tanto `PitestParser` como (en T-012) `StrykerParser`. T-013 no es una reimplementación; es la tarea para ampliar los casos borde de esa lógica si aparecen (p. ej. redondeo, umbrales) según lo que exija T-014/T-015.
+- `PitestParser.parsePitestReport(xml, { createdAt, label? })`: `createdAt` es obligatorio y lo aporta la capa I/O (server/CLI) — `core` no llama a `Date.now()`, se mantiene puro y determinista/testeable.
+- Validación de XML: `XMLValidator.validate()` de `fast-xml-parser` antes de `parse()` (el parser en sí es permisivo y no lanza con XML mal formado). Estados PiTest no reconocidos (fuera de KILLED/SURVIVED/NO_COVERAGE/TIMED_OUT/RUN_ERROR/MEMORY_ERROR/NON_VIABLE) lanzan error explícito en vez de mapearse por defecto — evita clasificar mal un estado de un futuro schema no soportado.
+- `Mutant.id` es un contador secuencial asignado por el parser (PiTest no expone id de mutante); no tiene significado fuera del `NormalizedRun` en el que se generó.
+
 ## Convenciones
 
 - Nombres de código, tipos y comentarios de API en inglés; documentación de producto (docs/) en español.

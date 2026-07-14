@@ -16,5 +16,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
+  },
+  "dependencies": {
+    "fast-xml-parser": "^5.10.0"
   }
 }
