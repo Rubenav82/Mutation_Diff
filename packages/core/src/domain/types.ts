@@ -37,3 +37,25 @@ export interface NormalizedRun {
   units: UnitResult[];
   metrics: UnitMetrics;
 }
+
+export type UnitChangeKind = 'improved' | 'regressed' | 'unchanged' | 'added' | 'removed';
+
+export interface UnitComparison {
+  key: string;
+  kind: UnitChangeKind;
+  base?: UnitMetrics;
+  head?: UnitMetrics;
+  scoreDelta: number | null;
+  coverageDelta: number | null;
+  isUncovered: boolean;
+}
+
+export interface ComparisonResult {
+  tool: Tool;
+  global: { base: UnitMetrics; head: UnitMetrics; scoreDelta: number; coverageDelta: number };
+  units: UnitComparison[];
+  regressions: UnitComparison[];
+  uncovered: UnitComparison[];
+  added: UnitComparison[];
+  removed: UnitComparison[];
+}

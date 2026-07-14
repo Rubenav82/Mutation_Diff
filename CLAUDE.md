@@ -81,6 +81,15 @@ Las fixtures Stryker realistas usan `schemaVersion: "2.0"` con bloque `testFiles
 - Campos de Stryker no usados por el modelo de dominio (`coveredBy`, `killedBy`, `testFiles`) se ignoran deliberadamente en T-011/T-012; no forman parte de `Mutant`/`UnitResult` en `docs/plan.md` §2.3.
 - **T-013** (edge case real encontrado): un `<mutations></mutations>` o `<mutations/>` vacío parsea con `fast-xml-parser` a `{ mutations: '' }` (string vacío), no a un objeto — un check `!parsed.mutations` lo trataba como "root ausente" y lanzaba error, cuando en realidad es un reporte vacío válido (caso borde listado en `docs/plan.md` §2.6). Corregido en `PitestParser` distinguiendo `'mutations' in parsed` (root realmente ausente → error) de `typeof parsed.mutations === 'string'` (root vacío → `units: []`). Stryker no tenía este bug (`files: {}` ya es un objeto válido). Si se toca la lógica de parseo de XML de nuevo, tener presente que fast-xml-parser no siempre devuelve un objeto para elementos vacíos.
 
+## ComparisonEngine (fijado en T-014, incluye T-015)
+
+- `packages/core/src/compare/comparisonEngine.ts`: `compareRuns(base, head, { regressionThreshold?, uncoveredThreshold? })`. Mismo patrón que T-011/T-013: el tipo `UnitComparison` obliga a rellenar `isUncovered` para cada unidad, así que T-015 ("Detección `isUncovered` con umbral") se implementó ya dentro de T-014 en vez de dejarlo pendiente — no hay una segunda pasada que hacer, ambas casillas de `docs/tasks.md` se marcaron juntas.
+- Clasificación (CA-HU-05, literal): `scoreDelta = head.score - base.score`; `scoreDelta > 0` → `improved`; `scoreDelta < -regressionThreshold` → `regressed`; en cualquier otro caso (incluye caídas pequeñas dentro del umbral) → `unchanged`. `regressionThreshold` por defecto `0`.
+- `isUncovered` (CA-HU-05, segunda cláusula): `(noCoverage / total) * 100 >= uncoveredThreshold` sobre las métricas de **head** (no `validTotal`: la fórmula del spec usa `total`). Umbral por defecto `100`; las unidades `removed` siempre son `isUncovered: false` (no hay `head` que evaluar). `total === 0` también da `false` (evita `NaN`).
+- `base`/`head` en `UnitComparison` son `UnitMetrics` opcionales rellenados solo para el lado que exista (unidades `added` no tienen `base`, `removed` no tienen `head`); `scoreDelta`/`coverageDelta` son `null` en ambos casos, no `0` — evita interpretar "sin datos" como "sin cambio".
+- `regressions` se ordena por `scoreDelta` ascendente (la caída más severa primero); `units` se ordena por `key` para salida determinista, aunque el modelo no lo exige explícitamente.
+- Comparar dos `NormalizedRun` con `tool` distinto (CA-HU-03) lanza error explícito en el propio motor, no solo en la capa HTTP futura (T-021 solo tendrá que mapearlo a 422).
+
 ## Convenciones
 
 - Nombres de código, tipos y comentarios de API en inglés; documentación de producto (docs/) en español.

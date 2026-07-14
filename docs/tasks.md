@@ -11,8 +11,8 @@
 - [x] T-011 `PitestParser` → NormalizedRun (tests primero).
 - [x] T-012 `StrykerParser` → NormalizedRun (soportar schemaVersion 1.x y 2.x).
 - [x] T-013 Cálculo de `UnitMetrics` y agregado global.
-- [ ] T-014 `ComparisonEngine`: clasificación improved/regressed/added/removed/unchanged, umbrales configurables, orden de regresiones.
-- [ ] T-015 Detección `isUncovered` con umbral.
+- [x] T-014 `ComparisonEngine`: clasificación improved/regressed/added/removed/unchanged, umbrales configurables, orden de regresiones.
+- [x] T-015 Detección `isUncovered` con umbral.
 - [ ] T-016 Generador de reporte HTML autocontenido (plantilla + inline CSS/JS + datos embebidos).
 
 ### Fase 2 — Server
