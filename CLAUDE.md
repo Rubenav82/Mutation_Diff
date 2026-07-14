@@ -76,6 +76,9 @@ Las fixtures Stryker realistas usan `schemaVersion: "2.0"` con bloque `testFiles
 - `PitestParser.parsePitestReport(xml, { createdAt, label? })`: `createdAt` es obligatorio y lo aporta la capa I/O (server/CLI) — `core` no llama a `Date.now()`, se mantiene puro y determinista/testeable.
 - Validación de XML: `XMLValidator.validate()` de `fast-xml-parser` antes de `parse()` (el parser en sí es permisivo y no lanza con XML mal formado). Estados PiTest no reconocidos (fuera de KILLED/SURVIVED/NO_COVERAGE/TIMED_OUT/RUN_ERROR/MEMORY_ERROR/NON_VIABLE) lanzan error explícito en vez de mapearse por defecto — evita clasificar mal un estado de un futuro schema no soportado.
 - `Mutant.id` es un contador secuencial asignado por el parser (PiTest no expone id de mutante); no tiene significado fuera del `NormalizedRun` en el que se generó.
+- `StrykerParser.parseStrykerReport(json, { createdAt, label? })` (T-012): mismo contrato que `PitestParser`. Soporte de `schemaVersion` 1.x/2.x implementado como validación de versión mayor (`"1"`/`"2"` antes del primer punto), no como dos rutas de parseo distintas — los campos usados (`status`, `mutatorName`, `location.start.line`, `files{}`) son estables entre subversiones, confirmado al construir las fixtures realistas en `schemaVersion: "2.0"` con bloque `testFiles` (T-010) sin que afecte al parseo. Un `schemaVersion` con major fuera de `{1,2}`, ausente o no-string lanza error explícito.
+- Los `key` de Stryker (rutas de fichero) se normalizan con `path.replace(/\\/g, '/')` antes de agruparse, para que un reporte generado en Windows compare igual que uno generado en CI Linux.
+- Campos de Stryker no usados por el modelo de dominio (`coveredBy`, `killedBy`, `testFiles`) se ignoran deliberadamente en T-011/T-012; no forman parte de `Mutant`/`UnitResult` en `docs/plan.md` §2.3.
 
 ## Convenciones
 
