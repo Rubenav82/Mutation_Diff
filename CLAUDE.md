@@ -90,6 +90,14 @@ Las fixtures Stryker realistas usan `schemaVersion: "2.0"` con bloque `testFiles
 - `regressions` se ordena por `scoreDelta` ascendente (la caída más severa primero); `units` se ordena por `key` para salida determinista, aunque el modelo no lo exige explícitamente.
 - Comparar dos `NormalizedRun` con `tool` distinto (CA-HU-03) lanza error explícito en el propio motor, no solo en la capa HTTP futura (T-021 solo tendrá que mapearlo a 422).
 
+## Generador de reporte HTML (fijado en T-016 — cierra Fase 1)
+
+- `packages/core/src/report/htmlReportGenerator.ts`: `generateHtmlReport(result: ComparisonResult): string`, puro y sin I/O — escribir a disco es responsabilidad de `server`/CLI en fases posteriores.
+- CA-HU-07 exige exactamente 4 bloques (resumen, tabla completa, regresiones, sin cobertura); no se añadieron secciones de "nuevas"/"eliminadas" aparte porque el `kind` de cada fila ya lo indica en la tabla completa — evita duplicar contenido no pedido por el criterio de aceptación.
+- Sin `<script>`: la interactividad (filtrar/ordenar) es de la SPA (T-033/034), no del export estático; el informe es HTML+CSS inline puro. Si en el futuro se pide interactividad offline en el propio export, añadirla ahí, no reabrir esta decisión sin motivo.
+- Seguridad: todo texto proveniente del reporte del usuario (`unit.key`, `tool`) pasa por `escapeHtml()` antes de interpolarse — un `mutatedClass`/ruta de fichero maliciosa (p. ej. `<img src=x onerror=...>`) no puede inyectar HTML/JS en el informe exportado. Cubierto por test dedicado.
+- Test de presupuesto de tamaño (CA-HU-07, "< 2 MB para hasta 5.000 clases") implementado literalmente: genera 5000 `UnitComparison` sintéticas y verifica `Buffer.byteLength(html, 'utf-8') < 2 MB`. Si se añade markup por fila en el futuro, este test es la señal de alarma real, no una estimación a ojo.
+
 ## Convenciones
 
 - Nombres de código, tipos y comentarios de API en inglés; documentación de producto (docs/) en español.

@@ -5,3 +5,4 @@ export * from './domain/metrics.js';
 export * from './parsers/pitestParser.js';
 export * from './parsers/strykerParser.js';
 export * from './compare/comparisonEngine.js';
+export * from './report/htmlReportGenerator.js';

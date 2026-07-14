@@ -13,7 +13,7 @@
 - [x] T-013 Cálculo de `UnitMetrics` y agregado global.
 - [x] T-014 `ComparisonEngine`: clasificación improved/regressed/added/removed/unchanged, umbrales configurables, orden de regresiones.
 - [x] T-015 Detección `isUncovered` con umbral.
-- [ ] T-016 Generador de reporte HTML autocontenido (plantilla + inline CSS/JS + datos embebidos).
+- [x] T-016 Generador de reporte HTML autocontenido (plantilla + inline CSS/JS + datos embebidos).
 
 ### Fase 2 — Server
 - [ ] T-020 Express + multer + validación Zod + límites de tamaño.
