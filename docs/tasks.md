@@ -16,7 +16,7 @@
 - [x] T-016 Generador de reporte HTML autocontenido (plantilla + inline CSS/JS + datos embebidos).
 
 ### Fase 2 — Server
-- [ ] T-020 Express + multer + validación Zod + límites de tamaño.
+- [x] T-020 Express + multer + validación Zod + límites de tamaño.
 - [ ] T-021 `POST /api/comparisons` con detección/validación de herramienta.
 - [ ] T-022 `GET /api/comparisons/:id` (store en memoria con TTL).
 - [ ] T-023 `GET /api/comparisons/:id/report` (descarga HTML).

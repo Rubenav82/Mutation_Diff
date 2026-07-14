@@ -112,6 +112,19 @@ Las fixtures Stryker realistas usan `schemaVersion: "2.0"` con bloque `testFiles
 - Seguridad: todo texto proveniente del reporte del usuario (`unit.key`, `tool`) pasa por `escapeHtml()` antes de interpolarse — un `mutatedClass`/ruta de fichero maliciosa (p. ej. `<img src=x onerror=...>`) no puede inyectar HTML/JS en el informe exportado. Cubierto por test dedicado.
 - Test de presupuesto de tamaño (CA-HU-07, "< 2 MB para hasta 5.000 clases") implementado literalmente: genera 5000 `UnitComparison` sintéticas y verifica `Buffer.byteLength(html, 'utf-8') < 2 MB`. Si se añade markup por fila en el futuro, este test es la señal de alarma real, no una estimación a ojo.
 
+## `packages/server` (bootstrap fijado en T-020 — arranca Fase 2)
+
+- Mismo patrón de paquete que `core`: nombre sin scope (`server`), `tsconfig.json` extiende `../../tsconfig.base.json`, `vitest.config.ts` importa `sharedTest`, registrado en el `tsconfig.json` raíz.
+- `app.ts` exporta `createApp(): Express` — **sin llamar a `.listen()`**; eso es responsabilidad de un `server.ts`/script `dev` que aún no existe (ver nota más abajo). Esto es lo que permite testear con Supertest sin abrir un puerto real.
+- `errors.ts` es la pieza central de manejo homogéneo de errores (adelanta gran parte de T-024, no la totalidad — ver nota):
+  - `ApiError extends Error` con `status`/`code`/`message` explícitos.
+  - `errorHandler` (Express `ErrorRequestHandler`, 4 argumentos): `ApiError` → su propio status/código; `MulterError` con `code === 'LIMIT_FILE_SIZE'` → 413 `FILE_TOO_LARGE`; cualquier otro error → 500 `INTERNAL_ERROR` con mensaje genérico, **nunca** el mensaje ni el stack del error original (constitución: "ninguna respuesta de la API expone stack traces").
+  - `createApp()` monta un 404 homogéneo (`ApiError(404, 'NOT_FOUND', ...)`) para rutas no reconocidas, en vez de dejar la página HTML por defecto de Express — no hace falta esperar a tener rutas reales para que `createApp()` sea testeable.
+  - **Nota sobre T-024**: el *mecanismo* de errores homogéneos ya está construido y probado aquí (ApiError, errorHandler, sin stack traces). T-024 en `docs/tasks.md` queda pendiente no porque falte código, sino porque no se puede verificar contra los errores reales que introducirán T-021 (herramientas mezcladas, ficheros inválidos), T-022 (id no encontrado) y T-023 hasta que esas rutas existan. Cuando lleguen, deberían limitarse a lanzar `new ApiError(status, code, message)` — si T-024 acaba necesitando algo más que eso, es la señal de que este diseño no fue suficiente.
+- `upload.ts`: `createUpload(maxFileSizeBytes)` (fábrica testeable con límites pequeños) + `upload = createUpload(MAX_UPLOAD_SIZE_BYTES)` con `MAX_UPLOAD_SIZE_BYTES = 50 MB` (`docs/plan.md` §2.7). `multer.memoryStorage()` — nunca se escribe el fichero subido a disco, coherente con "los datos del usuario nunca salen del servidor" y con que solo se persiste el `NormalizedRun`, no el fichero original.
+- `validation.ts`: `validateBody(schema: ZodType)` — middleware genérico reutilizable para cualquier endpoint futuro, no atado a un schema concreto todavía (el schema del body de `POST /api/comparisons` se define en T-021). En caso de fallo, produce un único `ApiError(422, 'VALIDATION_ERROR', ...)` con los mensajes de Zod concatenados; en éxito, sustituye `req.body` por el valor ya parseado/tipado por Zod.
+- **Pendiente, no decidido en T-020**: el script `npm run dev` para levantar el servidor en desarrollo sigue siendo el placeholder de T-001, porque requiere elegir una herramienta para ejecutar TypeScript directamente (`tsx`, `ts-node`, `node --watch` sobre `tsc -b --watch`...) que no está en `docs/plan.md` §2.1 — hay que decidirlo explícitamente (con el usuario) antes de añadirla, no colarla de paso en una tarea que no la pedía.
+
 ## Convenciones
 
 - Nombres de código, tipos y comentarios de API en inglés; documentación de producto (docs/) en español.
