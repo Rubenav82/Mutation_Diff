@@ -5,8 +5,8 @@ export default defineConfig({
     projects: ['packages/*'],
     coverage: {
       provider: 'v8',
-      include: ['packages/*/src/**/*.ts'],
-      exclude: ['**/*.{test,spec}.ts', '**/index.ts'],
+      include: ['packages/*/src/**/*.{ts,tsx}'],
+      exclude: ['**/*.{test,spec}.{ts,tsx}', '**/index.ts', '**/main.tsx'],
     },
   },
 });

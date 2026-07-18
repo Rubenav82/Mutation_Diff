@@ -23,7 +23,7 @@
 - [x] T-024 Manejo de errores homogéneo (middleware, sin stack traces al cliente).
 
 ### Fase 3 — Web
-- [ ] T-030 Scaffolding Vite + React + router + capa API tipada.
+- [x] T-030 Scaffolding Vite + React + router + capa API tipada.
 - [ ] T-031 Pantalla de nueva comparación (wizard, drag&drop, validación de extensión).
 - [ ] T-031b Panel de ayuda ⓘ con instrucciones de configuración por herramienta (snippets copiables de `outputFormats=XML` y reporter `json`), enlazado también desde los errores de fichero inválido.
 - [ ] T-032 Dashboard: tarjetas globales con deltas.
