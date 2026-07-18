@@ -49,6 +49,40 @@ describe('FileDropZone', () => {
     expect(screen.queryByText('base.json')).not.toBeInTheDocument();
   });
 
+  it('offers a link to the configuration help next to the validation error when onShowHelp is provided', () => {
+    const onShowHelp = vi.fn();
+    render(
+      <FileDropZone
+        id="testFile"
+        label="Zona de prueba"
+        acceptedExtension=".xml"
+        file={null}
+        onFileSelected={vi.fn()}
+        onClear={vi.fn()}
+        onShowHelp={onShowHelp}
+      />,
+    );
+
+    const file = new File(['{}'], 'base.json', { type: 'application/json' });
+    const input = screen.getByLabelText(/zona de prueba/i, { selector: 'input' });
+    fireEvent.change(input, { target: { files: [file] } });
+
+    fireEvent.click(screen.getByRole('button', { name: /instrucciones/i }));
+
+    expect(onShowHelp).toHaveBeenCalledOnce();
+  });
+
+  it('does not render a help link when onShowHelp is not provided', () => {
+    render(<ControlledZone acceptedExtension=".xml" />);
+
+    const file = new File(['{}'], 'base.json', { type: 'application/json' });
+    const input = screen.getByLabelText(/zona de prueba/i, { selector: 'input' });
+    fireEvent.change(input, { target: { files: [file] } });
+
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /instrucciones/i })).not.toBeInTheDocument();
+  });
+
   it('accepts a valid file dropped onto the zone', () => {
     const onFileSelected = vi.fn();
     render(

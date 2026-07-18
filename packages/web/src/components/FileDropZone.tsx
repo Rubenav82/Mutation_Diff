@@ -7,6 +7,7 @@ interface FileDropZoneProps {
   file: File | null;
   onFileSelected: (file: File) => void;
   onClear: () => void;
+  onShowHelp?: () => void;
 }
 
 export function FileDropZone({
@@ -16,6 +17,7 @@ export function FileDropZone({
   file,
   onFileSelected,
   onClear,
+  onShowHelp,
 }: FileDropZoneProps) {
   const [error, setError] = useState<string | null>(null);
 
@@ -66,7 +68,16 @@ export function FileDropZone({
           Quitar
         </button>
       )}
-      {error && <p role="alert">{error}</p>}
+      {error && (
+        <p role="alert">
+          {error}
+          {onShowHelp && (
+            <button type="button" onClick={onShowHelp}>
+              Ver instrucciones
+            </button>
+          )}
+        </p>
+      )}
     </div>
   );
 }

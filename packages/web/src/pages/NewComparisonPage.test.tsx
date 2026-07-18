@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -125,5 +125,48 @@ describe('NewComparisonPage', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Invalid PiTest report');
     expect(screen.getByRole('heading', { name: /nueva comparación/i })).toBeInTheDocument();
+  });
+
+  it('toggles the configuration help panel with the ⓘ button', async () => {
+    const user = userEvent.setup();
+    renderWizard();
+
+    expect(
+      screen.queryByRole('region', { name: /ayuda de configuración/i }),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /ayuda de configuración/i }));
+
+    expect(screen.getByRole('region', { name: /ayuda de configuración/i })).toBeInTheDocument();
+    expect(screen.getByText(/target\/pit-reports/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /ayuda de configuración/i }));
+
+    expect(
+      screen.queryByRole('region', { name: /ayuda de configuración/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('shows Stryker help content when Stryker is selected while the panel is open', async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await user.click(screen.getByRole('button', { name: /ayuda de configuración/i }));
+
+    await user.click(screen.getByRole('radio', { name: /stryker/i }));
+
+    expect(screen.getByText(/reports\/mutation\/mutation\.json/)).toBeInTheDocument();
+    expect(screen.queryByText(/target\/pit-reports/)).not.toBeInTheDocument();
+  });
+
+  it('opens the help panel from the "ver instrucciones" link in a file validation error', () => {
+    renderWizard();
+    const baseInput = screen.getByLabelText(/ejecución base/i, { selector: 'input' });
+    fireEvent.change(baseInput, {
+      target: { files: [new File(['{}'], 'base.json', { type: 'application/json' })] },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /ver instrucciones/i }));
+
+    expect(screen.getByRole('region', { name: /ayuda de configuración/i })).toBeInTheDocument();
   });
 });

@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import type { Tool } from 'core';
 import { ApiClientError, createComparison } from '../api/client';
 import { FileDropZone } from '../components/FileDropZone';
+import { ToolHelpPanel } from '../components/ToolHelpPanel';
+
+const HELP_PANEL_ID = 'tool-help-panel';
 
 const EXTENSION_BY_TOOL: Record<Tool, string> = {
   pitest: '.xml',
@@ -18,6 +21,7 @@ export function NewComparisonPage() {
   const [uncoveredThreshold, setUncoveredThreshold] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   function handleToolChange(nextTool: Tool) {
     setTool(nextTool);
@@ -77,7 +81,17 @@ export function NewComparisonPage() {
             />
             Stryker
           </label>
+          <button
+            type="button"
+            aria-expanded={isHelpOpen}
+            aria-controls={HELP_PANEL_ID}
+            onClick={() => setIsHelpOpen((open) => !open)}
+          >
+            ⓘ<span className="sr-only">Ayuda de configuración</span>
+          </button>
         </fieldset>
+
+        {isHelpOpen && <ToolHelpPanel tool={tool} id={HELP_PANEL_ID} />}
 
         <FileDropZone
           id="baseFile"
@@ -86,6 +100,7 @@ export function NewComparisonPage() {
           file={baseFile}
           onFileSelected={setBaseFile}
           onClear={() => setBaseFile(null)}
+          onShowHelp={() => setIsHelpOpen(true)}
         />
         <FileDropZone
           id="headFile"
@@ -94,6 +109,7 @@ export function NewComparisonPage() {
           file={headFile}
           onFileSelected={setHeadFile}
           onClear={() => setHeadFile(null)}
+          onShowHelp={() => setIsHelpOpen(true)}
         />
 
         <label>
