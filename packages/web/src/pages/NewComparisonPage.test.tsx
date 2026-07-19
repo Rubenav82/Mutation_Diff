@@ -1,17 +1,18 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ApiClientError, createComparison } from '../api/client';
+import { ApiClientError, createComparison, getComparison } from '../api/client';
 import { ComparisonDashboardPage } from './ComparisonDashboardPage';
 import { NewComparisonPage } from './NewComparisonPage';
 
 vi.mock('../api/client', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../api/client')>();
-  return { ...actual, createComparison: vi.fn() };
+  return { ...actual, createComparison: vi.fn(), getComparison: vi.fn() };
 });
 
 const createComparisonMock = vi.mocked(createComparison);
+const getComparisonMock = vi.mocked(getComparison);
 
 function renderWizard() {
   return render(
@@ -41,6 +42,10 @@ async function selectFiles(
 
 beforeEach(() => {
   createComparisonMock.mockReset();
+  getComparisonMock.mockReset();
+  // The dashboard fetches on mount after navigation; keep it pending so tests
+  // that only assert the wizard's navigation don't hit an unmocked fetch.
+  getComparisonMock.mockReturnValue(new Promise(() => {}));
 });
 
 describe('NewComparisonPage', () => {
@@ -95,7 +100,8 @@ describe('NewComparisonPage', () => {
         headFile: expect.any(File),
       }),
     );
-    expect(await screen.findByText('Dashboard — abc-123')).toBeInTheDocument();
+    expect(await screen.findByText(/cargando comparación/i)).toBeInTheDocument();
+    await waitFor(() => expect(getComparisonMock).toHaveBeenCalledWith('abc-123'));
   });
 
   it('includes optional thresholds in the request when provided', async () => {

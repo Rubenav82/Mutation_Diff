@@ -1,7 +1,13 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { getComparison } from './api/client';
 import { App } from './App';
+
+vi.mock('./api/client', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./api/client')>();
+  return { ...actual, getComparison: vi.fn(() => new Promise(() => {})) };
+});
 
 describe('App routing', () => {
   it('renders the new comparison page at /', () => {
@@ -21,7 +27,7 @@ describe('App routing', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole('heading', { name: /dashboard/i })).toBeInTheDocument();
-    expect(screen.getByText(/abc-123/)).toBeInTheDocument();
+    expect(screen.getByText(/cargando comparación/i)).toBeInTheDocument();
+    expect(vi.mocked(getComparison)).toHaveBeenCalledWith('abc-123');
   });
 });
