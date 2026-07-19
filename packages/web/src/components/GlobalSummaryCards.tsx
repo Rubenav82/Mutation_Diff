@@ -1,4 +1,5 @@
 import type { ComparisonResult } from 'core';
+import { formatPct, formatSignedPct } from '../lib/format';
 
 type Polarity = 'higher-better' | 'higher-worse' | 'neutral';
 type Variant = 'positive' | 'negative' | 'neutral';
@@ -15,14 +16,6 @@ function trendVariant(delta: number, polarity: Polarity): Variant {
   if (delta === 0 || polarity === 'neutral') return 'neutral';
   const isGood = polarity === 'higher-better' ? delta > 0 : delta < 0;
   return isGood ? 'positive' : 'negative';
-}
-
-function formatPct(value: number): string {
-  return `${value.toFixed(1)}%`;
-}
-
-function formatPctDelta(value: number): string {
-  return `${value > 0 ? '+' : ''}${value.toFixed(1)}%`;
 }
 
 function formatCountDelta(value: number): string {
@@ -54,14 +47,14 @@ export function GlobalSummaryCards({ global }: { global: ComparisonResult['globa
       label: 'Mutation score',
       baseText: formatPct(base.score),
       headText: formatPct(head.score),
-      deltaText: formatPctDelta(scoreDelta),
+      deltaText: formatSignedPct(scoreDelta),
       variant: trendVariant(scoreDelta, 'higher-better'),
     },
     {
       label: 'Cobertura',
       baseText: formatPct(base.coveredPct),
       headText: formatPct(head.coveredPct),
-      deltaText: formatPctDelta(coverageDelta),
+      deltaText: formatSignedPct(coverageDelta),
       variant: trendVariant(coverageDelta, 'higher-better'),
     },
     countCard('Killed', base.killed, head.killed, 'higher-better'),

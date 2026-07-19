@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import type { ComparisonResult } from 'core';
 import { ApiClientError, getComparison } from '../api/client';
 import { GlobalSummaryCards } from '../components/GlobalSummaryCards';
+import { UnitsTable } from '../components/UnitsTable';
 
 export function ComparisonDashboardPage() {
   const { id } = useParams<{ id: string }>();
@@ -51,6 +52,7 @@ export function ComparisonDashboardPage() {
       <h1>Comparación</h1>
       <p className="text-sm text-gray-500 dark:text-gray-400">Herramienta: {result.tool}</p>
       <GlobalSummaryCards global={result.global} />
+      <UnitsTable units={result.units} />
     </main>
   );
 }

@@ -34,7 +34,17 @@ function makeResult(): ComparisonResult {
   return {
     tool: 'pitest',
     global: { base, head, scoreDelta: 5, coverageDelta: -2 },
-    units: [],
+    units: [
+      {
+        key: 'com.example.Calculator',
+        kind: 'improved',
+        base: metrics({ score: 80 }),
+        head: metrics({ score: 85 }),
+        scoreDelta: 5,
+        coverageDelta: 0,
+        isUncovered: false,
+      },
+    ],
     regressions: [],
     uncovered: [],
     added: [],
@@ -65,6 +75,16 @@ describe('ComparisonDashboardPage', () => {
     expect(getComparisonMock).toHaveBeenCalledWith('abc-123');
     expect(score).not.toBeNull();
     expect(within(score as HTMLElement).getByText('+5.0%')).toBeInTheDocument();
+  });
+
+  it('renders the units table with one row per unit', async () => {
+    getComparisonMock.mockResolvedValue(makeResult());
+    renderDashboard();
+
+    const cell = await screen.findByText('com.example.Calculator');
+    const row = cell.closest('tr');
+    expect(row).toHaveAttribute('data-kind', 'improved');
+    expect(within(row as HTMLElement).getByText('Mejora ▲')).toBeInTheDocument();
   });
 
   it('shows a loading indicator while the comparison is being fetched', () => {
