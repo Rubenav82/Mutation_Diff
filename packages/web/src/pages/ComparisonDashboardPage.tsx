@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import type { ComparisonResult } from 'core';
 import { ApiClientError, getComparison } from '../api/client';
 import { GlobalSummaryCards } from '../components/GlobalSummaryCards';
+import { UnitSection } from '../components/UnitSection';
 import { UnitsTable } from '../components/UnitsTable';
 
 export function ComparisonDashboardPage() {
@@ -52,6 +53,22 @@ export function ComparisonDashboardPage() {
       <h1>Comparación</h1>
       <p className="text-sm text-gray-500 dark:text-gray-400">Herramienta: {result.tool}</p>
       <GlobalSummaryCards global={result.global} />
+      <UnitSection
+        title="Regresiones"
+        units={result.regressions}
+        emptyMessage="No hay regresiones."
+      />
+      <UnitSection
+        title="Sin cobertura"
+        units={result.uncovered}
+        emptyMessage="No hay clases/ficheros sin cobertura."
+      />
+      <UnitSection title="Nuevas" units={result.added} emptyMessage="No hay unidades nuevas." />
+      <UnitSection
+        title="Eliminadas"
+        units={result.removed}
+        emptyMessage="No hay unidades eliminadas."
+      />
       <UnitsTable units={result.units} />
     </main>
   );

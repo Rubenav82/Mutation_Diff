@@ -205,6 +205,14 @@ No se ha tocado nada más: `ApiError`, el catch-all 404, y el fallback 500 para 
 - Colores por kind: `data-kind` en cada `<tr>` (mismo patrón `data-*` testeable que `data-variant` de T-032) + `KIND_LABEL_CLASS` con clases Tailwind sobre la etiqueta de Estado. Los tests verifican `data-kind`, no clases concretas.
 - `src/lib/format.ts` (nuevo): `formatPct`/`formatSignedPct` extraídos de `GlobalSummaryCards` al necesitarlos también la tabla — primera utilidad compartida de `web`; futuras piezas de formato van ahí, no duplicadas por componente.
 
+## Secciones del dashboard (fijado en T-034)
+
+- La tarea nombra tres secciones ("regresiones / sin cobertura / nuevas") pero `docs/plan.md` §3 define cuatro para el dashboard (añade "Eliminadas") y `ComparisonResult` ya trae los cuatro arrays — se implementaron las cuatro con un único componente reutilizable, no una decisión nueva de diseño. (El reporte HTML de T-016 sigue con sus 4 bloques exactos de CA-HU-07; esa restricción es del export, no del dashboard.)
+- `src/components/UnitSection.tsx`: presentacional puro, `{title, units, emptyMessage}` — cabecera `Título (n)`, tabla simple (Clase/fichero, Score base, Score nuevo, Δ Score) o mensaje de vacío. **No reutiliza `UnitsTable`**: las secciones no llevan filtro/orden (HU-05 exige el orden que ya trae `regressions` de `core` — scoreDelta asc, la caída más severa primero — y reordenarlas lo rompería); el componente preserva el orden del array recibido, con test explícito de ello.
+- Mismos patrones de T-032/T-033: `data-kind` en cada `<tr>`, `—` para lados ausentes, etiquetas/mensajes de vacío idénticos a los del reporte HTML de T-016 ("No hay regresiones.", "No hay clases/ficheros sin cobertura.") para no divergir entre SPA y export.
+- `lib/format.ts` gana `formatOptionalPct`/`formatOptionalSignedPct` (em dash para `undefined`/`null`); `UnitsTable` se refactorizó en verde para usarlos y eliminar su `pctCell` local — la lógica "lado ausente → —" vive en un solo sitio.
+- Orden en la página: tarjetas → Regresiones → Sin cobertura → Nuevas → Eliminadas → tabla completa (el orden de `docs/plan.md` §3).
+
 ## Convenciones
 
 - Nombres de código, tipos y comentarios de API en inglés; documentación de producto (docs/) en español.

@@ -45,9 +45,38 @@ function makeResult(): ComparisonResult {
         isUncovered: false,
       },
     ],
-    regressions: [],
-    uncovered: [],
-    added: [],
+    regressions: [
+      {
+        key: 'com.example.TaxCalculator',
+        kind: 'regressed',
+        base: metrics({ score: 90 }),
+        head: metrics({ score: 55 }),
+        scoreDelta: -35,
+        coverageDelta: -5,
+        isUncovered: false,
+      },
+    ],
+    uncovered: [
+      {
+        key: 'com.example.EmailSender',
+        kind: 'unchanged',
+        base: metrics({ score: 0, noCoverage: 10 }),
+        head: metrics({ score: 0, noCoverage: 10 }),
+        scoreDelta: 0,
+        coverageDelta: 0,
+        isUncovered: true,
+      },
+    ],
+    added: [
+      {
+        key: 'com.example.RefundService',
+        kind: 'added',
+        head: metrics({ score: 50 }),
+        scoreDelta: null,
+        coverageDelta: null,
+        isUncovered: false,
+      },
+    ],
     removed: [],
   };
 }
@@ -85,6 +114,23 @@ describe('ComparisonDashboardPage', () => {
     const row = cell.closest('tr');
     expect(row).toHaveAttribute('data-kind', 'improved');
     expect(within(row as HTMLElement).getByText('Mejora ▲')).toBeInTheDocument();
+  });
+
+  it('renders the regressions, uncovered, added and removed sections', async () => {
+    getComparisonMock.mockResolvedValue(makeResult());
+    renderDashboard();
+
+    expect(await screen.findByRole('heading', { name: 'Regresiones (1)' })).toBeInTheDocument();
+    expect(screen.getByText('com.example.TaxCalculator')).toBeInTheDocument();
+
+    expect(screen.getByRole('heading', { name: 'Sin cobertura (1)' })).toBeInTheDocument();
+    expect(screen.getByText('com.example.EmailSender')).toBeInTheDocument();
+
+    expect(screen.getByRole('heading', { name: 'Nuevas (1)' })).toBeInTheDocument();
+    expect(screen.getByText('com.example.RefundService')).toBeInTheDocument();
+
+    expect(screen.getByRole('heading', { name: 'Eliminadas (0)' })).toBeInTheDocument();
+    expect(screen.getByText('No hay unidades eliminadas.')).toBeInTheDocument();
   });
 
   it('shows a loading indicator while the comparison is being fetched', () => {

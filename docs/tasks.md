@@ -28,7 +28,7 @@
 - [x] T-031b Panel de ayuda ⓘ con instrucciones de configuración por herramienta (snippets copiables de `outputFormats=XML` y reporter `json`), enlazado también desde los errores de fichero inválido.
 - [x] T-032 Dashboard: tarjetas globales con deltas.
 - [x] T-033 Tabla de unidades (TanStack Table): filtro, orden, colores por kind.
-- [ ] T-034 Secciones regresiones / sin cobertura / nuevas.
+- [x] T-034 Secciones regresiones / sin cobertura / nuevas.
 - [ ] T-035 Botón exportar HTML.
 - [ ] T-036 Estados de carga y error accesibles.
 

@@ -9,7 +9,7 @@ import {
   type SortingState,
 } from '@tanstack/react-table';
 import type { UnitChangeKind, UnitComparison } from 'core';
-import { formatPct, formatSignedPct } from '../lib/format';
+import { formatOptionalPct, formatOptionalSignedPct } from '../lib/format';
 
 const KIND_LABELS: Record<UnitChangeKind, string> = {
   improved: 'Mejora ▲',
@@ -27,10 +27,6 @@ const KIND_LABEL_CLASS: Record<UnitChangeKind, string> = {
   removed: 'text-gray-400 dark:text-gray-500 line-through',
 };
 
-function pctCell(value: number | undefined): string {
-  return value === undefined ? '—' : formatPct(value);
-}
-
 const COLUMNS: ColumnDef<UnitComparison>[] = [
   {
     id: 'key',
@@ -41,24 +37,21 @@ const COLUMNS: ColumnDef<UnitComparison>[] = [
     id: 'baseScore',
     accessorFn: (unit) => unit.base?.score,
     header: 'Score base',
-    cell: ({ getValue }) => pctCell(getValue<number | undefined>()),
+    cell: ({ getValue }) => formatOptionalPct(getValue<number | undefined>()),
     sortUndefined: 'last',
   },
   {
     id: 'headScore',
     accessorFn: (unit) => unit.head?.score,
     header: 'Score nuevo',
-    cell: ({ getValue }) => pctCell(getValue<number | undefined>()),
+    cell: ({ getValue }) => formatOptionalPct(getValue<number | undefined>()),
     sortUndefined: 'last',
   },
   {
     id: 'scoreDelta',
     accessorFn: (unit) => unit.scoreDelta ?? undefined,
     header: 'Δ Score',
-    cell: ({ getValue }) => {
-      const value = getValue<number | undefined>();
-      return value === undefined ? '—' : formatSignedPct(value);
-    },
+    cell: ({ getValue }) => formatOptionalSignedPct(getValue<number | undefined>()),
     sortUndefined: 'last',
   },
   {
