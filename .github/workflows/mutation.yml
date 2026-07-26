@@ -1,0 +1,33 @@
+name: Mutation
+
+# Job nightly (docs/plan.md §5): el mutation testing es demasiado lento para
+# ejecutarlo en cada push/PR como lint, typecheck y tests. `workflow_dispatch`
+# permite lanzarlo a mano antes de cerrar una fase.
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  mutation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      # `break: 70` en stryker.config.json hace fallar este paso por debajo del
+      # umbral mínimo de docs/constitution.md #2.
+      - run: npm run mutation
+
+      # Sin esto, un fallo por umbral no dice qué mutantes sobrevivieron.
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mutation-report
+          path: reports/mutation/

@@ -9,7 +9,7 @@
 | Backend | Node 20+, Express 5, TypeScript, Zod (validación), fast-xml-parser (PiTest), multer (upload) |
 | Frontend | Vite + React 18 + TypeScript, TanStack Table (tablas), Recharts (gráficos), CSS modules o Tailwind |
 | Persistencia (fase 2) | SQLite vía better-sqlite3 |
-| Tests | Vitest (unit back y front), React Testing Library, Supertest (API), Playwright (e2e, fase 2), Stryker (mutation testing del propio proyecto) |
+| Tests | Vitest (unit back y front), React Testing Library, Supertest (API), Playwright (e2e, fase 4), Stryker (mutation testing del propio proyecto) |
 | Monorepo | npm workspaces: `packages/core`, `packages/server`, `packages/web` |
 
 ### 2.2 Arquitectura
@@ -155,7 +155,8 @@ POST /api/projects/:id/compare   (fase 2) comparar dos runs guardados { baseRunI
 - **server**: Supertest para endpoints, incluidos errores 422 y límite de tamaño.
 - **web**: RTL para componentes (tabla, tarjetas de delta, wizard) mockeando la API.
 - **mutation testing del proyecto**: Stryker sobre `packages/core` en CI; el resultado se puede… comparar con la propia app 🙂
-- **CI** (GitHub Actions): lint + typecheck + tests + stryker (job nightly).
+- **e2e**: Playwright (solo Chromium) sobre el flujo real wizard → API → dashboard → export, usando las mismas fixtures que los tests de `core`.
+- **CI** (GitHub Actions): lint + typecheck + tests + e2e; stryker en un workflow aparte (job nightly).
 
 ### 2.7 Riesgos y decisiones abiertas
 

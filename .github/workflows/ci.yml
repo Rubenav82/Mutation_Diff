@@ -23,3 +23,29 @@ jobs:
       - run: npm run typecheck
 
       - run: npm test
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      # Solo Chromium: es el único proyecto declarado en playwright.config.ts.
+      - run: npx playwright install --with-deps chromium
+
+      # `pretest:e2e` hace `tsc -b` antes: el servidor de desarrollo importa
+      # `core` desde su `dist`, que está gitignorado.
+      - run: npm run test:e2e
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
