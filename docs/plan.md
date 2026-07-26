@@ -131,7 +131,7 @@ Decisiones: el `tool` se fija a nivel de proyecto (evita mezclar PiTest y Stryke
 POST /api/comparisons            multipart: baseFile, headFile, tool ('pitest'|'stryker'), opciones
   → 200 { comparisonId, result: ComparisonResult }
   → 422 formato inválido / herramientas mezcladas
-GET  /api/comparisons/:id        → ComparisonResult (en memoria o SQLite en fase 2)
+GET  /api/comparisons/:id        → ComparisonResult (siempre en memoria, con TTL; ver nota)
 GET  /api/comparisons/:id/report → text/html (reporte autocontenido, Content-Disposition: attachment)
 POST /api/projects               (fase 2) crear proyecto { name, tool }
 GET  /api/projects               (fase 2) listar proyectos
@@ -139,6 +139,8 @@ POST /api/projects/:id/runs      (fase 2) guardar run (opt-in, desde una compara
 GET  /api/projects/:id/runs      (fase 2) histórico con global_metrics (para el gráfico)
 POST /api/projects/:id/compare   (fase 2) comparar dos runs guardados { baseRunId, headRunId }
 ```
+
+**Las comparaciones no se persisten nunca**: lo que se guarda en SQLite son los `runs`, y una comparación del histórico se recalcula con `POST /api/projects/:id/compare`. Persistir también el `ComparisonResult` dejaría dos fuentes de verdad para el mismo id y un TTL desincronizado con la BBDD; recalcular es barato (`compareRuns` es una función pura sobre dos `NormalizedRun` ya normalizados).
 
 ### 2.5 UI (pantallas)
 

@@ -37,7 +37,29 @@
 - [x] T-041 e2e Playwright del flujo completo con fixtures.
 - [x] T-042 README con quickstart y ejemplos.
 
-### Fase 5 (v2)
-- [ ] T-050 Persistencia SQLite: tablas projects/runs, endpoints de proyectos, guardado opt-in desde el dashboard, histórico y gráfico de evolución.
-- [ ] T-051 Atribución de autor vía git log.
-- [ ] T-052 Modo CLI reutilizando `core` (para integrarlo en pipelines).
+### Fase 5 (v2) — Histórico y persistencia
+
+> T-050 a T-058 son el desglose de lo que antes era una única tarea "Persistencia SQLite". Mismo grano que las fases 2 y 3: un endpoint o una pantalla por tarea, un commit por tarea. Cubren HU-10 y HU-11.
+
+**Backend**
+
+- [ ] T-050 Bootstrap de persistencia: dependencia `better-sqlite3`, módulo `db.ts` que abre el fichero y crea el esquema de `docs/plan.md` §2.3.2 (tablas `projects`/`runs`). Ruta configurable por env, `:memory:` en tests, `PRAGMA foreign_keys = ON` (sin él, el `ON DELETE CASCADE` del esquema no hace nada). Sin endpoints todavía.
+- [ ] T-051 Repositorio de proyectos + `POST /api/projects` y `GET /api/projects`. Nombre duplicado → 409 homogéneo (`name` es `UNIQUE` en el esquema).
+- [ ] T-052 `POST /api/projects/:id/runs`: guardado **opt-in** de un `NormalizedRun` con `label` y `executed_at`. Un run cuya herramienta no coincide con la del proyecto → 422 (el `tool` se fija a nivel de proyecto).
+- [ ] T-053 `GET /api/projects/:id/runs`: histórico ordenado por `executed_at`, devolviendo solo `global_metrics` sin deserializar `normalized_run` (para eso está desnormalizado).
+- [ ] T-054 `POST /api/projects/:id/compare`: compara dos runs guardados reutilizando `compareRuns` de `core`; 404 si algún run no existe o no pertenece al proyecto.
+
+**Web**
+
+- [ ] T-055 Guardado opt-in desde el dashboard (CA-HU-10): elegir proyecto existente o crearlo en el momento y marcar cuál de las dos ejecuciones guardar, con `label` y fecha editables. Ambas marcadas por defecto si el proyecto no tiene runs, solo la nueva en caso contrario. Una comparación puntual sigue sin persistir nada si el usuario no lo pide.
+- [ ] T-056 Pantalla de histórico: lista de runs guardados de un proyecto, selección del par y lanzar la comparación (HU-10).
+- [ ] T-057 Gráfico de evolución del score global con Recharts (HU-11).
+
+**Calidad**
+
+- [ ] T-058 e2e del flujo de histórico: guardar un run → aparece en el listado → comparar un par del histórico.
+
+**Independientes de la persistencia**
+
+- [ ] T-059 Atribución de autor vía git log.
+- [ ] T-060 Modo CLI reutilizando `core` (para integrarlo en pipelines).
