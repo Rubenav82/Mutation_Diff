@@ -33,7 +33,7 @@
 - [x] T-036 Estados de carga y error accesibles.
 
 ### Fase 4 — Calidad
-- [ ] T-040 Stryker sobre `packages/core`, umbral 70 en CI.
+- [x] T-040 Stryker sobre `packages/core`, umbral 70 en CI.
 - [ ] T-041 e2e Playwright del flujo completo con fixtures.
 - [ ] T-042 README con quickstart y ejemplos.
 
