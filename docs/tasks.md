@@ -34,7 +34,7 @@
 
 ### Fase 4 — Calidad
 - [x] T-040 Stryker sobre `packages/core`, umbral 70 en CI.
-- [ ] T-041 e2e Playwright del flujo completo con fixtures.
+- [x] T-041 e2e Playwright del flujo completo con fixtures.
 - [ ] T-042 README con quickstart y ejemplos.
 
 ### Fase 5 (v2)

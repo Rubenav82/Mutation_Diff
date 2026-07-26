@@ -11,6 +11,8 @@ export default tseslint.config(
       '**/*.tsbuildinfo',
       '**/.stryker-tmp/**',
       '**/reports/**',
+      'test-results/**',
+      'playwright-report/**',
     ],
   },
   js.configs.recommended,
@@ -22,7 +24,9 @@ export default tseslint.config(
     },
   },
   {
-    files: ['packages/core/**/*.ts', 'packages/server/**/*.ts'],
+    // `e2e` corre bajo Node (fs, Buffer, import.meta), no en el navegador:
+    // el código de página vive dentro de los locators de Playwright.
+    files: ['packages/core/**/*.ts', 'packages/server/**/*.ts', 'e2e/**/*.ts'],
     languageOptions: {
       globals: { ...globals.node },
     },
