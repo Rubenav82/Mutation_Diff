@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import type { ComparisonResult } from 'core';
-import { ApiClientError, getComparison } from '../api/client';
+import { ApiClientError, getComparison, getComparisonReportUrl } from '../api/client';
 import { GlobalSummaryCards } from '../components/GlobalSummaryCards';
 import { UnitSection } from '../components/UnitSection';
 import { UnitsTable } from '../components/UnitsTable';
@@ -44,14 +44,27 @@ export function ComparisonDashboardPage() {
   if (error) {
     return <p role="alert">{error}</p>;
   }
-  if (!result) {
+  if (!result || !id) {
     return null;
   }
 
   return (
     <main>
-      <h1>Comparación</h1>
-      <p className="text-sm text-gray-500 dark:text-gray-400">Herramienta: {result.tool}</p>
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1>Comparación</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Herramienta: {result.tool}</p>
+        </div>
+        {/* Plain anchor, not fetch+blob: the endpoint already sends
+            Content-Disposition: attachment with the filename. */}
+        <a
+          href={getComparisonReportUrl(id)}
+          download
+          className="rounded bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+        >
+          Exportar HTML
+        </a>
+      </div>
       <GlobalSummaryCards global={result.global} />
       <UnitSection
         title="Regresiones"

@@ -29,7 +29,7 @@
 - [x] T-032 Dashboard: tarjetas globales con deltas.
 - [x] T-033 Tabla de unidades (TanStack Table): filtro, orden, colores por kind.
 - [x] T-034 Secciones regresiones / sin cobertura / nuevas.
-- [ ] T-035 Botón exportar HTML.
+- [x] T-035 Botón exportar HTML.
 - [ ] T-036 Estados de carga y error accesibles.
 
 ### Fase 4 — Calidad

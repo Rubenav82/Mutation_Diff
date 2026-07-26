@@ -133,6 +133,16 @@ describe('ComparisonDashboardPage', () => {
     expect(screen.getByText('No hay unidades eliminadas.')).toBeInTheDocument();
   });
 
+  it('offers an HTML export link pointing at the report endpoint', async () => {
+    getComparisonMock.mockResolvedValue(makeResult());
+    renderDashboard('abc 123');
+
+    const link = await screen.findByRole('link', { name: 'Exportar HTML' });
+    // the id is encoded so a key with spaces/slashes still resolves
+    expect(link).toHaveAttribute('href', '/api/comparisons/abc%20123/report');
+    expect(link).toHaveAttribute('download');
+  });
+
   it('shows a loading indicator while the comparison is being fetched', () => {
     getComparisonMock.mockReturnValue(new Promise(() => {}));
     renderDashboard();

@@ -213,6 +213,13 @@ No se ha tocado nada más: `ApiError`, el catch-all 404, y el fallback 500 para 
 - `lib/format.ts` gana `formatOptionalPct`/`formatOptionalSignedPct` (em dash para `undefined`/`null`); `UnitsTable` se refactorizó en verde para usarlos y eliminar su `pctCell` local — la lógica "lado ausente → —" vive en un solo sitio.
 - Orden en la página: tarjetas → Regresiones → Sin cobertura → Nuevas → Eliminadas → tabla completa (el orden de `docs/plan.md` §3).
 
+## Botón exportar HTML (fijado en T-035)
+
+- Implementado como un `<a href={getComparisonReportUrl(id)} download>` en la cabecera del dashboard, **no** como `fetch` + `Blob` + `URL.createObjectURL`: el endpoint `GET /api/comparisons/:id/report` (T-023) ya envía `Content-Disposition: attachment` con el nombre de fichero, así que el navegador descarga solo y el nombre del fichero sigue teniendo una única fuente de verdad (el servidor). La ruta de fetch+blob solo haría falta si hubiera que enviar cabeceras (p. ej. auth), que no es el caso.
+- `download` sin valor a propósito: con un valor lo pisaría, y el `filename="mutadiff-report-<id>.html"` del servidor dejaría de aplicarse.
+- El guard de render pasó de `if (!result)` a `if (!result || !id)` para estrechar `id` a `string` antes de construir la URL — `useParams` lo tipa como `string | undefined` y bajo strict no se puede pasar directo. No es una rama nueva alcanzable en la práctica (sin `id` el `useEffect` ni siquiera lanza el fetch y la página se queda en carga), solo el estrechamiento que exige el tipo.
+- El test verifica el `href` con un id que contiene un espacio (`'abc 123'` → `/api/comparisons/abc%20123/report`) para cubrir el `encodeURIComponent` de `getComparisonReportUrl`, no solo la presencia del enlace.
+
 ## Convenciones
 
 - Nombres de código, tipos y comentarios de API en inglés; documentación de producto (docs/) en español.
