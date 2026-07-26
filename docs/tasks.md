@@ -35,7 +35,7 @@
 ### Fase 4 — Calidad
 - [x] T-040 Stryker sobre `packages/core`, umbral 70 en CI.
 - [x] T-041 e2e Playwright del flujo completo con fixtures.
-- [ ] T-042 README con quickstart y ejemplos.
+- [x] T-042 README con quickstart y ejemplos.
 
 ### Fase 5 (v2)
 - [ ] T-050 Persistencia SQLite: tablas projects/runs, endpoints de proyectos, guardado opt-in desde el dashboard, histórico y gráfico de evolución.

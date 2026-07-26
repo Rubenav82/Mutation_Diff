@@ -251,6 +251,14 @@ Recoge el pulido que T-031/T-032 dejaron explícitamente aparcado aquí. Dos com
 - El filtro de la tabla es `<input type="search">` → rol **`searchbox`**, no `textbox`. Fue el único fallo real de la primera pasada; si se añaden más locators sobre inputs de `web`, comprobar el `type` antes de asumir `textbox`.
 - CI: job `e2e` **paralelo** al de lint/typecheck/tests en `ci.yml` (no un step más), para que un fallo de e2e no oculte ni retrase el feedback rápido. Sube `playwright-report/` como artifact con `if: ${{ !cancelled() }}`.
 
+## README (fijado en T-042 — cierra Fase 4)
+
+- El `README.md` es la **puerta de entrada de usuario**, no un resumen de `docs/`: quickstart, cómo generar los reportes en PiTest/Stryker, uso de la UI, API con `curl`, comandos, arquitectura en una tabla, privacidad, limitaciones conocidas y enlaces a los cuatro documentos de `docs/`. Lo que ya está en `docs/spec.md`/`plan.md` se enlaza, no se duplica — si el README empieza a repetir criterios de aceptación, es señal de que va por mal camino.
+- **Todos los ejemplos están verificados contra el servidor real**, no escritos de memoria: los tres `curl` (POST, GET, `-OJ` del informe) y las cinco filas de la tabla de errores. Verificado en vivo `VALIDATION_ERROR` (422, sin `tool`), `INVALID_REPORT` (422, XML roto), `COMPARISON_NOT_FOUND` (404) e `INVALID_UPLOAD` (400, campo inesperado); `FILE_TOO_LARGE` (413) no se probó en vivo (haría falta un fichero de +50 MB) pero está cubierto por `upload.test.ts` con un límite reducido. Regla para futuras ediciones del README: si tocas un ejemplo, ejecútalo.
+- El README documenta explícitamente las dos limitaciones que un usuario descubriría por las malas: **un solo fichero por lado** (HU-12 b/c sin implementar) y **sin persistencia** (store en memoria, TTL 1 h, se pierde al reiniciar). Mejor decirlo que dejar que lo encuentren.
+- El apartado de umbrales explica el efecto práctico de `uncoveredThreshold=75` con la fixture del repo, que es justo el caso que ejercita el e2e de Stryker de T-041 — el mismo ejemplo sirve de documentación y de test.
+- `.prettierignore` excluye `*.md`, así que el README no pasa por `prettier --check`: el formato de sus tablas es manual y no lo va a reformatear nadie.
+
 ## Convenciones
 
 - Nombres de código, tipos y comentarios de API en inglés; documentación de producto (docs/) en español.
