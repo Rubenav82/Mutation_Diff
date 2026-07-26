@@ -11,6 +11,10 @@
   "workspaces": [
     "packages/*"
   ],
+  "overrides": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
   "scripts": {
     "build": "tsc -b",
     "pretest": "tsc -b",
@@ -21,7 +25,7 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
-    "dev": "echo \"dev script se define en T-020 (server) y T-030 (web)\" && exit 0",
+    "dev": "concurrently -n server,web -c blue,magenta \"npm run dev -w server\" \"npm run dev -w web\"",
     "mutation": "stryker run"
   },
   "devDependencies": {
@@ -30,6 +34,7 @@
     "@stryker-mutator/vitest-runner": "^9.6.1",
     "@types/node": "^26.1.1",
     "@vitest/coverage-v8": "^4.1.10",
+    "concurrently": "^10.0.3",
     "eslint": "^10.6.0",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.7.0",

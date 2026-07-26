@@ -23,14 +23,14 @@
 - [x] T-024 Manejo de errores homogéneo (middleware, sin stack traces al cliente).
 
 ### Fase 3 — Web
-- [ ] T-030 Scaffolding Vite + React + router + capa API tipada.
-- [ ] T-031 Pantalla de nueva comparación (wizard, drag&drop, validación de extensión).
-- [ ] T-031b Panel de ayuda ⓘ con instrucciones de configuración por herramienta (snippets copiables de `outputFormats=XML` y reporter `json`), enlazado también desde los errores de fichero inválido.
-- [ ] T-032 Dashboard: tarjetas globales con deltas.
-- [ ] T-033 Tabla de unidades (TanStack Table): filtro, orden, colores por kind.
-- [ ] T-034 Secciones regresiones / sin cobertura / nuevas.
-- [ ] T-035 Botón exportar HTML.
-- [ ] T-036 Estados de carga y error accesibles.
+- [x] T-030 Scaffolding Vite + React + router + capa API tipada.
+- [x] T-031 Pantalla de nueva comparación (wizard, drag&drop, validación de extensión).
+- [x] T-031b Panel de ayuda ⓘ con instrucciones de configuración por herramienta (snippets copiables de `outputFormats=XML` y reporter `json`), enlazado también desde los errores de fichero inválido.
+- [x] T-032 Dashboard: tarjetas globales con deltas.
+- [x] T-033 Tabla de unidades (TanStack Table): filtro, orden, colores por kind.
+- [x] T-034 Secciones regresiones / sin cobertura / nuevas.
+- [x] T-035 Botón exportar HTML.
+- [x] T-036 Estados de carga y error accesibles.
 
 ### Fase 4 — Calidad
 - [ ] T-040 Stryker sobre `packages/core`, umbral 70 en CI.
