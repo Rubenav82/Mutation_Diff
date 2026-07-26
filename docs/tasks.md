@@ -51,7 +51,7 @@
 
 **Web**
 
-- [ ] T-055 Guardado opt-in desde el dashboard: elegir proyecto existente o crearlo en el momento, con `label` y fecha editables. Una comparación puntual sigue sin persistir nada si el usuario no lo pide.
+- [ ] T-055 Guardado opt-in desde el dashboard (CA-HU-10): elegir proyecto existente o crearlo en el momento y marcar cuál de las dos ejecuciones guardar, con `label` y fecha editables. Ambas marcadas por defecto si el proyecto no tiene runs, solo la nueva en caso contrario. Una comparación puntual sigue sin persistir nada si el usuario no lo pide.
 - [ ] T-056 Pantalla de histórico: lista de runs guardados de un proyecto, selección del par y lanzar la comparación (HU-10).
 - [ ] T-057 Gráfico de evolución del score global con Recharts (HU-11).
 
