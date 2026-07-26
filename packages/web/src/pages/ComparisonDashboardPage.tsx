@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import type { ComparisonResult } from 'core';
 import { ApiClientError, getComparison, getComparisonReportUrl } from '../api/client';
+import { ErrorMessage } from '../components/ErrorMessage';
 import { GlobalSummaryCards } from '../components/GlobalSummaryCards';
+import { LoadingIndicator } from '../components/LoadingIndicator';
 import { UnitSection } from '../components/UnitSection';
 import { UnitsTable } from '../components/UnitsTable';
 
@@ -11,6 +13,8 @@ export function ComparisonDashboardPage() {
   const [result, setResult] = useState<ComparisonResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  // Bumped by the retry button; re-runs the effect without duplicating the fetch.
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     if (!id) return;
@@ -36,13 +40,13 @@ export function ComparisonDashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, reloadToken]);
 
   if (isLoading) {
-    return <p>Cargando comparación…</p>;
+    return <LoadingIndicator label="Cargando comparación…" />;
   }
   if (error) {
-    return <p role="alert">{error}</p>;
+    return <ErrorMessage message={error} onRetry={() => setReloadToken((token) => token + 1)} />;
   }
   if (!result || !id) {
     return null;

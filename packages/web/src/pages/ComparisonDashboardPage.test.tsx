@@ -1,4 +1,5 @@
 import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ComparisonResult, UnitMetrics } from 'core';
@@ -147,7 +148,7 @@ describe('ComparisonDashboardPage', () => {
     getComparisonMock.mockReturnValue(new Promise(() => {}));
     renderDashboard();
 
-    expect(screen.getByText(/cargando/i)).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent(/cargando/i);
   });
 
   it('shows the API error message when the comparison cannot be loaded', async () => {
@@ -157,5 +158,21 @@ describe('ComparisonDashboardPage', () => {
     renderDashboard();
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Comparison not found');
+  });
+
+  it('refetches the comparison when the user retries after a failed load', async () => {
+    const user = userEvent.setup();
+    getComparisonMock.mockRejectedValueOnce(
+      new ApiClientError(500, 'INTERNAL_ERROR', 'Unexpected error'),
+    );
+    getComparisonMock.mockResolvedValueOnce(makeResult());
+    renderDashboard('abc-123');
+    await screen.findByRole('alert');
+
+    await user.click(screen.getByRole('button', { name: /reintentar/i }));
+
+    expect(await screen.findByText('Mutation score')).toBeInTheDocument();
+    expect(getComparisonMock).toHaveBeenCalledTimes(2);
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 });

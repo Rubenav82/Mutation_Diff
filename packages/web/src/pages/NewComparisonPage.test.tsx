@@ -119,6 +119,20 @@ describe('NewComparisonPage', () => {
     );
   });
 
+  it('announces progress and marks the submit button busy while comparing', async () => {
+    const user = userEvent.setup();
+    createComparisonMock.mockReturnValue(new Promise(() => {}));
+    renderWizard();
+    await selectFiles(user, 'base.xml', 'head.xml');
+
+    await user.click(screen.getByRole('button', { name: /comparar/i }));
+
+    expect(await screen.findByRole('status')).toHaveTextContent(/comparando/i);
+    const submit = screen.getByRole('button', { name: /comparar/i });
+    expect(submit).toHaveAttribute('aria-busy', 'true');
+    expect(submit).toBeDisabled();
+  });
+
   it('shows the API error message and stays on the wizard when the request fails', async () => {
     const user = userEvent.setup();
     createComparisonMock.mockRejectedValue(

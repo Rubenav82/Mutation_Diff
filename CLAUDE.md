@@ -220,6 +220,16 @@ No se ha tocado nada más: `ApiError`, el catch-all 404, y el fallback 500 para 
 - El guard de render pasó de `if (!result)` a `if (!result || !id)` para estrechar `id` a `string` antes de construir la URL — `useParams` lo tipa como `string | undefined` y bajo strict no se puede pasar directo. No es una rama nueva alcanzable en la práctica (sin `id` el `useEffect` ni siquiera lanza el fetch y la página se queda en carga), solo el estrechamiento que exige el tipo.
 - El test verifica el `href` con un id que contiene un espacio (`'abc 123'` → `/api/comparisons/abc%20123/report`) para cubrir el `encodeURIComponent` de `getComparisonReportUrl`, no solo la presencia del enlace.
 
+## Estados de carga y error accesibles (fijado en T-036 — cierra Fase 3)
+
+Recoge el pulido que T-031/T-032 dejaron explícitamente aparcado aquí. Dos componentes compartidos en `src/components/`, usados por el wizard y el dashboard, en vez de repetir markup accesible en cada página:
+
+- **`LoadingIndicator({ label })`**: `<p role="status">` con spinner `aria-hidden`. `role="status"` **ya implica** `aria-live="polite"` + `aria-atomic="true"`; no se añade `aria-live` explícito (sería redundante). El spinner es puramente decorativo, así que el texto anunciado es exactamente el `label` — hay test que lo fija (`textContent === label`), para que nadie meta texto dentro del spinner sin darse cuenta.
+- **`ErrorMessage({ message, onRetry? })`**: `role="alert"` (ya es live region assertive por sí solo) + botón "Reintentar" **solo** si se pasa `onRetry`. El wizard no lo pasa a propósito: su propio botón de submit ya es la forma de reintentar, y un segundo botón sería ambiguo. Mismo patrón de prop opcional que `onShowHelp` en `FileDropZone` (T-031b).
+- **Dashboard**: el reintento se implementa con un `reloadToken` en el estado que entra en las deps del `useEffect` (`[id, reloadToken]`) y se incrementa al pulsar el botón — el fetch sigue viviendo en un único sitio, sin duplicar la llamada en un handler aparte.
+- **Wizard**: el texto de progreso se movió del *label del botón* (`isSubmitting ? 'Comparando…' : 'Comparar'`) a un `LoadingIndicator` aparte, y el botón se queda con label fijo `Comparar` + `aria-busy={isSubmitting}` + `disabled`. Motivo: **un cambio en el propio label de un botón no se anuncia de forma fiable** por los lectores de pantalla; una live region separada sí. Visualmente el usuario sigue viendo spinner + "Comparando…".
+- `FileDropZone` no se tocó: sus errores de validación ya eran `role="alert"` desde T-031 y su forma (mensaje + enlace "Ver instrucciones") no encaja en `ErrorMessage` sin añadirle una prop de acción genérica que hoy nadie más necesitaría.
+
 ## Convenciones
 
 - Nombres de código, tipos y comentarios de API en inglés; documentación de producto (docs/) en español.

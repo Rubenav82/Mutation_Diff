@@ -30,7 +30,7 @@
 - [x] T-033 Tabla de unidades (TanStack Table): filtro, orden, colores por kind.
 - [x] T-034 Secciones regresiones / sin cobertura / nuevas.
 - [x] T-035 Botón exportar HTML.
-- [ ] T-036 Estados de carga y error accesibles.
+- [x] T-036 Estados de carga y error accesibles.
 
 ### Fase 4 — Calidad
 - [ ] T-040 Stryker sobre `packages/core`, umbral 70 en CI.

@@ -2,7 +2,9 @@ import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Tool } from 'core';
 import { ApiClientError, createComparison } from '../api/client';
+import { ErrorMessage } from '../components/ErrorMessage';
 import { FileDropZone } from '../components/FileDropZone';
+import { LoadingIndicator } from '../components/LoadingIndicator';
 import { ToolHelpPanel } from '../components/ToolHelpPanel';
 
 const HELP_PANEL_ID = 'tool-help-panel';
@@ -129,10 +131,15 @@ export function NewComparisonPage() {
           />
         </label>
 
-        {submitError && <p role="alert">{submitError}</p>}
+        {/* No `onRetry`: the submit button below is the way to retry. */}
+        {submitError && <ErrorMessage message={submitError} />}
 
-        <button type="submit" disabled={!canSubmit}>
-          {isSubmitting ? 'Comparando…' : 'Comparar'}
+        {/* The progress text lives here, not in the button label: a change to a
+            button's own label is not reliably announced by screen readers. */}
+        {isSubmitting && <LoadingIndicator label="Comparando…" />}
+
+        <button type="submit" disabled={!canSubmit} aria-busy={isSubmitting}>
+          Comparar
         </button>
       </form>
     </main>
