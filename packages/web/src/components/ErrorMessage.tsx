@@ -8,15 +8,17 @@ export function ErrorMessage({ message, onRetry }: ErrorMessageProps) {
   return (
     <div
       role="alert"
-      className="flex items-center gap-3 rounded border border-red-300 bg-red-50 p-3 text-red-800 dark:border-red-700 dark:bg-red-950 dark:text-red-200"
+      className="flex items-center gap-3 rounded-lg border border-loss/40 bg-raised p-4 text-sm text-loss"
     >
-      <span aria-hidden="true">⚠</span>
-      <p>{message}</p>
+      <span aria-hidden="true" className="text-base">
+        ⚠
+      </span>
+      <p className="flex-1">{message}</p>
       {onRetry && (
         <button
           type="button"
           onClick={onRetry}
-          className="rounded border border-red-400 px-2 py-1 text-sm font-semibold hover:bg-red-100 dark:hover:bg-red-900"
+          className="shrink-0 rounded-md border border-loss/40 px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-loss hover:text-white"
         >
           Reintentar
         </button>

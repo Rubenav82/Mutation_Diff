@@ -38,14 +38,25 @@ export function ToolHelpPanel({ tool, id }: ToolHelpPanelProps) {
   }
 
   return (
-    <div id={id} role="region" aria-label="Ayuda de configuración">
-      <p>{help.description}</p>
-      <pre>
-        <code>{help.snippet}</code>
-      </pre>
-      <button type="button" onClick={() => void handleCopy()}>
-        {copied ? 'Copiado' : 'Copiar'}
-      </button>
+    <div
+      id={id}
+      role="region"
+      aria-label="Ayuda de configuración"
+      className="rise rounded-lg border border-line bg-raised p-5"
+    >
+      <p className="text-sm leading-relaxed text-muted">{help.description}</p>
+      <div className="mt-3 flex items-center gap-3">
+        <pre className="flex-1 overflow-x-auto rounded-md border border-line bg-surface px-3 py-2">
+          <code className="font-mono text-sm text-ink">{help.snippet}</code>
+        </pre>
+        <button
+          type="button"
+          onClick={() => void handleCopy()}
+          className="shrink-0 rounded-md border border-line px-3 py-2 text-xs font-semibold text-muted transition-colors hover:border-accent hover:text-accent"
+        >
+          {copied ? 'Copiado' : 'Copiar'}
+        </button>
+      </div>
     </div>
   );
 }

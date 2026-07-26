@@ -31,6 +31,7 @@
 - [x] T-034 Secciones regresiones / sin cobertura / nuevas.
 - [x] T-035 Botón exportar HTML.
 - [x] T-036 Estados de carga y error accesibles.
+- [x] T-037 Estilado de la aplicación: layout compartido (contenedor, ancho máximo, tipografía base), estilado completo del wizard (radios, zonas de arrastre y sus estados, umbrales, botón, panel ⓘ) y pasada por el dashboard. Detectada al levantar la app después de cerrar la Fase 4: T-031/T-031b construyeron la estructura y el comportamiento del wizard, pero ninguna tarea cubrió nunca el diseño visual, y Preflight de Tailwind resetea además los estilos por defecto del navegador. Sin TDD: las clases no se testean unitariamente (los tests verifican roles y `data-*`, decisión de T-032/T-033); la verificación es visual con capturas de Playwright, más la suite en verde.
 
 ### Fase 4 — Calidad
 - [x] T-040 Stryker sobre `packages/core`, umbral 70 en CI.
