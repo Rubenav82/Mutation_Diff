@@ -14,7 +14,10 @@ const STATUS_MAP: Record<string, MutantStatus> = {
   TIMED_OUT: 'timeout',
   RUN_ERROR: 'error',
   MEMORY_ERROR: 'error',
-  NON_VIABLE: 'error',
+  // PiTest writes detected="true" for NON_VIABLE and counts it in the numerator of the
+  // mutation coverage shown in its own report, so it maps to `killed` rather than `error`:
+  // otherwise MutaDiff's killed total is always one short per non-viable mutant.
+  NON_VIABLE: 'killed',
 };
 
 interface RawMutation {

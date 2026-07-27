@@ -94,7 +94,7 @@ interface ComparisonResult {
 ```
 
 Notas de mapeo:
-- **PiTest** (`mutations.xml`): agrupar `<mutation>` por `mutatedClass`; estados KILLED→killed, SURVIVED→survived, NO_COVERAGE→no_coverage, TIMED_OUT→timeout, MEMORY_ERROR/RUN_ERROR/NON_VIABLE→error.
+- **PiTest** (`mutations.xml`): agrupar `<mutation>` por `mutatedClass`; estados KILLED→killed, SURVIVED→survived, NO_COVERAGE→no_coverage, TIMED_OUT→timeout, NON_VIABLE→killed, MEMORY_ERROR/RUN_ERROR→error. NON_VIABLE va a `killed` porque PiTest lo marca `detected="true"` y lo cuenta en el numerador de su propia cobertura de mutación: mapearlo a `error` dejaba el total de matados de MutaDiff por debajo del informe original.
 - **Stryker** (JSON del schema oficial): iterar `files{}.mutants[]`; Killed→killed, Survived→survived, NoCoverage→no_coverage, Timeout→timeout, CompileError/RuntimeError→error, Ignored→ignored. Normalizar separadores de ruta.
 - El matching entre ejecuciones es por `key`. Documentar limitación: renombrados de clase aparecen como removed + added.
 

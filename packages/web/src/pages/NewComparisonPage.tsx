@@ -14,6 +14,11 @@ const EXTENSION_BY_TOOL: Record<Tool, string> = {
   stryker: '.json',
 };
 
+const TOOLS: { value: Tool; label: string }[] = [
+  { value: 'pitest', label: 'PiTest' },
+  { value: 'stryker', label: 'Stryker' },
+];
+
 export function NewComparisonPage() {
   const navigate = useNavigate();
   const [tool, setTool] = useState<Tool>('pitest');
@@ -58,78 +63,104 @@ export function NewComparisonPage() {
   }
 
   return (
-    <main>
+    // Sin `mx-auto`: el formulario se alinea con la marca de la cabecera en vez
+    // de quedar centrado respecto a un contenedor más ancho que él.
+    <main className="rise max-w-3xl">
       <h1>Nueva comparación</h1>
-      <form onSubmit={(event) => void handleSubmit(event)}>
+      <p className="mt-2 mb-8 text-sm text-balance text-muted">
+        Sube la ejecución de referencia y la nueva. MutaDiff te dice qué clases han perdido score,
+        cuáles se han quedado sin tests y qué ha entrado o desaparecido.
+      </p>
+
+      <form onSubmit={(event) => void handleSubmit(event)} className="flex flex-col gap-7">
         <fieldset>
-          <legend>Herramienta</legend>
-          <label>
-            <input
-              type="radio"
-              name="tool"
-              value="pitest"
-              checked={tool === 'pitest'}
-              onChange={() => handleToolChange('pitest')}
-            />
-            PiTest
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="tool"
-              value="stryker"
-              checked={tool === 'stryker'}
-              onChange={() => handleToolChange('stryker')}
-            />
-            Stryker
-          </label>
-          <button
-            type="button"
-            aria-expanded={isHelpOpen}
-            aria-controls={HELP_PANEL_ID}
-            onClick={() => setIsHelpOpen((open) => !open)}
-          >
-            ⓘ<span className="sr-only">Ayuda de configuración</span>
-          </button>
+          <legend className="eyebrow mb-2">Herramienta</legend>
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Control segmentado: radios reales, con el input oculto y el
+                estado visual sobre el propio <label>. */}
+            <div className="inline-flex overflow-hidden rounded-md border border-line bg-raised">
+              {TOOLS.map(({ value, label }) => (
+                <label
+                  key={value}
+                  className={`relative cursor-pointer px-4 py-1.5 font-mono text-sm transition-colors ${
+                    tool === value
+                      ? 'bg-accent text-white'
+                      : 'text-muted hover:bg-accent-soft hover:text-ink'
+                  }`}
+                >
+                  {/* El input cubre el segmento en vez de ser `sr-only`: así el
+                      propio radio es la diana de clic, y no un <label> que se
+                      interpone por encima de un input de tamaño cero. */}
+                  <input
+                    type="radio"
+                    name="tool"
+                    value={value}
+                    checked={tool === value}
+                    onChange={() => handleToolChange(value)}
+                    className="absolute inset-0 h-full w-full cursor-pointer appearance-none opacity-0"
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+            <button
+              type="button"
+              aria-expanded={isHelpOpen}
+              aria-controls={HELP_PANEL_ID}
+              onClick={() => setIsHelpOpen((open) => !open)}
+              className="flex h-7 w-7 items-center justify-center rounded-full border border-line text-muted transition-colors hover:border-accent hover:text-accent"
+            >
+              ⓘ<span className="sr-only">Ayuda de configuración</span>
+            </button>
+          </div>
         </fieldset>
 
         {isHelpOpen && <ToolHelpPanel tool={tool} id={HELP_PANEL_ID} />}
 
-        <FileDropZone
-          id="baseFile"
-          label="Ejecución base"
-          acceptedExtension={EXTENSION_BY_TOOL[tool]}
-          file={baseFile}
-          onFileSelected={setBaseFile}
-          onClear={() => setBaseFile(null)}
-          onShowHelp={() => setIsHelpOpen(true)}
-        />
-        <FileDropZone
-          id="headFile"
-          label="Ejecución nueva"
-          acceptedExtension={EXTENSION_BY_TOOL[tool]}
-          file={headFile}
-          onFileSelected={setHeadFile}
-          onClear={() => setHeadFile(null)}
-          onShowHelp={() => setIsHelpOpen(true)}
-        />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <FileDropZone
+            id="baseFile"
+            label="Ejecución base"
+            acceptedExtension={EXTENSION_BY_TOOL[tool]}
+            file={baseFile}
+            onFileSelected={setBaseFile}
+            onClear={() => setBaseFile(null)}
+            onShowHelp={() => setIsHelpOpen(true)}
+          />
+          <FileDropZone
+            id="headFile"
+            label="Ejecución nueva"
+            acceptedExtension={EXTENSION_BY_TOOL[tool]}
+            file={headFile}
+            onFileSelected={setHeadFile}
+            onClear={() => setHeadFile(null)}
+            onShowHelp={() => setIsHelpOpen(true)}
+          />
+        </div>
 
-        <label>
-          Umbral de regresión (%)
-          <input
-            type="number"
-            value={regressionThreshold}
-            onChange={(event) => setRegressionThreshold(event.target.value)}
-          />
-        </label>
-        <label>
-          Umbral sin cobertura (%)
-          <input
-            type="number"
-            value={uncoveredThreshold}
-            onChange={(event) => setUncoveredThreshold(event.target.value)}
-          />
-        </label>
+        <fieldset className="grid gap-4 sm:grid-cols-2">
+          <legend className="eyebrow mb-2">Umbrales (opcional)</legend>
+          <label className="flex flex-col gap-1.5 text-sm text-muted">
+            Umbral de regresión (%)
+            <input
+              type="number"
+              value={regressionThreshold}
+              onChange={(event) => setRegressionThreshold(event.target.value)}
+              placeholder="0"
+              className="rounded-md border border-line bg-raised px-3 py-2 font-mono text-sm text-ink transition-colors hover:border-line-strong"
+            />
+          </label>
+          <label className="flex flex-col gap-1.5 text-sm text-muted">
+            Umbral sin cobertura (%)
+            <input
+              type="number"
+              value={uncoveredThreshold}
+              onChange={(event) => setUncoveredThreshold(event.target.value)}
+              placeholder="100"
+              className="rounded-md border border-line bg-raised px-3 py-2 font-mono text-sm text-ink transition-colors hover:border-line-strong"
+            />
+          </label>
+        </fieldset>
 
         {/* No `onRetry`: the submit button below is the way to retry. */}
         {submitError && <ErrorMessage message={submitError} />}
@@ -138,9 +169,19 @@ export function NewComparisonPage() {
             button's own label is not reliably announced by screen readers. */}
         {isSubmitting && <LoadingIndicator label="Comparando…" />}
 
-        <button type="submit" disabled={!canSubmit} aria-busy={isSubmitting}>
-          Comparar
-        </button>
+        <div className="flex items-center gap-4 border-t border-line pt-6">
+          <button
+            type="submit"
+            disabled={!canSubmit}
+            aria-busy={isSubmitting}
+            className="rounded-md bg-accent px-6 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-35"
+          >
+            Comparar
+          </button>
+          {!canSubmit && !isSubmitting && (
+            <span className="text-xs text-muted">Necesitas las dos ejecuciones.</span>
+          )}
+        </div>
       </form>
     </main>
   );

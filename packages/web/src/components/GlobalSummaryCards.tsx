@@ -34,9 +34,16 @@ function countCard(label: string, base: number, head: number, polarity: Polarity
 }
 
 const VARIANT_DELTA_CLASS: Record<Variant, string> = {
-  positive: 'text-green-700 dark:text-green-400',
-  negative: 'text-red-700 dark:text-red-400',
-  neutral: 'text-gray-500 dark:text-gray-400',
+  positive: 'text-gain',
+  negative: 'text-loss',
+  neutral: 'text-muted',
+};
+
+/** Filete superior de la tarjeta: el color del dato, no del cromo. */
+const VARIANT_RULE_CLASS: Record<Variant, string> = {
+  positive: 'bg-gain',
+  negative: 'bg-loss',
+  neutral: 'bg-line',
 };
 
 export function GlobalSummaryCards({ global }: { global: ComparisonResult['global'] }) {
@@ -51,35 +58,41 @@ export function GlobalSummaryCards({ global }: { global: ComparisonResult['globa
       variant: trendVariant(scoreDelta, 'higher-better'),
     },
     {
-      label: 'Cobertura',
+      label: 'Mutantes cubiertos',
       baseText: formatPct(base.coveredPct),
       headText: formatPct(head.coveredPct),
       deltaText: formatSignedPct(coverageDelta),
       variant: trendVariant(coverageDelta, 'higher-better'),
     },
     countCard('Killed', base.killed, head.killed, 'higher-better'),
-    countCard('Supervivientes', base.survived, head.survived, 'higher-worse'),
-    countCard('Sin cobertura', base.noCoverage, head.noCoverage, 'higher-worse'),
+    countCard('Survivors', base.survived, head.survived, 'higher-worse'),
+    countCard('Sin cubrir', base.noCoverage, head.noCoverage, 'higher-worse'),
     countCard('Timeouts', base.timeout, head.timeout, 'neutral'),
   ];
 
   return (
     <section aria-label="Métricas globales">
       <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        {cards.map((card) => (
+        {cards.map((card, index) => (
           <li
             key={card.label}
             data-variant={card.variant}
-            className="rounded-lg border border-gray-200 p-3 dark:border-gray-700"
+            className="rise overflow-hidden rounded-lg border border-line bg-raised"
+            style={{ animationDelay: `${index * 45}ms` }}
           >
-            <span className="block text-xs text-gray-500 dark:text-gray-400">{card.label}</span>
-            <span className="block text-sm text-gray-600 dark:text-gray-300">
+            <span className={`block h-0.5 ${VARIANT_RULE_CLASS[card.variant]}`} />
+            <span className="block px-3 pt-3">
+              <span className="eyebrow">{card.label}</span>
+            </span>
+            <span
+              className={`block px-3 pt-1 font-mono text-xl font-semibold tabular-nums ${VARIANT_DELTA_CLASS[card.variant]}`}
+            >
+              {card.deltaText}
+            </span>
+            <span className="block px-3 pb-3 font-mono text-xs text-muted tabular-nums">
               <span>{card.baseText}</span>
               <span aria-hidden="true"> → </span>
               <span>{card.headText}</span>
-            </span>
-            <span className={`block text-lg font-semibold ${VARIANT_DELTA_CLASS[card.variant]}`}>
-              {card.deltaText}
             </span>
           </li>
         ))}

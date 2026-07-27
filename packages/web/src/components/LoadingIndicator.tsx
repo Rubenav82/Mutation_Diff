@@ -4,10 +4,10 @@
  */
 export function LoadingIndicator({ label }: { label: string }) {
   return (
-    <p role="status" className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+    <p role="status" className="flex items-center gap-2.5 text-sm text-muted">
       <span
         aria-hidden="true"
-        className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"
+        className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-line border-t-accent"
       />
       {label}
     </p>

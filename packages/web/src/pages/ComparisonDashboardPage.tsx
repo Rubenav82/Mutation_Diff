@@ -53,18 +53,18 @@ export function ComparisonDashboardPage() {
   }
 
   return (
-    <main>
-      <div className="flex items-center justify-between gap-4">
+    <main className="rise flex flex-col gap-10">
+      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-5">
         <div>
           <h1>Comparación</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Herramienta: {result.tool}</p>
+          <p className="mt-1 font-mono text-xs text-muted">Herramienta: {result.tool}</p>
         </div>
         {/* Plain anchor, not fetch+blob: the endpoint already sends
             Content-Disposition: attachment with the filename. */}
         <a
           href={getComparisonReportUrl(id)}
           download
-          className="rounded bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+          className="rounded-md border border-accent px-4 py-2 text-sm font-semibold text-accent transition-colors hover:bg-accent hover:text-white"
         >
           Exportar HTML
         </a>

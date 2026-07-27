@@ -20,11 +20,11 @@ const KIND_LABELS: Record<UnitChangeKind, string> = {
 };
 
 const KIND_LABEL_CLASS: Record<UnitChangeKind, string> = {
-  improved: 'text-green-700 dark:text-green-400',
-  regressed: 'text-red-700 dark:text-red-400',
-  unchanged: 'text-gray-500 dark:text-gray-400',
-  added: 'text-blue-700 dark:text-blue-400',
-  removed: 'text-gray-400 dark:text-gray-500 line-through',
+  improved: 'text-gain',
+  regressed: 'text-loss',
+  unchanged: 'text-muted',
+  added: 'text-accent',
+  removed: 'text-muted line-through',
 };
 
 const COLUMNS: ColumnDef<UnitComparison>[] = [
@@ -88,59 +88,69 @@ export function UnitsTable({ units }: { units: UnitComparison[] }) {
 
   return (
     <section aria-label="Todas las unidades">
-      <h2 className="text-lg font-semibold">Todas las unidades</h2>
-      <input
-        type="search"
-        aria-label="Filtrar por clase o paquete"
-        placeholder="Filtrar por clase o paquete…"
-        value={globalFilter}
-        onChange={(event) => setGlobalFilter(event.target.value)}
-        className="my-2 w-full max-w-sm rounded border border-gray-300 px-2 py-1 dark:border-gray-600"
-      />
-      <table className="w-full border-collapse text-sm">
-        <thead>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <th key={header.id} className="border-b border-gray-300 p-2 text-left">
-                  <button
-                    type="button"
-                    onClick={header.column.getToggleSortingHandler()}
-                    className="font-semibold"
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <h2>Todas las unidades</h2>
+        <input
+          type="search"
+          aria-label="Filtrar por clase o paquete"
+          placeholder="Filtrar por clase o paquete…"
+          value={globalFilter}
+          onChange={(event) => setGlobalFilter(event.target.value)}
+          className="w-full max-w-xs rounded-md border border-line bg-raised px-3 py-1.5 font-mono text-sm text-ink transition-colors hover:border-line-strong"
+        />
+      </div>
+      <div className="overflow-x-auto rounded-lg border border-line bg-raised">
+        <table className="w-full border-collapse text-sm">
+          <thead>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <th
+                    key={header.id}
+                    className="border-b border-line bg-surface p-0 text-left first:w-1/2"
                   >
-                    {flexRender(header.column.columnDef.header, header.getContext())}
-                    {header.column.getIsSorted() === 'asc'
-                      ? ' ↑'
-                      : header.column.getIsSorted() === 'desc'
-                        ? ' ↓'
-                        : ''}
-                  </button>
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr
-              key={row.id}
-              data-kind={row.original.kind}
-              className="border-b border-gray-200 dark:border-gray-700"
-            >
-              {row.getVisibleCells().map((cell) => (
-                <td key={cell.id} className="p-2">
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {rows.length === 0 && (
-        <p className="p-2 text-gray-500 dark:text-gray-400">
-          {units.length === 0 ? 'No hay unidades.' : 'Ninguna unidad coincide con el filtro.'}
-        </p>
-      )}
+                    <button
+                      type="button"
+                      onClick={header.column.getToggleSortingHandler()}
+                      className="eyebrow w-full px-3 py-2.5 text-left transition-colors hover:text-accent"
+                    >
+                      {flexRender(header.column.columnDef.header, header.getContext())}
+                      {header.column.getIsSorted() === 'asc'
+                        ? ' ↑'
+                        : header.column.getIsSorted() === 'desc'
+                          ? ' ↓'
+                          : ''}
+                    </button>
+                  </th>
+                ))}
+              </tr>
+            ))}
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr
+                key={row.id}
+                data-kind={row.original.kind}
+                className="border-b border-line last:border-0 hover:bg-accent-soft/50"
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <td
+                    key={cell.id}
+                    className="px-3 py-2 font-mono text-sm tabular-nums first:break-all"
+                  >
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {rows.length === 0 && (
+          <p className="px-3 py-6 text-center text-sm text-muted">
+            {units.length === 0 ? 'No hay unidades.' : 'Ninguna unidad coincide con el filtro.'}
+          </p>
+        )}
+      </div>
     </section>
   );
 }
