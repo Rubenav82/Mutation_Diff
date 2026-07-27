@@ -253,9 +253,18 @@ describe('compareRuns — contexto de la comparación', () => {
     expect(context.headLabel).toBe('mutations2.xml');
   });
 
-  it('omits a label key entirely when the run has none', () => {
+  // Cada lado necesita su propia comprobación: con una sola, el mutante que fuerza
+  // la rama del otro sobrevive, porque la clave llega como `undefined` en vez de
+  // faltar y ninguna aserción lo distingue.
+  it('omits the base label key entirely when that run has none', () => {
     const { context } = compareRuns(base, { ...head, label: 'mutations2.xml' });
     expect('baseLabel' in context).toBe(false);
     expect(context.headLabel).toBe('mutations2.xml');
+  });
+
+  it('omits the head label key entirely when that run has none', () => {
+    const { context } = compareRuns({ ...base, label: 'mutations1.xml' }, head);
+    expect('headLabel' in context).toBe(false);
+    expect(context.baseLabel).toBe('mutations1.xml');
   });
 });

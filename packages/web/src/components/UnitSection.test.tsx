@@ -46,7 +46,7 @@ describe('UnitSection', () => {
       <UnitSection title="Regresiones" units={REGRESSIONS} emptyMessage="No hay regresiones." />,
     );
 
-    expect(screen.getByRole('heading', { name: 'Regresiones (2)' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Regresiones 2' })).toBeInTheDocument();
     const row = screen.getByText('com.example.TaxCalculator').closest('tr') as HTMLElement;
     expect(within(row).getByText('90.0%')).toBeInTheDocument();
     expect(within(row).getByText('55.0%')).toBeInTheDocument();
@@ -92,7 +92,7 @@ describe('UnitSection', () => {
   it('shows the empty message and no table when there are no units', () => {
     render(<UnitSection title="Regresiones" units={[]} emptyMessage="No hay regresiones." />);
 
-    expect(screen.getByRole('heading', { name: 'Regresiones (0)' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Regresiones 0' })).toBeInTheDocument();
     expect(screen.getByText('No hay regresiones.')).toBeInTheDocument();
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
   });

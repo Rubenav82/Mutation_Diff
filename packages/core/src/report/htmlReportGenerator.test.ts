@@ -141,12 +141,28 @@ describe('generateHtmlReport — contexto de la comparación', () => {
     expect(html).toContain('75%');
   });
 
-  it('falls back to a placeholder when a run carries no file name', () => {
+  // Un lado cada vez: comprobando solo que el texto aparece, el sustituto del otro
+  // lado puede desaparecer sin que ninguna aserción se entere.
+  it('falls back to a placeholder for the base run alone', () => {
     const html = generateHtmlReport(
-      resultFrom({ context: { regressionThreshold: 0, uncoveredThreshold: 100 } }),
+      resultFrom({
+        context: { headLabel: 'head.xml', regressionThreshold: 0, uncoveredThreshold: 100 },
+      }),
     );
 
-    expect(html).toContain('Sin nombre');
+    expect(html).toContain('<span class="file">Sin nombre</span>');
+    expect(html).toContain('<span class="file">head.xml</span>');
+  });
+
+  it('falls back to a placeholder for the head run alone', () => {
+    const html = generateHtmlReport(
+      resultFrom({
+        context: { baseLabel: 'base.xml', regressionThreshold: 0, uncoveredThreshold: 100 },
+      }),
+    );
+
+    expect(html).toContain('<span class="file">base.xml</span>');
+    expect(html).toContain('<span class="file">Sin nombre</span>');
   });
 
   it('escapes a file name instead of injecting it raw', () => {

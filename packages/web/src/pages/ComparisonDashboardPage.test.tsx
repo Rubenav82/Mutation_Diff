@@ -129,16 +129,16 @@ describe('ComparisonDashboardPage', () => {
     getComparisonMock.mockResolvedValue(makeResult());
     renderDashboard();
 
-    expect(await screen.findByRole('heading', { name: 'Regresiones (1)' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Regresiones 1' })).toBeInTheDocument();
     expect(screen.getByText('com.example.TaxCalculator')).toBeInTheDocument();
 
-    expect(screen.getByRole('heading', { name: 'Sin cobertura (1)' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Sin cobertura 1' })).toBeInTheDocument();
     expect(screen.getByText('com.example.EmailSender')).toBeInTheDocument();
 
-    expect(screen.getByRole('heading', { name: 'Nuevas (1)' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Nuevas 1' })).toBeInTheDocument();
     expect(screen.getByText('com.example.RefundService')).toBeInTheDocument();
 
-    expect(screen.getByRole('heading', { name: 'Eliminadas (0)' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Eliminadas 0' })).toBeInTheDocument();
     expect(screen.getByText('No hay unidades eliminadas.')).toBeInTheDocument();
   });
 
