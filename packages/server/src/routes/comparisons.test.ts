@@ -137,6 +137,45 @@ describe('GET /api/comparisons/:id', () => {
     expect(res.status).toBe(404);
     expect(res.body.error.code).toBe('COMPARISON_NOT_FOUND');
   });
+
+  // El caso que importa es la recarga: al abrir /comparisons/:id el cliente solo tiene
+  // el ComparisonResult del store, así que el contexto tiene que sobrevivir al viaje.
+  it('reports the uploaded file names and the effective thresholds after the store round-trip', async () => {
+    const app = createApp();
+    const postRes = await request(app)
+      .post('/api/comparisons')
+      .field('tool', 'pitest')
+      .field('regressionThreshold', '2')
+      .field('uncoveredThreshold', '75')
+      .attach('baseFile', fixture('pitest/mini/base.xml'), 'mutations-enero.xml')
+      .attach('headFile', fixture('pitest/mini/head.xml'), 'mutations-febrero.xml');
+    const { comparisonId } = postRes.body as { comparisonId: string };
+
+    const getRes = await request(app).get(`/api/comparisons/${comparisonId}`);
+
+    expect(getRes.status).toBe(200);
+    expect(getRes.body.context).toEqual({
+      baseLabel: 'mutations-enero.xml',
+      headLabel: 'mutations-febrero.xml',
+      regressionThreshold: 2,
+      uncoveredThreshold: 75,
+    });
+  });
+
+  it('reports the engine default thresholds when the request omits them', async () => {
+    const app = createApp();
+    const postRes = await request(app)
+      .post('/api/comparisons')
+      .field('tool', 'stryker')
+      .attach('baseFile', fixture('stryker/mini/base.json'), 'base.json')
+      .attach('headFile', fixture('stryker/mini/head.json'), 'head.json');
+    const { comparisonId } = postRes.body as { comparisonId: string };
+
+    const getRes = await request(app).get(`/api/comparisons/${comparisonId}`);
+
+    expect(getRes.body.context.regressionThreshold).toBe(0);
+    expect(getRes.body.context.uncoveredThreshold).toBe(100);
+  });
 });
 
 describe('POST /api/comparisons — error homogeneity (T-024)', () => {

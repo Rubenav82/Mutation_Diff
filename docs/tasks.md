@@ -45,7 +45,7 @@
 **Backend — contexto de la comparación**
 
 - [x] T-043 `ComparisonResult` gana `context: { baseLabel?, headLabel?, regressionThreshold, uncoveredThreshold }`, rellenado por `compareRuns` desde `base.label`/`head.label` (campo que ya existe en `NormalizedRun` y hoy nadie usa) y desde las opciones ya recibidas, con los **defaults ya resueltos** — no los opcionales de entrada, para que el rail pueda mostrar el umbral efectivo sin volver a conocer los defaults. Motivo: sin esto, al recargar `/comparisons/:id` o abrir un enlace compartido no hay forma de saber qué ficheros ni qué umbrales produjeron el resultado.
-- [ ] T-044 `POST /api/comparisons` pasa `label: file.originalname` a ambos parsers. Test con Supertest que verifica que `GET /api/comparisons/:id` devuelve nombres y umbrales **después** de guardarse en el store (es el caso que importa: la recarga, no la respuesta del POST).
+- [x] T-044 `POST /api/comparisons` pasa `label: file.originalname` a ambos parsers. Test con Supertest que verifica que `GET /api/comparisons/:id` devuelve nombres y umbrales **después** de guardarse en el store (es el caso que importa: la recarga, no la respuesta del POST).
 
 **Sistema visual**
 
