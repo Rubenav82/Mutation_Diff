@@ -64,7 +64,7 @@ export function ComparisonDashboardPage() {
         <a
           href={getComparisonReportUrl(id)}
           download
-          className="rounded-md border border-accent px-4 py-2 text-sm font-semibold text-accent transition-colors hover:bg-accent hover:text-white"
+          className="rounded-md border-2 border-line-strong px-4 py-2 text-sm font-semibold text-ink transition-colors hover:bg-deep hover:text-inverse"
         >
           Exportar HTML
         </a>

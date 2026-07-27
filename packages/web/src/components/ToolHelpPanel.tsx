@@ -52,7 +52,7 @@ export function ToolHelpPanel({ tool, id }: ToolHelpPanelProps) {
         <button
           type="button"
           onClick={() => void handleCopy()}
-          className="shrink-0 rounded-md border border-line px-3 py-2 text-xs font-semibold text-muted transition-colors hover:border-accent hover:text-accent"
+          className="shrink-0 rounded-md border border-line px-3 py-2 text-xs font-semibold text-muted transition-colors hover:border-accent hover:text-ink"
         >
           {copied ? 'Copiado' : 'Copiar'}
         </button>

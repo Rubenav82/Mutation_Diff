@@ -96,7 +96,7 @@ export function FileDropZone({
         <button
           type="button"
           onClick={onClear}
-          className="mt-1.5 text-xs text-muted underline underline-offset-2 hover:text-accent"
+          className="mt-1.5 text-xs text-muted underline underline-offset-2 hover:text-ink"
         >
           Quitar
         </button>
@@ -108,7 +108,7 @@ export function FileDropZone({
             <button
               type="button"
               onClick={onShowHelp}
-              className="underline underline-offset-2 hover:text-accent"
+              className="underline underline-offset-2 hover:text-ink"
             >
               Ver instrucciones
             </button>

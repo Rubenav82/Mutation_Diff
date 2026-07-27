@@ -46,7 +46,7 @@ export function UnitSection({ title, units, emptyMessage }: UnitSectionProps) {
                 <tr
                   key={unit.key}
                   data-kind={unit.kind}
-                  className="border-b border-line last:border-0 hover:bg-accent-soft/50"
+                  className="border-b border-line last:border-0 hover:bg-wash"
                 >
                   <td className="px-3 py-2 font-mono text-sm break-all">{unit.key}</td>
                   <td className="px-3 py-2 font-mono text-sm tabular-nums">

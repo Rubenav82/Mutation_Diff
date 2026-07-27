@@ -23,7 +23,7 @@ const KIND_LABEL_CLASS: Record<UnitChangeKind, string> = {
   improved: 'text-gain',
   regressed: 'text-loss',
   unchanged: 'text-muted',
-  added: 'text-accent',
+  added: 'text-ink',
   removed: 'text-muted line-through',
 };
 
@@ -112,7 +112,7 @@ export function UnitsTable({ units }: { units: UnitComparison[] }) {
                     <button
                       type="button"
                       onClick={header.column.getToggleSortingHandler()}
-                      className="eyebrow w-full px-3 py-2.5 text-left transition-colors hover:text-accent"
+                      className="eyebrow w-full px-3 py-2.5 text-left transition-colors hover:text-ink"
                     >
                       {flexRender(header.column.columnDef.header, header.getContext())}
                       {header.column.getIsSorted() === 'asc'
@@ -131,7 +131,7 @@ export function UnitsTable({ units }: { units: UnitComparison[] }) {
               <tr
                 key={row.id}
                 data-kind={row.original.kind}
-                className="border-b border-line last:border-0 hover:bg-accent-soft/50"
+                className="border-b border-line last:border-0 hover:bg-wash"
               >
                 {row.getVisibleCells().map((cell) => (
                   <td

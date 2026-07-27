@@ -272,6 +272,25 @@ Detectado al levantar la app tras cerrar la Fase 4: Tailwind funcionaba, pero el
 - `UnitSection` necesita un `{' '}` explícito entre el título y el contador: JSX se come el salto de línea y el nombre accesible pasaría a ser `Regresiones(2)`, rompiendo `getByRole('heading', { name: 'Regresiones (2)' })`. Vale para cualquier cabecera que parta texto en varios nodos.
 - **Verificación**: no hay TDD aquí (las clases no se testean unitariamente; los tests verifican roles y `data-*`, decisión de T-032/T-033). La comprobación es la suite en verde + capturas con Playwright en claro y oscuro, generadas con un script suelto que usa `chromium` de `@playwright/test` directamente. Ese script tiene que ejecutarse **desde la raíz del repo**: fuera de él Node no resuelve `@playwright/test`.
 
+## Sistema visual Modernist (fijado en T-045 — arranca el rediseño de la Fase 4.5)
+
+Sustituye la paleta cobre/papel de T-037 por el sistema Modernist. Las decisiones de adaptación están en `docs/plan.md` §2.5.1 y prevalecen sobre el handoff externo de `design-input/`; aquí solo lo que afecta a cómo se toca el código.
+
+- **Los nombres de los tokens semánticos no cambiaron, solo sus valores** (`surface`, `raised`, `line`, `ink`, `muted`, `gain`, `loss`): los ~100 usos de clases en los componentes siguieron valiendo y el diff quedó acotado a `index.css` más los sitios donde el *rol* de un color cambiaba de verdad. Al añadir un token nuevo, seguir este criterio antes que inventar una familia paralela.
+- **Radio 0 se aplica con `--radius-*: 0` en `@theme inline`, no borrando cada `rounded-*` del marcado**: un solo punto de reversión y cero ruido en los componentes. `rounded-full` es la excepción deliberada (spinner) porque no deriva de esas variables.
+- **Tres roles que antes estaban fundidos en `accent` y ahora están separados** — mezclarlos otra vez es el error a evitar:
+  - `--accent` (#ec3013) **no toca texto ni datos**: da 3.76:1 sobre el fondo y 4.20:1 con blanco encima, así que falla AA en ambos sentidos. Queda en foco, logotipo, spinner y borde de arrastre activo (componentes no textuales, mínimo 3:1). El `text-accent` que usaba `UnitsTable` para el kind `added` era además una violación de "el color es del dato": un dato neutro pintado con el color del cromo.
+  - `--deep` (#2d2b2b) es la superficie de acción primaria y de la banda de T-047 (14.07:1 con blanco). Los botones primarios van aquí, **no** en rojo.
+  - `--wash` (#eae7e7) es el hover neutro de fila; antes era `accent-soft/50`, que teñía de rojo cada hover sin que hubiera dato que lo justificara.
+- `--line-strong` es el borde acentuado de un **control** (hover, zona con fichero) y por eso es gris (#605d5d), no tinta: con tinta pura, cada hover se convertía en un marco negro. La tinta queda para `.rule` (la regla estructural de 2px del sistema). Detectado en las capturas, no en los tests.
+- **Los contrastes se verifican, no se estiman**: hay un script de ratios WCAG en el flujo de esta tarea. `--gain` (6.67:1) y `--loss` (6.41:1) están emparejados a propósito — si el verde pesara más, una mejora cantaría más que una regresión.
+
+**Capturas de verificación (afina la nota de T-037)**:
+
+- El script suelto de Playwright **tiene que vivir en la raíz del repo**, no en un directorio temporal: Node resuelve `@playwright/test` desde la ubicación del *script*, no desde el `cwd`, así que ejecutarlo desde la raíz no basta si el fichero está fuera.
+- **Usar `reducedMotion: 'reduce'` en el contexto del navegador.** Sin esto, `.rise` y las transiciones se capturan a mitad de fotograma y producen falsos positivos convincentes: en esta tarea el botón "Comparar" salió gris (parecía deshabilitado con los dos ficheros ya puestos) y la mitad de las tarjetas del dashboard salieron invisibles. Ambas cosas eran artefactos de la captura, confirmado midiendo `getComputedStyle` y las reglas CSS que realmente matcheaban en vez de razonar sobre el píxel.
+- Un comentario `{/* … */}` **no puede ser hermano del elemento raíz** dentro de un `return ( … )`: rompe el parseo con un `PARSE_ERROR` de oxc que apunta al elemento siguiente, no al comentario. Va antes del `return`, como comentario JS.
+
 ## Convenciones
 
 - Nombres de código, tipos y comentarios de API en inglés; documentación de producto (docs/) en español.

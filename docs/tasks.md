@@ -49,7 +49,7 @@
 
 **Sistema visual**
 
-- [ ] T-045 Tokens Modernist en `packages/web/src/index.css`: paleta (fondo `#f3f2f2`, tinta `#201e1d`, rampa de neutros y de acento), `--color-gain: #14622f` / `--color-loss: #ae1800`, radio 0, reglas de 2px, escala de espaciados. Retira el bloque `prefers-color-scheme` (sin modo oscuro) y mantiene los stacks de sistema (sin webfont). Incluye la pasada por el wizard, que el handoff no cubría pero que comparte los mismos tokens: cambiarlos sin repasarlo lo dejaría a medio estilar.
+- [x] T-045 Tokens Modernist en `packages/web/src/index.css`: paleta (fondo `#f3f2f2`, tinta `#201e1d`, rampa de neutros y de acento), `--color-gain: #14622f` / `--color-loss: #ae1800`, radio 0, reglas de 2px, escala de espaciados. Retira el bloque `prefers-color-scheme` (sin modo oscuro) y mantiene los stacks de sistema (sin webfont). Incluye la pasada por el wizard, que el handoff no cubría pero que comparte los mismos tokens: cambiarlos sin repasarlo lo dejaría a medio estilar.
 
 **Pantalla de comparación**
 

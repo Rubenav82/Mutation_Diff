@@ -84,8 +84,8 @@ export function NewComparisonPage() {
                   key={value}
                   className={`relative cursor-pointer px-4 py-1.5 font-mono text-sm transition-colors ${
                     tool === value
-                      ? 'bg-accent text-white'
-                      : 'text-muted hover:bg-accent-soft hover:text-ink'
+                      ? 'bg-deep text-inverse'
+                      : 'text-muted hover:bg-wash hover:text-ink'
                   }`}
                 >
                   {/* El input cubre el segmento en vez de ser `sr-only`: así el
@@ -108,7 +108,7 @@ export function NewComparisonPage() {
               aria-expanded={isHelpOpen}
               aria-controls={HELP_PANEL_ID}
               onClick={() => setIsHelpOpen((open) => !open)}
-              className="flex h-7 w-7 items-center justify-center rounded-full border border-line text-muted transition-colors hover:border-accent hover:text-accent"
+              className="flex h-7 w-7 items-center justify-center border border-line text-muted transition-colors hover:border-accent hover:text-ink"
             >
               ⓘ<span className="sr-only">Ayuda de configuración</span>
             </button>
@@ -169,12 +169,12 @@ export function NewComparisonPage() {
             button's own label is not reliably announced by screen readers. */}
         {isSubmitting && <LoadingIndicator label="Comparando…" />}
 
-        <div className="flex items-center gap-4 border-t border-line pt-6">
+        <div className="rule flex items-center gap-4 pt-6">
           <button
             type="submit"
             disabled={!canSubmit}
             aria-busy={isSubmitting}
-            className="rounded-md bg-accent px-6 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-35"
+            className="rounded-md bg-deep px-6 py-2.5 text-sm font-semibold text-inverse transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-35"
           >
             Comparar
           </button>
