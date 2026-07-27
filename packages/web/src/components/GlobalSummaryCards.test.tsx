@@ -50,7 +50,7 @@ describe('GlobalSummaryCards', () => {
     expect(within(score).getByText('85.0%')).toBeInTheDocument();
     expect(within(score).getByText('+5.0%')).toBeInTheDocument();
 
-    const coverage = cardByLabel('Cobertura de mutantes');
+    const coverage = cardByLabel('Mutantes cubiertos');
     expect(within(coverage).getByText('-2.0%')).toBeInTheDocument();
   });
 
@@ -65,7 +65,7 @@ describe('GlobalSummaryCards', () => {
     );
 
     expect(cardByLabel('Mutation score')).toHaveAttribute('data-variant', 'positive');
-    expect(cardByLabel('Cobertura de mutantes')).toHaveAttribute('data-variant', 'negative');
+    expect(cardByLabel('Mutantes cubiertos')).toHaveAttribute('data-variant', 'negative');
   });
 
   it('treats more survivors as a negative trend (higher is worse)', () => {
@@ -75,7 +75,7 @@ describe('GlobalSummaryCards', () => {
       />,
     );
 
-    const survivors = cardByLabel('Cubiertos supervivientes');
+    const survivors = cardByLabel('Survivors');
     expect(within(survivors).getByText('+3')).toBeInTheDocument();
     expect(survivors).toHaveAttribute('data-variant', 'negative');
   });
@@ -91,8 +91,8 @@ describe('GlobalSummaryCards', () => {
     );
 
     expect(within(cardByLabel('Killed')).getByText('+1')).toBeInTheDocument();
-    expect(within(cardByLabel('Cubiertos supervivientes')).getByText('-1')).toBeInTheDocument();
-    expect(within(cardByLabel('Mutantes sin cubrir')).getByText('+1')).toBeInTheDocument();
+    expect(within(cardByLabel('Survivors')).getByText('-1')).toBeInTheDocument();
+    expect(within(cardByLabel('Sin cubrir')).getByText('+1')).toBeInTheDocument();
     expect(within(cardByLabel('Timeouts')).getByText('+1')).toBeInTheDocument();
   });
 

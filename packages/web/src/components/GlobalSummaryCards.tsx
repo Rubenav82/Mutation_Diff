@@ -58,15 +58,15 @@ export function GlobalSummaryCards({ global }: { global: ComparisonResult['globa
       variant: trendVariant(scoreDelta, 'higher-better'),
     },
     {
-      label: 'Cobertura de mutantes',
+      label: 'Mutantes cubiertos',
       baseText: formatPct(base.coveredPct),
       headText: formatPct(head.coveredPct),
       deltaText: formatSignedPct(coverageDelta),
       variant: trendVariant(coverageDelta, 'higher-better'),
     },
     countCard('Killed', base.killed, head.killed, 'higher-better'),
-    countCard('Cubiertos supervivientes', base.survived, head.survived, 'higher-worse'),
-    countCard('Mutantes sin cubrir', base.noCoverage, head.noCoverage, 'higher-worse'),
+    countCard('Survivors', base.survived, head.survived, 'higher-worse'),
+    countCard('Sin cubrir', base.noCoverage, head.noCoverage, 'higher-worse'),
     countCard('Timeouts', base.timeout, head.timeout, 'neutral'),
   ];
 
