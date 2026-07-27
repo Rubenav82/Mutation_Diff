@@ -38,11 +38,11 @@ const VARIANT_DELTA_CLASS: Record<Variant, string> = {
   neutral: 'text-muted',
 };
 
-/** Filete superior de la tarjeta: el color del dato, no del cromo. */
+/** Regla superior de 2px: el color es del dato, no del cromo. */
 const VARIANT_RULE_CLASS: Record<Variant, string> = {
-  positive: 'bg-gain',
-  negative: 'bg-loss',
-  neutral: 'bg-line',
+  positive: 'border-gain',
+  negative: 'border-loss',
+  neutral: 'border-line-strong',
 };
 
 /**
@@ -50,7 +50,7 @@ const VARIANT_RULE_CLASS: Record<Variant, string> = {
  * from `SummaryBand`, and repeating them would give the same figure two
  * different visual weights.
  */
-export function GlobalSummaryCards({ global }: { global: ComparisonResult['global'] }) {
+export function KpiRow({ global }: { global: ComparisonResult['global'] }) {
   const { base, head } = global;
 
   const cards: CardSpec[] = [
@@ -62,27 +62,30 @@ export function GlobalSummaryCards({ global }: { global: ComparisonResult['globa
 
   return (
     <section aria-label="Métricas globales">
-      <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      <ul className="grid grid-cols-2 gap-px bg-line lg:grid-cols-4">
         {cards.map((card, index) => (
           <li
             key={card.label}
             data-variant={card.variant}
-            className="rise overflow-hidden rounded-lg border border-line bg-raised"
+            className={`rise border-t-2 bg-raised px-4 pt-3 pb-4 ${VARIANT_RULE_CLASS[card.variant]}`}
             style={{ animationDelay: `${index * 45}ms` }}
           >
-            <span className={`block h-0.5 ${VARIANT_RULE_CLASS[card.variant]}`} />
-            <span className="block px-3 pt-3">
-              <span className="eyebrow">{card.label}</span>
-            </span>
+            <span className="eyebrow block">{card.label}</span>
+            {/* La cifra destacada es el valor nuevo, igual que en SummaryBand. */}
             <span
-              className={`block px-3 pt-1 font-mono text-xl font-semibold tabular-nums ${VARIANT_DELTA_CLASS[card.variant]}`}
+              data-kpi="value"
+              className="mt-1 block font-mono text-3xl font-semibold tabular-nums"
             >
-              {card.deltaText}
+              {card.headText}
             </span>
-            <span className="block px-3 pb-3 font-mono text-xs text-muted tabular-nums">
-              <span>{card.baseText}</span>
-              <span aria-hidden="true"> → </span>
-              <span>{card.headText}</span>
+            <span className="mt-1 block font-mono text-xs tabular-nums">
+              <span className={`font-semibold ${VARIANT_DELTA_CLASS[card.variant]}`}>
+                {card.deltaText}
+              </span>
+              {/* El valor base va en su propio nodo: concatenado con el texto de
+                  alrededor, una consulta por su cifra ya no lo encuentra. */}
+              <span className="text-muted"> desde </span>
+              <span className="text-muted">{card.baseText}</span>
             </span>
           </li>
         ))}

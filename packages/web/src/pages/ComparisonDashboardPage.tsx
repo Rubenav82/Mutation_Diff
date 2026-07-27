@@ -4,7 +4,7 @@ import type { ComparisonResult } from 'core';
 import { ApiClientError, getComparison, getComparisonReportUrl } from '../api/client';
 import { ComparisonContextRail } from '../components/ComparisonContextRail';
 import { ErrorMessage } from '../components/ErrorMessage';
-import { GlobalSummaryCards } from '../components/GlobalSummaryCards';
+import { KpiRow } from '../components/KpiRow';
 import { LoadingIndicator } from '../components/LoadingIndicator';
 import { SummaryBand } from '../components/SummaryBand';
 import { UnitSection } from '../components/UnitSection';
@@ -66,7 +66,7 @@ export function ComparisonDashboardPage() {
           regressionCount={result.regressions.length}
           reportUrl={getComparisonReportUrl(id)}
         />
-        <GlobalSummaryCards global={result.global} />
+        <KpiRow global={result.global} />
         <UnitSection
           title="Regresiones"
           units={result.regressions}

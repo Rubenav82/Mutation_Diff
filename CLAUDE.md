@@ -272,6 +272,8 @@ Detectado al levantar la app tras cerrar la Fase 4: Tailwind funcionaba, pero el
 - `UnitSection` necesita un `{' '}` explícito entre el título y el contador: JSX se come el salto de línea y el nombre accesible pasaría a ser `Regresiones(2)`, rompiendo `getByRole('heading', { name: 'Regresiones (2)' })`. Vale para cualquier cabecera que parta texto en varios nodos.
 - **Verificación**: no hay TDD aquí (las clases no se testean unitariamente; los tests verifican roles y `data-*`, decisión de T-032/T-033). La comprobación es la suite en verde + capturas con Playwright en claro y oscuro, generadas con un script suelto que usa `chromium` de `@playwright/test` directamente. Ese script tiene que ejecutarse **desde la raíz del repo**: fuera de él Node no resuelve `@playwright/test`.
 
+> **Actualizado en T-047/T-048**: `GlobalSummaryCards` ya no existe. Score y cobertura encabezan la comparación desde `SummaryBand` (banda oscura) y los cuatro conteos viven en `KpiRow`, que conserva el `aria-label="Métricas globales"`, el patrón `data-variant` y `trendVariant`/polaridades descritos arriba. Lo que cambió: la cifra destacada de cada KPI es el **valor nuevo**, no el delta, para no resaltar dos magnitudes distintas en la misma pantalla.
+
 ## Sistema visual Modernist (fijado en T-045 — arranca el rediseño de la Fase 4.5)
 
 Sustituye la paleta cobre/papel de T-037 por el sistema Modernist. Las decisiones de adaptación están en `docs/plan.md` §2.5.1 y prevalecen sobre el handoff externo de `design-input/`; aquí solo lo que afecta a cómo se toca el código.
