@@ -38,7 +38,14 @@ test.describe('flujo completo de comparación', () => {
     await submitComparison(page, { tool: 'pitest' });
 
     await expect(page.getByRole('heading', { name: 'Comparación' })).toBeVisible();
-    await expect(page.getByText('Herramienta: pitest')).toBeVisible();
+
+    // El rail de contexto (T-046) con los datos que el servidor adjunta al
+    // resultado (T-043/T-044): herramienta, ficheros comparados y umbrales.
+    const rail = page.getByRole('complementary', { name: 'Contexto de la comparación' });
+    await expect(rail.getByText('pitest')).toBeVisible();
+    await expect(rail.getByText('base.xml')).toBeVisible();
+    await expect(rail.getByText('head.xml')).toBeVisible();
+    await expect(rail.getByText('100%')).toBeVisible();
 
     // HU-03: métricas globales con su delta.
     const metrics = page.getByRole('region', { name: 'Métricas globales' });
@@ -83,7 +90,11 @@ test.describe('flujo completo de comparación', () => {
     // bajando el umbral por debajo de su porcentaje (CA-HU-05).
     await submitComparison(page, { tool: 'stryker', uncoveredThreshold: '75' });
 
-    await expect(page.getByText('Herramienta: stryker')).toBeVisible();
+    const rail = page.getByRole('complementary', { name: 'Contexto de la comparación' });
+    await expect(rail.getByText('stryker')).toBeVisible();
+    // El umbral que se aplicó de verdad, no el que quedó en el formulario.
+    await expect(rail.getByText('75%')).toBeVisible();
+
     const uncovered = page.getByRole('region', { name: 'Sin cobertura' });
     await expect(uncovered.getByText('src/billing/refundService.js')).toBeVisible();
     await expect(uncovered.getByText('src/notifications/emailSender.js')).toBeVisible();

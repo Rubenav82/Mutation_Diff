@@ -34,7 +34,12 @@ function makeResult(): ComparisonResult {
   const head = metrics({ score: 85, coveredPct: 88 });
   return {
     tool: 'pitest',
-    context: { regressionThreshold: 0, uncoveredThreshold: 100 },
+    context: {
+      baseLabel: 'mutations-enero.xml',
+      headLabel: 'mutations-febrero.xml',
+      regressionThreshold: 0,
+      uncoveredThreshold: 100,
+    },
     global: { base, head, scoreDelta: 5, coverageDelta: -2 },
     units: [
       {
@@ -143,6 +148,48 @@ describe('ComparisonDashboardPage', () => {
     // the id is encoded so a key with spaces/slashes still resolves
     expect(link).toHaveAttribute('href', '/api/comparisons/abc%20123/report');
     expect(link).toHaveAttribute('download');
+  });
+
+  // El rail de contexto (T-046): al reabrir una comparación por su id, es lo único
+  // que dice de dónde salió el resultado — el servidor no guarda los ficheros.
+  it('shows the compared file names and the applied thresholds in the context rail', async () => {
+    getComparisonMock.mockResolvedValue(makeResult());
+    renderDashboard();
+
+    const rail = await screen.findByRole('complementary', { name: 'Contexto de la comparación' });
+    expect(within(rail).getByText('mutations-enero.xml')).toBeInTheDocument();
+    expect(within(rail).getByText('mutations-febrero.xml')).toBeInTheDocument();
+    expect(within(rail).getByText('pitest')).toBeInTheDocument();
+    expect(within(rail).getByText('0%')).toBeInTheDocument();
+    expect(within(rail).getByText('100%')).toBeInTheDocument();
+  });
+
+  it('falls back to a placeholder when a run carries no file name', async () => {
+    const result = makeResult();
+    getComparisonMock.mockResolvedValue({
+      ...result,
+      context: {
+        regressionThreshold: result.context.regressionThreshold,
+        uncoveredThreshold: result.context.uncoveredThreshold,
+      },
+    });
+    renderDashboard();
+
+    const rail = await screen.findByRole('complementary', { name: 'Contexto de la comparación' });
+    expect(within(rail).getAllByText('Sin nombre')).toHaveLength(2);
+  });
+
+  // No recalcula con otros umbrales: el servidor nunca guarda los ficheros subidos
+  // (memoryStorage, T-020), así que habría que volver a subirlos.
+  it('links back to the wizard instead of offering to recompute', async () => {
+    getComparisonMock.mockResolvedValue(makeResult());
+    renderDashboard();
+
+    const rail = await screen.findByRole('complementary', { name: 'Contexto de la comparación' });
+    expect(within(rail).getByRole('link', { name: 'Nueva comparación' })).toHaveAttribute(
+      'href',
+      '/',
+    );
   });
 
   it('shows a loading indicator while the comparison is being fetched', () => {
