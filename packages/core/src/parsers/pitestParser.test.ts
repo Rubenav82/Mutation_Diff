@@ -205,21 +205,43 @@ describe('parsePitestReport — invalid input', () => {
 });
 
 describe('parsePitestReport — additional status mappings and defaults', () => {
-  it('maps MEMORY_ERROR and NON_VIABLE to the "error" status', () => {
+  it('maps MEMORY_ERROR to "error" but NON_VIABLE to "killed" (PiTest reports it as detected)', () => {
     const xml = `<?xml version="1.0"?><mutations>
       <mutation detected='false' status='MEMORY_ERROR'>
         <mutatedClass>com.example.A</mutatedClass>
         <mutator>m</mutator>
         <lineNumber>1</lineNumber>
       </mutation>
-      <mutation detected='false' status='NON_VIABLE'>
+      <mutation detected='true' status='NON_VIABLE'>
         <mutatedClass>com.example.A</mutatedClass>
         <mutator>m</mutator>
         <lineNumber>2</lineNumber>
       </mutation>
     </mutations>`;
     const run = parsePitestReport(xml, { createdAt: '2026-01-01T00:00:00.000Z' });
-    expect(run.units[0]?.mutants.map((m) => m.status)).toEqual(['error', 'error']);
+    expect(run.units[0]?.mutants.map((m) => m.status)).toEqual(['error', 'killed']);
+  });
+
+  // PiTest's own summary counts NON_VIABLE mutants in the numerator of its mutation
+  // coverage, so the killed total shown by MutaDiff must match it mutant for mutant.
+  it('counts NON_VIABLE mutants as killed in the aggregated metrics', () => {
+    const xml = `<?xml version="1.0"?><mutations>
+      <mutation detected='true' status='KILLED'>
+        <mutatedClass>com.example.A</mutatedClass>
+        <mutator>m</mutator>
+        <lineNumber>1</lineNumber>
+      </mutation>
+      <mutation detected='true' status='NON_VIABLE'>
+        <mutatedClass>com.example.A</mutatedClass>
+        <mutator>m</mutator>
+        <lineNumber>2</lineNumber>
+      </mutation>
+    </mutations>`;
+    const run = parsePitestReport(xml, { createdAt: '2026-01-01T00:00:00.000Z' });
+    expect(run.metrics.killed).toBe(2);
+    expect(run.metrics.error).toBe(0);
+    expect(run.metrics.validTotal).toBe(2);
+    expect(run.metrics.score).toBe(100);
   });
 
   it('defaults mutator to an empty string when <mutator> is absent', () => {

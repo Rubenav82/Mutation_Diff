@@ -43,7 +43,7 @@ test.describe('flujo completo de comparación', () => {
     // HU-03: métricas globales con su delta.
     const metrics = page.getByRole('region', { name: 'Métricas globales' });
     await expect(metrics.getByText('Mutation score')).toBeVisible();
-    await expect(metrics.getByText('Supervivientes')).toBeVisible();
+    await expect(metrics.getByText('Cubiertos supervivientes')).toBeVisible();
 
     // HU-05: cada clase de la fixture cae en la sección que le corresponde.
     await expect(
