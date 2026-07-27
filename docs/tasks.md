@@ -38,6 +38,26 @@
 - [x] T-041 e2e Playwright del flujo completo con fixtures.
 - [x] T-042 README con quickstart y ejemplos.
 
+### Fase 4.5 — Rediseño visual (sistema Modernist)
+
+> Propuesta de rediseño de la pantalla de comparación recibida como handoff externo. Las decisiones de adaptación (color semántico, tipografía, modo oscuro, alcance del rail) están fijadas en `docs/plan.md` §2.5.1 y prevalecen sobre el handoff donde chocan. T-043/T-044 son requisito de T-046: el rail muestra datos que hoy la API no devuelve.
+
+**Backend — contexto de la comparación**
+
+- [ ] T-043 `ComparisonResult` gana `context: { baseLabel?, headLabel?, regressionThreshold, uncoveredThreshold }`, rellenado por `compareRuns` desde `base.label`/`head.label` (campo que ya existe en `NormalizedRun` y hoy nadie usa) y desde las opciones ya recibidas, con los **defaults ya resueltos** — no los opcionales de entrada, para que el rail pueda mostrar el umbral efectivo sin volver a conocer los defaults. Motivo: sin esto, al recargar `/comparisons/:id` o abrir un enlace compartido no hay forma de saber qué ficheros ni qué umbrales produjeron el resultado.
+- [ ] T-044 `POST /api/comparisons` pasa `label: file.originalname` a ambos parsers. Test con Supertest que verifica que `GET /api/comparisons/:id` devuelve nombres y umbrales **después** de guardarse en el store (es el caso que importa: la recarga, no la respuesta del POST).
+
+**Sistema visual**
+
+- [ ] T-045 Tokens Modernist en `packages/web/src/index.css`: paleta (fondo `#f3f2f2`, tinta `#201e1d`, rampa de neutros y de acento), `--color-gain: #14622f` / `--color-loss: #ae1800`, radio 0, reglas de 2px, escala de espaciados. Retira el bloque `prefers-color-scheme` (sin modo oscuro) y mantiene los stacks de sistema (sin webfont). Incluye la pasada por el wizard, que el handoff no cubría pero que comparte los mismos tokens: cambiarlos sin repasarlo lo dejaría a medio estilar.
+
+**Pantalla de comparación**
+
+- [ ] T-046 Layout de dos paneles en `ComparisonDashboardPage`: rail lateral fijo (logotipo, herramienta, ficheros base/nueva y umbrales aplicados — todo en solo lectura, de `context`) + panel principal. El botón del rail es "Nueva comparación" y navega a `/`, no recalcula (ver `docs/plan.md` §2.5.1).
+- [ ] T-047 Banda de resumen sobre neutro oscuro: kicker "Comparación · {herramienta}", mutation score y cobertura como cifras grandes con su `base → nueva (delta)`, contador de regresiones, y el botón "Exportar HTML" alineado a la derecha. Sustituye la mitad de `GlobalSummaryCards`.
+- [ ] T-048 Fila de KPIs secundarios: Killed, Survivors, Sin cubrir y **Timeouts**. Son cuatro, no los tres del handoff: HU-03 pide explícitamente el total de timeout con su delta, y quitarlo incumpliría el criterio de aceptación. Sustituye la otra mitad de `GlobalSummaryCards`.
+- [ ] T-049 Tablas al estilo Modernist en `UnitsTable` y `UnitSection`: reglas de 2px, pill de contador junto al título, tags de estado, filtro alineado a la derecha del título de "Todas las unidades". **Conserva el orden por columna** de HU-08, que la referencia de diseño no muestra pero es criterio de aceptación.
+
 ### Fase 5 (v2) — Histórico y persistencia
 
 > T-050 a T-058 son el desglose de lo que antes era una única tarea "Persistencia SQLite". Mismo grano que las fases 2 y 3: un endpoint o una pantalla por tarea, un commit por tarea. Cubren HU-10 y HU-11.

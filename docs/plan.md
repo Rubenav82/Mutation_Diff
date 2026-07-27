@@ -148,8 +148,19 @@ POST /api/projects/:id/compare   (fase 2) comparar dos runs guardados { baseRunI
    - *PiTest*: "Debes activar el reporte XML en tu build. Maven/Gradle: `outputFormats = XML` (puedes mantener también HTML). El fichero a subir es `target/pit-reports/**/mutations.xml`."
    - *Stryker*: "Debes activar el reporter JSON en `stryker.config.json`: `\"reporters\": [\"json\", ...]`. El fichero a subir es `reports/mutation/mutation.json`."
    Cada panel incluye el snippet de configuración copiable. Si el usuario sube un fichero con extensión incorrecta para la herramienta elegida, el mensaje de error enlaza a esta misma ayuda.
-2. **Dashboard de resultados**: tarjetas de métricas globales con deltas coloreados; secciones "Regresiones", "Sin cobertura", "Nuevas", "Eliminadas"; tabla completa filtrable/ordenable; botón "Exportar HTML".
+2. **Dashboard de resultados**: layout de dos paneles — rail lateral de contexto (herramienta, ficheros comparados, umbrales aplicados, todo en solo lectura) + panel principal con banda de resumen, KPIs, secciones "Regresiones", "Sin cobertura", "Nuevas", "Eliminadas", tabla completa filtrable/ordenable y botón "Exportar HTML".
 3. **Histórico** (fase 2): lista de runs guardados, selección de par a comparar, gráfico de evolución del score.
+
+#### 2.5.1 Sistema visual (Modernist, adoptado en T-045)
+
+Rediseño basado en el sistema **Modernist**: flat, arquitectónico, radio de borde 0, reglas de 2px, alineación a la izquierda, densidad tabular. Decisiones tomadas al adaptarlo a este proyecto, que **prevalecen sobre el handoff original** allí donde chocan:
+
+- **El color es del dato, no del cromo** (regla heredada de T-037, innegociable). La banda de resumen va en el neutro más oscuro de la rampa (`#2d2b2b`, blanco encima a 14.07:1), **no** en el acento rojo como proponía el handoff: con la banda en rojo, el rojo de una regresión deja de leerse como alarma unos centímetros más abajo. Los botones primarios siguen la misma regla.
+- **Semántica de color**: verde `#14622f` = mejora, rojo `#ae1800` = regresión, neutro = igual, timeouts sin color. Modernist no trae verde; se añade uno profundo y desaturado elegido a **6.67:1** sobre el fondo para emparejar con el rojo a **6.41:1** — si el verde pesara más, una mejora cantaría más que una regresión.
+- **El acento rojo vivo (`#ec3013`) no toca ningún dato**: da 3.76:1 sobre el fondo, insuficiente para texto. Queda solo en el anillo de foco y en el logotipo.
+- **Sin webfonts**: el handoff carga Archivo desde Google Fonts; se descarta por lo ya fijado en T-037 (la app corre en local, a veces sin salida a internet). Se mantienen los stacks de sistema, con monoespaciada para toda medida. Se pierde el carácter tipográfico exacto de Modernist; se gana que la app nunca dependa de la red.
+- **Sin modo oscuro**: el bloque `prefers-color-scheme` de T-037 se retira. Modernist no define rampa oscura y no merece inventarla por ahora.
+- **El rail no recalcula**: muestra herramienta, ficheros y umbrales en solo lectura, y su botón lleva al wizard. No puede reejecutar con otros umbrales porque el servidor nunca guarda los ficheros subidos (`memoryStorage`, T-020) — habría que volver a subirlos.
 
 ### 2.6 Estrategia de testing
 

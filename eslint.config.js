@@ -13,6 +13,8 @@ export default tseslint.config(
       '**/reports/**',
       'test-results/**',
       'playwright-report/**',
+      // Material de diseño de entrada: código ajeno al proyecto, no se lintea.
+      'design-input/**',
     ],
   },
   js.configs.recommended,

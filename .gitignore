@@ -146,6 +146,11 @@ vite.config.ts.timestamp-*
 .stryker-tmp/
 reports/
 
+# Material de diseño de entrada (propuestas, exports de herramientas externas).
+# Es material de referencia, no fuente del proyecto: lo que se adopte se
+# reescribe en packages/web y esta carpeta se puede borrar.
+design-input/
+
 # Playwright
 test-results/
 playwright-report/
