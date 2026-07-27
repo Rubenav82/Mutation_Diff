@@ -120,6 +120,51 @@ describe('generateHtmlReport — mini PiTest comparison', () => {
   });
 });
 
+describe('generateHtmlReport — contexto de la comparación', () => {
+  // El informe se comparte suelto, fuera de la app: sin esto no hay forma de saber
+  // qué dos ejecuciones produjeron las cifras que muestra.
+  it('names the compared files and the thresholds that were applied', () => {
+    const html = generateHtmlReport(
+      resultFrom({
+        context: {
+          baseLabel: 'mutations-enero.xml',
+          headLabel: 'mutations-febrero.xml',
+          regressionThreshold: 2,
+          uncoveredThreshold: 75,
+        },
+      }),
+    );
+
+    expect(html).toContain('mutations-enero.xml');
+    expect(html).toContain('mutations-febrero.xml');
+    expect(html).toContain('2%');
+    expect(html).toContain('75%');
+  });
+
+  it('falls back to a placeholder when a run carries no file name', () => {
+    const html = generateHtmlReport(
+      resultFrom({ context: { regressionThreshold: 0, uncoveredThreshold: 100 } }),
+    );
+
+    expect(html).toContain('Sin nombre');
+  });
+
+  it('escapes a file name instead of injecting it raw', () => {
+    const html = generateHtmlReport(
+      resultFrom({
+        context: {
+          baseLabel: '<img src=x onerror=alert(1)>',
+          regressionThreshold: 0,
+          uncoveredThreshold: 100,
+        },
+      }),
+    );
+
+    expect(html).not.toContain('<img src=x');
+    expect(html).toContain('&lt;img src=x onerror=alert(1)&gt;');
+  });
+});
+
 describe('generateHtmlReport — XSS safety', () => {
   it('HTML-escapes unit keys instead of injecting them raw', () => {
     const malicious = '<img src=x onerror=alert(1)>';

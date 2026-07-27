@@ -8,23 +8,62 @@ const KIND_LABELS: Record<UnitChangeKind, string> = {
   removed: 'Eliminada',
 };
 
+/**
+ * Modernist, el mismo sistema visual que la SPA: radio 0, reglas de 2px,
+ * monoespaciada para toda medida y el par verde/rojo emparejado en contraste
+ * (6.67:1 y 6.41:1 sobre el fondo) para que una mejora no cante más que una
+ * regresión.
+ *
+ * Los valores están duplicados a mano desde `packages/web/src/index.css`, y no
+ * hay forma de evitarlo: `core` no puede importar de `web` (regla de
+ * dependencias) y el informe debe ser un fichero único sin hojas externas
+ * (CA-HU-07). Si cambia la paleta, hay que tocar los dos sitios.
+ *
+ * Sin banda oscura, a diferencia del dashboard: esto es un documento para
+ * compartir o imprimir.
+ */
 const STYLE = `
-  :root { color-scheme: light dark; }
-  body { font-family: system-ui, sans-serif; margin: 2rem; line-height: 1.4; }
-  h1 { margin-bottom: 0.25rem; }
-  .tool-badge { color: #666; margin-top: 0; }
-  section { margin: 2rem 0; }
-  .cards { display: flex; flex-wrap: wrap; gap: 1rem; }
-  .card { border: 1px solid #ccc; border-radius: 8px; padding: 0.75rem 1rem; min-width: 8rem; }
-  .card .label { display: block; font-size: 0.8rem; color: #666; }
-  .card .value { display: block; font-size: 1.4rem; font-weight: 600; }
-  .card.positive .value { color: #2e7d32; }
-  .card.negative .value { color: #c62828; }
-  table { border-collapse: collapse; width: 100%; }
-  th, td { border-bottom: 1px solid #ddd; padding: 0.4rem 0.6rem; text-align: left; }
-  tr.kind-regressed td:last-child { color: #c62828; }
-  tr.kind-improved td:last-child { color: #2e7d32; }
-  .empty { color: #666; font-style: italic; }
+  :root { color-scheme: light; }
+  body {
+    font-family: 'Segoe UI Variable Text', 'Segoe UI', -apple-system, system-ui, sans-serif;
+    background: #f3f2f2; color: #201e1d; margin: 0; padding: 2.5rem 2rem; line-height: 1.5;
+  }
+  h1, h2 { font-weight: 800; letter-spacing: -0.015em; line-height: 1.12; }
+  h1 { font-size: 2rem; margin: 0 0 0.75rem; }
+  h2 { font-size: 1.25rem; margin: 0 0 0.75rem; }
+  header { border-bottom: 2px solid #201e1d; padding-bottom: 1.25rem; margin-bottom: 2rem; }
+  .meta { font-family: ui-monospace, Consolas, monospace; font-size: 0.8125rem; color: #605d5d; margin: 0.35rem 0 0; }
+  .meta .file { color: #201e1d; }
+  section { margin: 2.5rem 0; }
+  /* Grid, no flex-wrap: con flex, la última tarjeta de una fila incompleta se
+     estira a lo ancho y rompe la retícula. */
+  .cards {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: 1px; background: #d7d3d3; border-top: 2px solid #201e1d;
+  }
+  .card { background: #fff; padding: 0.75rem 1rem; }
+  .card .label {
+    display: block; font-family: ui-monospace, Consolas, monospace; font-size: 0.6875rem;
+    letter-spacing: 0.14em; text-transform: uppercase; color: #605d5d;
+  }
+  .card .value {
+    display: block; font-family: ui-monospace, Consolas, monospace; font-size: 1.5rem;
+    font-weight: 600; font-variant-numeric: tabular-nums; margin-top: 0.25rem;
+  }
+  .card.positive .value { color: #14622f; }
+  .card.negative .value { color: #ae1800; }
+  table { border-collapse: collapse; width: 100%; background: #fff; }
+  th {
+    font-family: ui-monospace, Consolas, monospace; font-size: 0.6875rem; font-weight: 500;
+    letter-spacing: 0.14em; text-transform: uppercase; color: #605d5d;
+    border-bottom: 2px solid #201e1d;
+  }
+  th, td { padding: 0.5rem 0.75rem; text-align: left; }
+  td { border-bottom: 1px solid #d7d3d3; font-family: ui-monospace, Consolas, monospace; font-size: 0.8125rem; font-variant-numeric: tabular-nums; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tr.kind-regressed td:last-child { color: #ae1800; }
+  tr.kind-improved td:last-child { color: #14622f; }
+  .empty { color: #605d5d; font-style: italic; }
 `;
 
 function escapeHtml(value: string): string {
@@ -78,6 +117,20 @@ function renderSummary(result: ComparisonResult): string {
   </div></section>`;
 }
 
+/**
+ * Header block, not a `<section>`: CA-HU-07 fixes the report at exactly four
+ * sections, and the context is a caption for the whole document rather than a
+ * fifth one.
+ */
+function renderContext(result: ComparisonResult): string {
+  const { baseLabel, headLabel, regressionThreshold, uncoveredThreshold } = result.context;
+  const base = escapeHtml(baseLabel ?? 'Sin nombre');
+  const head = escapeHtml(headLabel ?? 'Sin nombre');
+  return `<p class="meta">Herramienta: ${escapeHtml(result.tool)}</p>
+<p class="meta"><span class="file">${base}</span> &rarr; <span class="file">${head}</span></p>
+<p class="meta">Umbral de regresión: ${regressionThreshold}% &middot; Umbral sin cobertura: ${uncoveredThreshold}%</p>`;
+}
+
 export function generateHtmlReport(result: ComparisonResult): string {
   return `<!doctype html>
 <html lang="es">
@@ -88,8 +141,10 @@ export function generateHtmlReport(result: ComparisonResult): string {
 <style>${STYLE}</style>
 </head>
 <body>
+<header>
 <h1>Informe de comparación MutaDiff</h1>
-<p class="tool-badge">Herramienta: ${escapeHtml(result.tool)}</p>
+${renderContext(result)}
+</header>
 ${renderSummary(result)}
 ${renderTable('Regresiones', result.regressions, 'No hay regresiones.')}
 ${renderTable('Sin cobertura', result.uncovered, 'No hay clases/ficheros sin cobertura.')}
