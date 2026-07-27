@@ -28,6 +28,25 @@ function metrics(overrides: Partial<UnitMetrics> = {}): UnitMetrics {
   };
 }
 
+/**
+ * Builds a ComparisonResult without repeating every field at each call site: the tests
+ * below only care about one or two of them, and a new required field on the type would
+ * otherwise have to be added by hand to every literal.
+ */
+function resultFrom(overrides: Partial<ComparisonResult> = {}): ComparisonResult {
+  return {
+    tool: 'pitest',
+    context: { regressionThreshold: 0, uncoveredThreshold: 100 },
+    global: { base: metrics(), head: metrics(), scoreDelta: 0, coverageDelta: 0 },
+    units: [],
+    regressions: [],
+    uncovered: [],
+    added: [],
+    removed: [],
+    ...overrides,
+  };
+}
+
 function section(html: string, heading: string): string {
   const start = html.indexOf(`<h2>${heading}`);
   if (start === -1) throw new Error(`section not found: ${heading}`);
@@ -112,15 +131,7 @@ describe('generateHtmlReport — XSS safety', () => {
       coverageDelta: null,
       isUncovered: false,
     };
-    const result: ComparisonResult = {
-      tool: 'pitest',
-      global: { base: metrics(), head: metrics(), scoreDelta: 0, coverageDelta: 0 },
-      units: [unit],
-      regressions: [],
-      uncovered: [],
-      added: [unit],
-      removed: [],
-    };
+    const result = resultFrom({ units: [unit], added: [unit] });
 
     const html = generateHtmlReport(result);
 
@@ -138,15 +149,7 @@ describe('generateHtmlReport — XSS safety', () => {
       coverageDelta: null,
       isUncovered: false,
     };
-    const result: ComparisonResult = {
-      tool: 'pitest',
-      global: { base: metrics(), head: metrics(), scoreDelta: 0, coverageDelta: 0 },
-      units: [unit],
-      regressions: [],
-      uncovered: [],
-      added: [unit],
-      removed: [],
-    };
+    const result = resultFrom({ units: [unit], added: [unit] });
 
     const html = generateHtmlReport(result);
 
@@ -200,15 +203,12 @@ describe('generateHtmlReport — exact row and delta rendering', () => {
       isUncovered: false,
     };
 
-    const result: ComparisonResult = {
-      tool: 'pitest',
-      global: { base: metrics(), head: metrics(), scoreDelta: 0, coverageDelta: 0 },
+    const result = resultFrom({
       units: [improved, regressed, unchanged, added, removed],
       regressions: [regressed],
-      uncovered: [],
       added: [added],
       removed: [removed],
-    };
+    });
     const html = generateHtmlReport(result);
 
     expect(html).toContain(
@@ -231,15 +231,9 @@ describe('generateHtmlReport — exact row and delta rendering', () => {
 
 describe('generateHtmlReport — global delta card styling', () => {
   function reportWithGlobalDelta(scoreDelta: number, coverageDelta: number): ComparisonResult {
-    return {
-      tool: 'pitest',
+    return resultFrom({
       global: { base: metrics(), head: metrics(), scoreDelta, coverageDelta },
-      units: [],
-      regressions: [],
-      uncovered: [],
-      added: [],
-      removed: [],
-    };
+    });
   }
 
   it('marks a positive delta card as positive and a negative one as negative', () => {
@@ -264,20 +258,14 @@ describe('generateHtmlReport — global delta card styling', () => {
 
 describe('generateHtmlReport — empty comparison', () => {
   it('renders without throwing and shows friendly empty-state messages', () => {
-    const empty: ComparisonResult = {
-      tool: 'pitest',
+    const empty = resultFrom({
       global: {
         base: metrics({ total: 0, killed: 0, validTotal: 0, score: 0, coveredPct: 0 }),
         head: metrics({ total: 0, killed: 0, validTotal: 0, score: 0, coveredPct: 0 }),
         scoreDelta: 0,
         coverageDelta: 0,
       },
-      units: [],
-      regressions: [],
-      uncovered: [],
-      added: [],
-      removed: [],
-    };
+    });
 
     expect(() => generateHtmlReport(empty)).not.toThrow();
     const html = generateHtmlReport(empty);
@@ -298,15 +286,7 @@ describe('generateHtmlReport — size budget (CA-HU-07)', () => {
       coverageDelta: 0,
       isUncovered: false,
     }));
-    const result: ComparisonResult = {
-      tool: 'pitest',
-      global: { base: metrics(), head: metrics(), scoreDelta: 0, coverageDelta: 0 },
-      units,
-      regressions: [],
-      uncovered: [],
-      added: [],
-      removed: [],
-    };
+    const result = resultFrom({ units });
 
     const html = generateHtmlReport(result);
     const bytes = Buffer.byteLength(html, 'utf-8');

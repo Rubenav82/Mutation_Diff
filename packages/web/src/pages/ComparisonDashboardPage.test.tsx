@@ -34,6 +34,7 @@ function makeResult(): ComparisonResult {
   const head = metrics({ score: 85, coveredPct: 88 });
   return {
     tool: 'pitest',
+    context: { regressionThreshold: 0, uncoveredThreshold: 100 },
     global: { base, head, scoreDelta: 5, coverageDelta: -2 },
     units: [
       {

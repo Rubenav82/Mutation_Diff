@@ -50,8 +50,21 @@ export interface UnitComparison {
   isUncovered: boolean;
 }
 
+/**
+ * How a comparison was produced. The `ComparisonResult` is the only thing stored, so
+ * without this a result reopened by its id cannot say which files or thresholds made it.
+ */
+export interface ComparisonContext {
+  baseLabel?: string;
+  headLabel?: string;
+  /** Effective values, with the engine defaults already applied. */
+  regressionThreshold: number;
+  uncoveredThreshold: number;
+}
+
 export interface ComparisonResult {
   tool: Tool;
+  context: ComparisonContext;
   global: { base: UnitMetrics; head: UnitMetrics; scoreDelta: number; coverageDelta: number };
   units: UnitComparison[];
   regressions: UnitComparison[];
