@@ -111,6 +111,8 @@ describe('ComparisonDashboardPage', () => {
     expect(getComparisonMock).toHaveBeenCalledWith('abc-123');
     expect(score).not.toBeNull();
     expect(within(score as HTMLElement).getByText('+5.0%')).toBeInTheDocument();
+    // Los conteos secundarios siguen presentes junto a la banda.
+    expect(screen.getByText('Survivors')).toBeInTheDocument();
   });
 
   it('renders the units table with one row per unit', async () => {
@@ -159,9 +161,10 @@ describe('ComparisonDashboardPage', () => {
     const rail = await screen.findByRole('complementary', { name: 'Contexto de la comparación' });
     expect(within(rail).getByText('mutations-enero.xml')).toBeInTheDocument();
     expect(within(rail).getByText('mutations-febrero.xml')).toBeInTheDocument();
-    expect(within(rail).getByText('pitest')).toBeInTheDocument();
     expect(within(rail).getByText('0%')).toBeInTheDocument();
     expect(within(rail).getByText('100%')).toBeInTheDocument();
+    // La herramienta encabeza la comparación en la banda, no se repite aquí.
+    expect(within(rail).queryByText('pitest')).not.toBeInTheDocument();
   });
 
   it('falls back to a placeholder when a run carries no file name', async () => {

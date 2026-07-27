@@ -37,20 +37,22 @@ test.describe('flujo completo de comparación', () => {
   test('compara dos reportes de PiTest y clasifica cada clase en su sección', async ({ page }) => {
     await submitComparison(page, { tool: 'pitest' });
 
-    await expect(page.getByRole('heading', { name: 'Comparación' })).toBeVisible();
+    // La banda de resumen (T-047) encabeza la comparación y nombra la herramienta.
+    await expect(page.getByRole('heading', { name: 'Comparación · pitest' })).toBeVisible();
 
     // El rail de contexto (T-046) con los datos que el servidor adjunta al
-    // resultado (T-043/T-044): herramienta, ficheros comparados y umbrales.
+    // resultado (T-043/T-044): ficheros comparados y umbrales aplicados.
     const rail = page.getByRole('complementary', { name: 'Contexto de la comparación' });
-    await expect(rail.getByText('pitest')).toBeVisible();
     await expect(rail.getByText('base.xml')).toBeVisible();
     await expect(rail.getByText('head.xml')).toBeVisible();
     await expect(rail.getByText('100%')).toBeVisible();
 
     // HU-03: métricas globales con su delta.
+    // Score y cobertura encabezan desde la banda; los conteos van en las tarjetas.
+    await expect(page.getByText('Mutation score')).toBeVisible();
     const metrics = page.getByRole('region', { name: 'Métricas globales' });
-    await expect(metrics.getByText('Mutation score')).toBeVisible();
     await expect(metrics.getByText('Survivors')).toBeVisible();
+    await expect(metrics.getByText('Timeouts')).toBeVisible();
 
     // HU-05: cada clase de la fixture cae en la sección que le corresponde.
     await expect(
@@ -90,9 +92,9 @@ test.describe('flujo completo de comparación', () => {
     // bajando el umbral por debajo de su porcentaje (CA-HU-05).
     await submitComparison(page, { tool: 'stryker', uncoveredThreshold: '75' });
 
-    const rail = page.getByRole('complementary', { name: 'Contexto de la comparación' });
-    await expect(rail.getByText('stryker')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Comparación · stryker' })).toBeVisible();
     // El umbral que se aplicó de verdad, no el que quedó en el formulario.
+    const rail = page.getByRole('complementary', { name: 'Contexto de la comparación' });
     await expect(rail.getByText('75%')).toBeVisible();
 
     const uncovered = page.getByRole('region', { name: 'Sin cobertura' });

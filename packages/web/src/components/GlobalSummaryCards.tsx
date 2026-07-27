@@ -1,5 +1,4 @@
 import type { ComparisonResult } from 'core';
-import { formatPct, formatSignedPct } from '../lib/format';
 
 type Polarity = 'higher-better' | 'higher-worse' | 'neutral';
 type Variant = 'positive' | 'negative' | 'neutral';
@@ -46,24 +45,15 @@ const VARIANT_RULE_CLASS: Record<Variant, string> = {
   neutral: 'bg-line',
 };
 
+/**
+ * Secondary counts. Score and coverage are not here: they lead the comparison
+ * from `SummaryBand`, and repeating them would give the same figure two
+ * different visual weights.
+ */
 export function GlobalSummaryCards({ global }: { global: ComparisonResult['global'] }) {
-  const { base, head, scoreDelta, coverageDelta } = global;
+  const { base, head } = global;
 
   const cards: CardSpec[] = [
-    {
-      label: 'Mutation score',
-      baseText: formatPct(base.score),
-      headText: formatPct(head.score),
-      deltaText: formatSignedPct(scoreDelta),
-      variant: trendVariant(scoreDelta, 'higher-better'),
-    },
-    {
-      label: 'Mutantes cubiertos',
-      baseText: formatPct(base.coveredPct),
-      headText: formatPct(head.coveredPct),
-      deltaText: formatSignedPct(coverageDelta),
-      variant: trendVariant(coverageDelta, 'higher-better'),
-    },
     countCard('Killed', base.killed, head.killed, 'higher-better'),
     countCard('Survivors', base.survived, head.survived, 'higher-worse'),
     countCard('Sin cubrir', base.noCoverage, head.noCoverage, 'higher-worse'),

@@ -1,8 +1,7 @@
 import { Link } from 'react-router-dom';
-import type { ComparisonContext, Tool } from 'core';
+import type { ComparisonContext } from 'core';
 
 interface ComparisonContextRailProps {
-  tool: Tool;
   context: ComparisonContext;
 }
 
@@ -12,7 +11,7 @@ interface ComparisonContextRailProps {
  * (memoryStorage), so a new run means uploading them again — hence a link back
  * to the wizard rather than a form.
  */
-export function ComparisonContextRail({ tool, context }: ComparisonContextRailProps) {
+export function ComparisonContextRail({ context }: ComparisonContextRailProps) {
   const { baseLabel, headLabel, regressionThreshold, uncoveredThreshold } = context;
 
   return (
@@ -20,8 +19,9 @@ export function ComparisonContextRail({ tool, context }: ComparisonContextRailPr
       aria-label="Contexto de la comparación"
       className="rule flex flex-col gap-5 pt-5 lg:sticky lg:top-8"
     >
+      {/* La herramienta no se repite aquí: encabeza la comparación en SummaryBand.
+          El rail responde de dónde salió el resultado, no qué mide. */}
       <dl className="flex flex-col gap-5">
-        <Field label="Herramienta" value={tool} />
         {/* Comparisons stored before the label existed, and any future consumer of
             `core` that omits it, still have to render as something. */}
         <Field label="Ejecución base" value={baseLabel ?? 'Sin nombre'} muted={!baseLabel} />

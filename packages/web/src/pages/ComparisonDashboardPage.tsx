@@ -6,6 +6,7 @@ import { ComparisonContextRail } from '../components/ComparisonContextRail';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { GlobalSummaryCards } from '../components/GlobalSummaryCards';
 import { LoadingIndicator } from '../components/LoadingIndicator';
+import { SummaryBand } from '../components/SummaryBand';
 import { UnitSection } from '../components/UnitSection';
 import { UnitsTable } from '../components/UnitsTable';
 
@@ -57,21 +58,14 @@ export function ComparisonDashboardPage() {
     // Dos paneles: el rail conserva el contexto a la vista mientras se recorren
     // las tablas (`sticky`), y se apila encima del contenido en pantallas estrechas.
     <div className="rise grid items-start gap-8 lg:grid-cols-[15rem_1fr] lg:gap-10">
-      <ComparisonContextRail tool={result.tool} context={result.context} />
+      <ComparisonContextRail context={result.context} />
       <main className="flex flex-col gap-10">
-        <div className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-5">
-          {/* La herramienta ya no se repite aquí: vive en el rail. */}
-          <h1>Comparación</h1>
-          {/* Plain anchor, not fetch+blob: the endpoint already sends
-              Content-Disposition: attachment with the filename. */}
-          <a
-            href={getComparisonReportUrl(id)}
-            download
-            className="border-2 border-line-strong px-4 py-2 text-sm font-semibold text-ink transition-colors hover:bg-deep hover:text-inverse"
-          >
-            Exportar HTML
-          </a>
-        </div>
+        <SummaryBand
+          tool={result.tool}
+          global={result.global}
+          regressionCount={result.regressions.length}
+          reportUrl={getComparisonReportUrl(id)}
+        />
         <GlobalSummaryCards global={result.global} />
         <UnitSection
           title="Regresiones"

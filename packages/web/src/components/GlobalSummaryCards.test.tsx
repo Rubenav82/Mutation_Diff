@@ -35,7 +35,9 @@ function cardByLabel(label: string): HTMLElement {
 }
 
 describe('GlobalSummaryCards', () => {
-  it('renders score and coverage cards with base → head values and signed deltas', () => {
+  // Score y cobertura encabezan la comparación desde SummaryBand (T-047); repetirlos
+  // aquí daría a la misma cifra dos pesos visuales distintos.
+  it('leaves score and coverage to the summary band', () => {
     render(
       <GlobalSummaryCards
         global={makeGlobal(
@@ -45,27 +47,19 @@ describe('GlobalSummaryCards', () => {
       />,
     );
 
-    const score = cardByLabel('Mutation score');
-    expect(within(score).getByText('80.0%')).toBeInTheDocument();
-    expect(within(score).getByText('85.0%')).toBeInTheDocument();
-    expect(within(score).getByText('+5.0%')).toBeInTheDocument();
-
-    const coverage = cardByLabel('Mutantes cubiertos');
-    expect(within(coverage).getByText('-2.0%')).toBeInTheDocument();
+    expect(screen.queryByText('Mutation score')).not.toBeInTheDocument();
+    expect(screen.queryByText('Mutantes cubiertos')).not.toBeInTheDocument();
   });
 
-  it('colors a score increase as positive and a coverage decrease as negative', () => {
+  it('renders base → head values and a signed delta on each count', () => {
     render(
-      <GlobalSummaryCards
-        global={makeGlobal(
-          metrics({ score: 80, coveredPct: 90 }),
-          metrics({ score: 85, coveredPct: 88 }),
-        )}
-      />,
+      <GlobalSummaryCards global={makeGlobal(metrics({ killed: 8 }), metrics({ killed: 9 }))} />,
     );
 
-    expect(cardByLabel('Mutation score')).toHaveAttribute('data-variant', 'positive');
-    expect(cardByLabel('Mutantes cubiertos')).toHaveAttribute('data-variant', 'negative');
+    const killed = cardByLabel('Killed');
+    expect(within(killed).getByText('8')).toBeInTheDocument();
+    expect(within(killed).getByText('9')).toBeInTheDocument();
+    expect(within(killed).getByText('+1')).toBeInTheDocument();
   });
 
   it('treats more survivors as a negative trend (higher is worse)', () => {
@@ -98,9 +92,18 @@ describe('GlobalSummaryCards', () => {
 
   it('marks a zero delta as a neutral trend', () => {
     render(
-      <GlobalSummaryCards global={makeGlobal(metrics({ score: 80 }), metrics({ score: 80 }))} />,
+      <GlobalSummaryCards global={makeGlobal(metrics({ killed: 8 }), metrics({ killed: 8 }))} />,
     );
 
-    expect(cardByLabel('Mutation score')).toHaveAttribute('data-variant', 'neutral');
+    expect(cardByLabel('Killed')).toHaveAttribute('data-variant', 'neutral');
+  });
+
+  // Sin polaridad buena/mala clara: subir o bajar no dice por sí solo si va mejor.
+  it('never colors the timeout trend', () => {
+    render(
+      <GlobalSummaryCards global={makeGlobal(metrics({ timeout: 0 }), metrics({ timeout: 3 }))} />,
+    );
+
+    expect(cardByLabel('Timeouts')).toHaveAttribute('data-variant', 'neutral');
   });
 });
