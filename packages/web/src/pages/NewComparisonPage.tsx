@@ -75,7 +75,10 @@ export function NewComparisonPage() {
 
       <form onSubmit={(event) => void handleSubmit(event)} className="flex flex-col gap-7">
         <fieldset>
-          <legend className="eyebrow mb-2">Herramienta</legend>
+          {/* `w-full`: la caja de un <legend> se ajusta a su contenido, así que
+              centrar el texto dentro no lo mueve. Chrome lo coloca igualmente con
+              el text-align heredado, Firefox no; con ancho completo da igual. */}
+          <legend className="eyebrow mb-2 w-full">Herramienta</legend>
           <div className="flex flex-wrap items-center justify-center gap-2">
             {/* Control segmentado: radios reales, con el input oculto y el
                 estado visual sobre el propio <label>. */}
@@ -140,7 +143,7 @@ export function NewComparisonPage() {
         </div>
 
         <fieldset className="grid gap-4 sm:grid-cols-2">
-          <legend className="eyebrow mb-2">Umbrales (opcional)</legend>
+          <legend className="eyebrow mb-2 w-full">Umbrales (opcional)</legend>
           <label className="flex flex-col gap-1.5 text-sm text-muted">
             Umbral de regresión (%)
             <input
