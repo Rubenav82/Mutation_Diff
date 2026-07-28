@@ -63,9 +63,10 @@ export function NewComparisonPage() {
   }
 
   return (
-    // Sin `mx-auto`: el formulario se alinea con la marca de la cabecera en vez
-    // de quedar centrado respecto a un contenedor más ancho que él.
-    <main className="rise max-w-3xl">
+    // Centrado dentro del contenedor de `App`, que es más ancho: alineado a la
+    // izquierda dejaba el formulario pegado a un lado con la mitad derecha vacía.
+    // El texto se centra con él; el panel de ayuda se exceptúa (lleva un snippet).
+    <main className="rise mx-auto max-w-3xl text-center">
       <h1>Nueva comparación</h1>
       <p className="mt-2 mb-8 text-sm text-balance text-muted">
         Sube la ejecución de referencia y la nueva. MutaDiff te dice qué clases han perdido score,
@@ -74,8 +75,11 @@ export function NewComparisonPage() {
 
       <form onSubmit={(event) => void handleSubmit(event)} className="flex flex-col gap-7">
         <fieldset>
-          <legend className="eyebrow mb-2">Herramienta</legend>
-          <div className="flex flex-wrap items-center gap-2">
+          {/* `w-full`: la caja de un <legend> se ajusta a su contenido, así que
+              centrar el texto dentro no lo mueve. Chrome lo coloca igualmente con
+              el text-align heredado, Firefox no; con ancho completo da igual. */}
+          <legend className="eyebrow mb-2 w-full">Herramienta</legend>
+          <div className="flex flex-wrap items-center justify-center gap-2">
             {/* Control segmentado: radios reales, con el input oculto y el
                 estado visual sobre el propio <label>. */}
             <div className="inline-flex overflow-hidden rounded-md border border-line bg-raised">
@@ -84,8 +88,8 @@ export function NewComparisonPage() {
                   key={value}
                   className={`relative cursor-pointer px-4 py-1.5 font-mono text-sm transition-colors ${
                     tool === value
-                      ? 'bg-accent text-white'
-                      : 'text-muted hover:bg-accent-soft hover:text-ink'
+                      ? 'bg-deep text-inverse'
+                      : 'text-muted hover:bg-wash hover:text-ink'
                   }`}
                 >
                   {/* El input cubre el segmento en vez de ser `sr-only`: así el
@@ -108,7 +112,7 @@ export function NewComparisonPage() {
               aria-expanded={isHelpOpen}
               aria-controls={HELP_PANEL_ID}
               onClick={() => setIsHelpOpen((open) => !open)}
-              className="flex h-7 w-7 items-center justify-center rounded-full border border-line text-muted transition-colors hover:border-accent hover:text-accent"
+              className="flex h-7 w-7 items-center justify-center border border-line text-muted transition-colors hover:border-accent hover:text-ink"
             >
               ⓘ<span className="sr-only">Ayuda de configuración</span>
             </button>
@@ -139,9 +143,9 @@ export function NewComparisonPage() {
         </div>
 
         <fieldset className="grid gap-4 sm:grid-cols-2">
-          <legend className="eyebrow mb-2">Umbrales (opcional)</legend>
+          <legend className="eyebrow mb-2 w-full">Umbrales (opcional)</legend>
           <label className="flex flex-col gap-1.5 text-sm text-muted">
-            Umbral de regresión (%)
+            Umbral de retroceso (%)
             <input
               type="number"
               value={regressionThreshold}
@@ -169,12 +173,12 @@ export function NewComparisonPage() {
             button's own label is not reliably announced by screen readers. */}
         {isSubmitting && <LoadingIndicator label="Comparando…" />}
 
-        <div className="flex items-center gap-4 border-t border-line pt-6">
+        <div className="rule flex flex-wrap items-center justify-center gap-4 pt-6">
           <button
             type="submit"
             disabled={!canSubmit}
             aria-busy={isSubmitting}
-            className="rounded-md bg-accent px-6 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-35"
+            className="rounded-md bg-deep px-6 py-2.5 text-sm font-semibold text-inverse transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-35"
           >
             Comparar
           </button>

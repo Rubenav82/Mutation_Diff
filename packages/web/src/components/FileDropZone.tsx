@@ -96,19 +96,22 @@ export function FileDropZone({
         <button
           type="button"
           onClick={onClear}
-          className="mt-1.5 text-xs text-muted underline underline-offset-2 hover:text-accent"
+          className="mt-1.5 text-xs text-muted underline underline-offset-2 hover:text-ink"
         >
           Quitar
         </button>
       )}
       {error && (
-        <p role="alert" className="mt-2 flex flex-wrap items-center gap-2 text-sm text-loss">
+        <p
+          role="alert"
+          className="mt-2 flex flex-wrap items-center justify-center gap-2 text-sm text-loss"
+        >
           {error}
           {onShowHelp && (
             <button
               type="button"
               onClick={onShowHelp}
-              className="underline underline-offset-2 hover:text-accent"
+              className="underline underline-offset-2 hover:text-ink"
             >
               Ver instrucciones
             </button>

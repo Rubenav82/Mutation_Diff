@@ -28,6 +28,25 @@ function metrics(overrides: Partial<UnitMetrics> = {}): UnitMetrics {
   };
 }
 
+/**
+ * Builds a ComparisonResult without repeating every field at each call site: the tests
+ * below only care about one or two of them, and a new required field on the type would
+ * otherwise have to be added by hand to every literal.
+ */
+function resultFrom(overrides: Partial<ComparisonResult> = {}): ComparisonResult {
+  return {
+    tool: 'pitest',
+    context: { regressionThreshold: 0, uncoveredThreshold: 100 },
+    global: { base: metrics(), head: metrics(), scoreDelta: 0, coverageDelta: 0 },
+    units: [],
+    regressions: [],
+    uncovered: [],
+    added: [],
+    removed: [],
+    ...overrides,
+  };
+}
+
 function section(html: string, heading: string): string {
   const start = html.indexOf(`<h2>${heading}`);
   if (start === -1) throw new Error(`section not found: ${heading}`);
@@ -71,7 +90,7 @@ describe('generateHtmlReport — mini PiTest comparison', () => {
   });
 
   it('limits the regressions section to regressed units only', () => {
-    const regressions = section(html, 'Regresiones');
+    const regressions = section(html, 'Retrocesos');
     expect(regressions).toContain('com.example.StringUtils');
     expect(regressions).not.toContain('com.example.MathHelper');
     expect(regressions).not.toContain('com.example.Calculator');
@@ -94,10 +113,71 @@ describe('generateHtmlReport — mini PiTest comparison', () => {
     expect(full).toContain('com.example.Legacy');
     expect(full).toContain('com.example.NewFeature');
     expect(full).toContain('Mejora ▲');
-    expect(full).toContain('Regresión ▼');
+    expect(full).toContain('Retroceso ▼');
     expect(full).toContain('Igual');
     expect(full).toContain('Nueva');
     expect(full).toContain('Eliminada');
+  });
+});
+
+describe('generateHtmlReport — contexto de la comparación', () => {
+  // El informe se comparte suelto, fuera de la app: sin esto no hay forma de saber
+  // qué dos ejecuciones produjeron las cifras que muestra.
+  it('names the compared files and the thresholds that were applied', () => {
+    const html = generateHtmlReport(
+      resultFrom({
+        context: {
+          baseLabel: 'mutations-enero.xml',
+          headLabel: 'mutations-febrero.xml',
+          regressionThreshold: 2,
+          uncoveredThreshold: 75,
+        },
+      }),
+    );
+
+    expect(html).toContain('mutations-enero.xml');
+    expect(html).toContain('mutations-febrero.xml');
+    expect(html).toContain('2%');
+    expect(html).toContain('75%');
+  });
+
+  // Un lado cada vez: comprobando solo que el texto aparece, el sustituto del otro
+  // lado puede desaparecer sin que ninguna aserción se entere.
+  it('falls back to a placeholder for the base run alone', () => {
+    const html = generateHtmlReport(
+      resultFrom({
+        context: { headLabel: 'head.xml', regressionThreshold: 0, uncoveredThreshold: 100 },
+      }),
+    );
+
+    expect(html).toContain('<span class="file">Sin nombre</span>');
+    expect(html).toContain('<span class="file">head.xml</span>');
+  });
+
+  it('falls back to a placeholder for the head run alone', () => {
+    const html = generateHtmlReport(
+      resultFrom({
+        context: { baseLabel: 'base.xml', regressionThreshold: 0, uncoveredThreshold: 100 },
+      }),
+    );
+
+    expect(html).toContain('<span class="file">base.xml</span>');
+    expect(html).toContain('<span class="file">Sin nombre</span>');
+  });
+
+  it('escapes a file name instead of injecting it raw', () => {
+    const html = generateHtmlReport(
+      resultFrom({
+        context: {
+          baseLabel: '<img src=x onerror=alert(1)>',
+          regressionThreshold: 0,
+          uncoveredThreshold: 100,
+        },
+      }),
+    );
+
+    expect(html).not.toContain('<img src=x');
+    expect(html).toContain('&lt;img src=x onerror=alert(1)&gt;');
   });
 });
 
@@ -112,15 +192,7 @@ describe('generateHtmlReport — XSS safety', () => {
       coverageDelta: null,
       isUncovered: false,
     };
-    const result: ComparisonResult = {
-      tool: 'pitest',
-      global: { base: metrics(), head: metrics(), scoreDelta: 0, coverageDelta: 0 },
-      units: [unit],
-      regressions: [],
-      uncovered: [],
-      added: [unit],
-      removed: [],
-    };
+    const result = resultFrom({ units: [unit], added: [unit] });
 
     const html = generateHtmlReport(result);
 
@@ -138,15 +210,7 @@ describe('generateHtmlReport — XSS safety', () => {
       coverageDelta: null,
       isUncovered: false,
     };
-    const result: ComparisonResult = {
-      tool: 'pitest',
-      global: { base: metrics(), head: metrics(), scoreDelta: 0, coverageDelta: 0 },
-      units: [unit],
-      regressions: [],
-      uncovered: [],
-      added: [unit],
-      removed: [],
-    };
+    const result = resultFrom({ units: [unit], added: [unit] });
 
     const html = generateHtmlReport(result);
 
@@ -200,22 +264,19 @@ describe('generateHtmlReport — exact row and delta rendering', () => {
       isUncovered: false,
     };
 
-    const result: ComparisonResult = {
-      tool: 'pitest',
-      global: { base: metrics(), head: metrics(), scoreDelta: 0, coverageDelta: 0 },
+    const result = resultFrom({
       units: [improved, regressed, unchanged, added, removed],
       regressions: [regressed],
-      uncovered: [],
       added: [added],
       removed: [removed],
-    };
+    });
     const html = generateHtmlReport(result);
 
     expect(html).toContain(
       '<tr class="kind-improved"><td>Improved</td><td>50.0%</td><td>62.3%</td><td>+12.3%</td><td>Mejora ▲</td></tr>',
     );
     expect(html).toContain(
-      '<tr class="kind-regressed"><td>Regressed</td><td>90.0%</td><td>81.5%</td><td>-8.5%</td><td>Regresión ▼</td></tr>',
+      '<tr class="kind-regressed"><td>Regressed</td><td>90.0%</td><td>81.5%</td><td>-8.5%</td><td>Retroceso ▼</td></tr>',
     );
     expect(html).toContain(
       '<tr class="kind-unchanged"><td>Unchanged</td><td>70.0%</td><td>70.0%</td><td>0.0%</td><td>Igual</td></tr>',
@@ -231,15 +292,9 @@ describe('generateHtmlReport — exact row and delta rendering', () => {
 
 describe('generateHtmlReport — global delta card styling', () => {
   function reportWithGlobalDelta(scoreDelta: number, coverageDelta: number): ComparisonResult {
-    return {
-      tool: 'pitest',
+    return resultFrom({
       global: { base: metrics(), head: metrics(), scoreDelta, coverageDelta },
-      units: [],
-      regressions: [],
-      uncovered: [],
-      added: [],
-      removed: [],
-    };
+    });
   }
 
   it('marks a positive delta card as positive and a negative one as negative', () => {
@@ -264,24 +319,18 @@ describe('generateHtmlReport — global delta card styling', () => {
 
 describe('generateHtmlReport — empty comparison', () => {
   it('renders without throwing and shows friendly empty-state messages', () => {
-    const empty: ComparisonResult = {
-      tool: 'pitest',
+    const empty = resultFrom({
       global: {
         base: metrics({ total: 0, killed: 0, validTotal: 0, score: 0, coveredPct: 0 }),
         head: metrics({ total: 0, killed: 0, validTotal: 0, score: 0, coveredPct: 0 }),
         scoreDelta: 0,
         coverageDelta: 0,
       },
-      units: [],
-      regressions: [],
-      uncovered: [],
-      added: [],
-      removed: [],
-    };
+    });
 
     expect(() => generateHtmlReport(empty)).not.toThrow();
     const html = generateHtmlReport(empty);
-    expect(html).toContain('No hay regresiones.');
+    expect(html).toContain('No hay retrocesos.');
     expect(html).toContain('No hay clases/ficheros sin cobertura.');
     expect(html).toContain('No hay unidades.');
   });
@@ -298,15 +347,7 @@ describe('generateHtmlReport — size budget (CA-HU-07)', () => {
       coverageDelta: 0,
       isUncovered: false,
     }));
-    const result: ComparisonResult = {
-      tool: 'pitest',
-      global: { base: metrics(), head: metrics(), scoreDelta: 0, coverageDelta: 0 },
-      units,
-      regressions: [],
-      uncovered: [],
-      added: [],
-      removed: [],
-    };
+    const result = resultFrom({ units });
 
     const html = generateHtmlReport(result);
     const bytes = Buffer.byteLength(html, 'utf-8');

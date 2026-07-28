@@ -7,8 +7,9 @@ import { NewComparisonPage } from './pages/NewComparisonPage';
  * single `<h1>`, and a permanent header heading would compete with it.
  */
 function AppHeader() {
+  // Plano y opaco: Modernist no usa translucidez ni desenfoque.
   return (
-    <header className="border-b border-line bg-raised/70 backdrop-blur-sm">
+    <header className="border-b border-line bg-raised">
       <div className="h-0.5 bg-accent" />
       <div className="mx-auto flex max-w-6xl items-baseline gap-3 px-6 py-4">
         <Link to="/" className="font-mono text-base font-semibold tracking-tight text-ink">

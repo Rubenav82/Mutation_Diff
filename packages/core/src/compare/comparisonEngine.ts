@@ -96,6 +96,12 @@ export function compareRuns(
 
   return {
     tool: base.tool,
+    context: {
+      ...(base.label !== undefined ? { baseLabel: base.label } : {}),
+      ...(head.label !== undefined ? { headLabel: head.label } : {}),
+      regressionThreshold,
+      uncoveredThreshold,
+    },
     global: {
       base: base.metrics,
       head: head.metrics,

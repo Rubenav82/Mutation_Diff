@@ -1,6 +1,6 @@
 # MutaDiff
 
-Compara dos ejecuciones de mutation testing —[PiTest](https://pitest.org/) o [Stryker](https://stryker-mutator.io/)— y te dice qué ha empeorado: regresiones de score por clase, clases nuevas sin tests y cobertura perdida. Exporta el resultado como un informe HTML autocontenido para adjuntarlo a una PR o archivarlo.
+Compara dos ejecuciones de mutation testing —[PiTest](https://pitest.org/) o [Stryker](https://stryker-mutator.io/)— y te dice qué ha empeorado: retrocesos de score por clase, clases nuevas sin tests y cobertura perdida. Exporta el resultado como un informe HTML autocontenido para adjuntarlo a una PR o archivarlo.
 
 Mirar dos `mutations.xml` en paralelo para averiguar qué clase ha bajado de score es tedioso y se hace mal. Esto lo automatiza.
 
@@ -57,9 +57,9 @@ La misma información está dentro de la app, detrás del icono ⓘ junto al sel
 
 1. Elige herramienta (PiTest o Stryker) y arrastra los dos reportes: la ejecución **base** y la **nueva**.
 2. Opcionalmente ajusta los umbrales:
-   - **Umbral de regresión (%)**: cuánto puede bajar el score de una clase antes de contarla como regresión. Por defecto `0` — cualquier bajada cuenta.
+   - **Umbral de retroceso (%)**: cuánto puede bajar el score de una clase antes de contarla como retroceso. Por defecto `0` — cualquier bajada cuenta. En la API el campo se sigue llamando `regressionThreshold`.
    - **Umbral sin cobertura (%)**: qué porcentaje de mutantes en `NO_COVERAGE` marca una clase como «sin cobertura». Por defecto `100` — solo las que no tienen ni un mutante cubierto. Bájalo a `75` para incluir también las casi descubiertas.
-3. El dashboard muestra las métricas globales con su delta, las secciones de regresiones / sin cobertura / nuevas / eliminadas, y la tabla completa con filtro y orden por columna.
+3. El dashboard muestra las métricas globales con su delta, las secciones de retrocesos / sin cobertura / nuevas / eliminadas, y la tabla completa con filtro y orden por columna.
 4. **Exportar HTML** descarga el informe completo como un único fichero, sin CSS ni JS externos: se abre offline y se puede adjuntar donde sea.
 
 ## API REST

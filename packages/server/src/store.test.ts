@@ -20,6 +20,7 @@ function metrics(): UnitMetrics {
 function fakeResult(): ComparisonResult {
   return {
     tool: 'pitest',
+    context: { regressionThreshold: 0, uncoveredThreshold: 100 },
     global: { base: metrics(), head: metrics(), scoreDelta: 0, coverageDelta: 0 },
     units: [],
     regressions: [],

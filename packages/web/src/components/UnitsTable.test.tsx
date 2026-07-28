@@ -74,7 +74,7 @@ describe('UnitsTable', () => {
     expect(within(row).getByText('90.0%')).toBeInTheDocument();
     expect(within(row).getByText('60.0%')).toBeInTheDocument();
     expect(within(row).getByText('-30.0%')).toBeInTheDocument();
-    expect(within(row).getByText('Regresión ▼')).toBeInTheDocument();
+    expect(within(row).getByText('Retroceso ▼')).toBeInTheDocument();
   });
 
   it('shows an em dash for the missing side of added and removed units', () => {

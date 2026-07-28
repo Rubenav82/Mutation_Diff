@@ -19,12 +19,21 @@ const comparisonRequestSchema = z.object({
   uncoveredThreshold: z.coerce.number().optional(),
 });
 
-function parseReport(tool: 'pitest' | 'stryker', buffer: Buffer, createdAt: string): NormalizedRun {
-  const content = buffer.toString('utf-8');
+/**
+ * The uploaded file name becomes the run's label, which is what identifies each side of
+ * the comparison in the dashboard once the result is reopened by its id.
+ */
+function parseReport(
+  tool: 'pitest' | 'stryker',
+  file: Express.Multer.File,
+  createdAt: string,
+): NormalizedRun {
+  const content = file.buffer.toString('utf-8');
+  const options = { createdAt, label: file.originalname };
   try {
     return tool === 'pitest'
-      ? parsePitestReport(content, { createdAt })
-      : parseStrykerReport(content, { createdAt });
+      ? parsePitestReport(content, options)
+      : parseStrykerReport(content, options);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Invalid report file';
     throw new ApiError(422, 'INVALID_REPORT', message);
@@ -56,8 +65,8 @@ export function createComparisonsRouter(): Router {
       >;
       const createdAt = new Date().toISOString();
 
-      const baseRun = parseReport(tool, baseFile.buffer, createdAt);
-      const headRun = parseReport(tool, headFile.buffer, createdAt);
+      const baseRun = parseReport(tool, baseFile, createdAt);
+      const headRun = parseReport(tool, headFile, createdAt);
       const result = compareRuns(baseRun, headRun, {
         ...(regressionThreshold !== undefined ? { regressionThreshold } : {}),
         ...(uncoveredThreshold !== undefined ? { uncoveredThreshold } : {}),

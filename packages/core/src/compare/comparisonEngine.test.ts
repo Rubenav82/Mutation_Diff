@@ -221,3 +221,50 @@ describe('compareRuns — uncovered threshold', () => {
     );
   });
 });
+
+// El dashboard necesita saber qué ficheros y qué umbrales produjeron un resultado
+// al reabrirlo por su id, y el ComparisonResult es lo único que se almacena.
+describe('compareRuns — contexto de la comparación', () => {
+  const base = runFrom('pitest', [unitFrom('A', ['killed'])]);
+  const head = runFrom('pitest', [unitFrom('A', ['killed'])]);
+
+  it('reports the effective thresholds, with defaults already resolved', () => {
+    expect(compareRuns(base, head).context).toEqual({
+      regressionThreshold: 0,
+      uncoveredThreshold: 100,
+    });
+  });
+
+  it('reports explicitly provided thresholds', () => {
+    const { context } = compareRuns(base, head, {
+      regressionThreshold: 2,
+      uncoveredThreshold: 75,
+    });
+    expect(context.regressionThreshold).toBe(2);
+    expect(context.uncoveredThreshold).toBe(75);
+  });
+
+  it('carries each run label through as the compared file name', () => {
+    const { context } = compareRuns(
+      { ...base, label: 'mutations1.xml' },
+      { ...head, label: 'mutations2.xml' },
+    );
+    expect(context.baseLabel).toBe('mutations1.xml');
+    expect(context.headLabel).toBe('mutations2.xml');
+  });
+
+  // Cada lado necesita su propia comprobación: con una sola, el mutante que fuerza
+  // la rama del otro sobrevive, porque la clave llega como `undefined` en vez de
+  // faltar y ninguna aserción lo distingue.
+  it('omits the base label key entirely when that run has none', () => {
+    const { context } = compareRuns(base, { ...head, label: 'mutations2.xml' });
+    expect('baseLabel' in context).toBe(false);
+    expect(context.headLabel).toBe('mutations2.xml');
+  });
+
+  it('omits the head label key entirely when that run has none', () => {
+    const { context } = compareRuns({ ...base, label: 'mutations1.xml' }, head);
+    expect('headLabel' in context).toBe(false);
+    expect(context.baseLabel).toBe('mutations1.xml');
+  });
+});

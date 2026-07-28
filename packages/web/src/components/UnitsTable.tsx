@@ -13,18 +13,19 @@ import { formatOptionalPct, formatOptionalSignedPct } from '../lib/format';
 
 const KIND_LABELS: Record<UnitChangeKind, string> = {
   improved: 'Mejora ▲',
-  regressed: 'Regresión ▼',
+  regressed: 'Retroceso ▼',
   unchanged: 'Igual',
   added: 'Nueva',
   removed: 'Eliminada',
 };
 
+/** Tag rectangular: borde del color del dato, sin relleno que compita con la fila. */
 const KIND_LABEL_CLASS: Record<UnitChangeKind, string> = {
-  improved: 'text-gain',
-  regressed: 'text-loss',
-  unchanged: 'text-muted',
-  added: 'text-accent',
-  removed: 'text-muted line-through',
+  improved: 'border-gain text-gain',
+  regressed: 'border-loss text-loss',
+  unchanged: 'border-line text-muted',
+  added: 'border-line-strong text-ink',
+  removed: 'border-line text-muted line-through',
 };
 
 const COLUMNS: ColumnDef<UnitComparison>[] = [
@@ -59,7 +60,11 @@ const COLUMNS: ColumnDef<UnitComparison>[] = [
     accessorKey: 'kind',
     header: 'Estado',
     cell: ({ row }) => (
-      <span className={KIND_LABEL_CLASS[row.original.kind]}>{KIND_LABELS[row.original.kind]}</span>
+      <span
+        className={`inline-block border px-2 py-0.5 text-xs whitespace-nowrap ${KIND_LABEL_CLASS[row.original.kind]}`}
+      >
+        {KIND_LABELS[row.original.kind]}
+      </span>
     ),
   },
 ];
@@ -96,23 +101,20 @@ export function UnitsTable({ units }: { units: UnitComparison[] }) {
           placeholder="Filtrar por clase o paquete…"
           value={globalFilter}
           onChange={(event) => setGlobalFilter(event.target.value)}
-          className="w-full max-w-xs rounded-md border border-line bg-raised px-3 py-1.5 font-mono text-sm text-ink transition-colors hover:border-line-strong"
+          className="w-full max-w-xs border border-line bg-raised px-3 py-1.5 font-mono text-sm text-ink transition-colors hover:border-line-strong"
         />
       </div>
-      <div className="overflow-x-auto rounded-lg border border-line bg-raised">
-        <table className="w-full border-collapse text-sm">
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse bg-raised text-sm">
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <th
-                    key={header.id}
-                    className="border-b border-line bg-surface p-0 text-left first:w-1/2"
-                  >
+                  <th key={header.id} className="border-b-2 border-ink p-0 text-left first:w-1/2">
                     <button
                       type="button"
                       onClick={header.column.getToggleSortingHandler()}
-                      className="eyebrow w-full px-3 py-2.5 text-left transition-colors hover:text-accent"
+                      className="eyebrow w-full px-3 py-2.5 text-left whitespace-nowrap transition-colors hover:text-ink"
                     >
                       {flexRender(header.column.columnDef.header, header.getContext())}
                       {header.column.getIsSorted() === 'asc'
@@ -131,7 +133,7 @@ export function UnitsTable({ units }: { units: UnitComparison[] }) {
               <tr
                 key={row.id}
                 data-kind={row.original.kind}
-                className="border-b border-line last:border-0 hover:bg-accent-soft/50"
+                className="border-b border-line last:border-0 hover:bg-wash"
               >
                 {row.getVisibleCells().map((cell) => (
                   <td

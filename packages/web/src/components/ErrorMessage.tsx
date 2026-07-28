@@ -18,7 +18,7 @@ export function ErrorMessage({ message, onRetry }: ErrorMessageProps) {
         <button
           type="button"
           onClick={onRetry}
-          className="shrink-0 rounded-md border border-loss/40 px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-loss hover:text-white"
+          className="shrink-0 rounded-md border border-loss/40 px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-loss hover:text-inverse"
         >
           Reintentar
         </button>
