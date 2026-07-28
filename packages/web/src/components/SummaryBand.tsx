@@ -39,7 +39,7 @@ export function SummaryBand({ tool, global, regressionCount, reportUrl }: Summar
     <section className="bg-deep text-inverse">
       <div className="flex flex-wrap items-start justify-between gap-6 p-6">
         <div className="flex flex-col gap-6">
-          <h1 className="eyebrow !text-deep-muted">Comparación · {tool}</h1>
+          <h1 className="eyebrow text-deep-muted!">Comparación · {tool}</h1>
           <div className="flex flex-wrap gap-10">
             <Figure
               label="Mutation score"
@@ -98,7 +98,7 @@ function Figure({
 }) {
   return (
     <div data-variant={variant} data-trend={trend}>
-      <p className="eyebrow !text-deep-muted">{label}</p>
+      <p className="eyebrow text-deep-muted!">{label}</p>
       <p className="mt-1 font-mono text-4xl font-semibold tabular-nums">{value}</p>
       <p className="mt-1 font-mono text-xs tabular-nums">
         <span className="text-deep-muted">{from}</span>
