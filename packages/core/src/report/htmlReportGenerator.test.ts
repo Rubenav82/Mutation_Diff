@@ -90,7 +90,7 @@ describe('generateHtmlReport — mini PiTest comparison', () => {
   });
 
   it('limits the regressions section to regressed units only', () => {
-    const regressions = section(html, 'Regresiones');
+    const regressions = section(html, 'Retrocesos');
     expect(regressions).toContain('com.example.StringUtils');
     expect(regressions).not.toContain('com.example.MathHelper');
     expect(regressions).not.toContain('com.example.Calculator');
@@ -113,7 +113,7 @@ describe('generateHtmlReport — mini PiTest comparison', () => {
     expect(full).toContain('com.example.Legacy');
     expect(full).toContain('com.example.NewFeature');
     expect(full).toContain('Mejora ▲');
-    expect(full).toContain('Regresión ▼');
+    expect(full).toContain('Retroceso ▼');
     expect(full).toContain('Igual');
     expect(full).toContain('Nueva');
     expect(full).toContain('Eliminada');
@@ -276,7 +276,7 @@ describe('generateHtmlReport — exact row and delta rendering', () => {
       '<tr class="kind-improved"><td>Improved</td><td>50.0%</td><td>62.3%</td><td>+12.3%</td><td>Mejora ▲</td></tr>',
     );
     expect(html).toContain(
-      '<tr class="kind-regressed"><td>Regressed</td><td>90.0%</td><td>81.5%</td><td>-8.5%</td><td>Regresión ▼</td></tr>',
+      '<tr class="kind-regressed"><td>Regressed</td><td>90.0%</td><td>81.5%</td><td>-8.5%</td><td>Retroceso ▼</td></tr>',
     );
     expect(html).toContain(
       '<tr class="kind-unchanged"><td>Unchanged</td><td>70.0%</td><td>70.0%</td><td>0.0%</td><td>Igual</td></tr>',
@@ -330,7 +330,7 @@ describe('generateHtmlReport — empty comparison', () => {
 
     expect(() => generateHtmlReport(empty)).not.toThrow();
     const html = generateHtmlReport(empty);
-    expect(html).toContain('No hay regresiones.');
+    expect(html).toContain('No hay retrocesos.');
     expect(html).toContain('No hay clases/ficheros sin cobertura.');
     expect(html).toContain('No hay unidades.');
   });

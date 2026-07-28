@@ -2,7 +2,7 @@ import type { ComparisonResult, UnitChangeKind, UnitComparison } from '../domain
 
 const KIND_LABELS: Record<UnitChangeKind, string> = {
   improved: 'Mejora ▲',
-  regressed: 'Regresión ▼',
+  regressed: 'Retroceso ▼',
   unchanged: 'Igual',
   added: 'Nueva',
   removed: 'Eliminada',
@@ -12,7 +12,7 @@ const KIND_LABELS: Record<UnitChangeKind, string> = {
  * Modernist, el mismo sistema visual que la SPA: radio 0, reglas de 2px,
  * monoespaciada para toda medida y el par verde/rojo emparejado en contraste
  * (6.67:1 y 6.41:1 sobre el fondo) para que una mejora no cante más que una
- * regresión.
+ * retroceso.
  *
  * Los valores están duplicados a mano desde `packages/web/src/index.css`, y no
  * hay forma de evitarlo: `core` no puede importar de `web` (regla de
@@ -128,7 +128,7 @@ function renderContext(result: ComparisonResult): string {
   const head = escapeHtml(headLabel ?? 'Sin nombre');
   return `<p class="meta">Herramienta: ${escapeHtml(result.tool)}</p>
 <p class="meta"><span class="file">${base}</span> &rarr; <span class="file">${head}</span></p>
-<p class="meta">Umbral de regresión: ${regressionThreshold}% &middot; Umbral sin cobertura: ${uncoveredThreshold}%</p>`;
+<p class="meta">Umbral de retroceso: ${regressionThreshold}% &middot; Umbral sin cobertura: ${uncoveredThreshold}%</p>`;
 }
 
 export function generateHtmlReport(result: ComparisonResult): string {
@@ -146,7 +146,7 @@ export function generateHtmlReport(result: ComparisonResult): string {
 ${renderContext(result)}
 </header>
 ${renderSummary(result)}
-${renderTable('Regresiones', result.regressions, 'No hay regresiones.')}
+${renderTable('Retrocesos', result.regressions, 'No hay retrocesos.')}
 ${renderTable('Sin cobertura', result.uncovered, 'No hay clases/ficheros sin cobertura.')}
 ${renderTable('Todas las unidades', result.units, 'No hay unidades.')}
 </body>

@@ -26,7 +26,7 @@ export function ComparisonContextRail({ context }: ComparisonContextRailProps) {
             `core` that omits it, still have to render as something. */}
         <Field label="Ejecución base" value={baseLabel ?? 'Sin nombre'} muted={!baseLabel} />
         <Field label="Ejecución nueva" value={headLabel ?? 'Sin nombre'} muted={!headLabel} />
-        <Field label="Umbral de regresión" value={`${regressionThreshold}%`} />
+        <Field label="Umbral de retroceso" value={`${regressionThreshold}%`} />
         <Field label="Umbral sin cobertura" value={`${uncoveredThreshold}%`} />
       </dl>
 

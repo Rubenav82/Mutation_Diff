@@ -23,8 +23,8 @@ function trendVariant(delta: number): Variant {
 }
 
 function regressionSummary(count: number): string {
-  if (count === 0) return 'Sin regresiones';
-  return count === 1 ? '1 regresión' : `${count} regresiones`;
+  if (count === 0) return 'Sin retrocesos';
+  return count === 1 ? '1 retroceso' : `${count} retrocesos`;
 }
 
 /**

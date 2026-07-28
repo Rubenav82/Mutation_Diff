@@ -11,7 +11,7 @@ export function UnitSection({ title, units, emptyMessage }: UnitSectionProps) {
   return (
     <section aria-label={title}>
       {/* El espacio explícito importa: sin él el nombre accesible sería
-          "Regresiones2" y JSX se come el salto de línea. */}
+          "Retrocesos2" y JSX se come el salto de línea. */}
       <h2 className="mb-3 flex items-center gap-2">
         {title}{' '}
         <span className="bg-deep px-2 py-0.5 font-mono text-xs font-normal text-inverse tabular-nums">

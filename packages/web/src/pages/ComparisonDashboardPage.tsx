@@ -68,9 +68,9 @@ export function ComparisonDashboardPage() {
         />
         <KpiRow global={result.global} />
         <UnitSection
-          title="Regresiones"
+          title="Retrocesos"
           units={result.regressions}
-          emptyMessage="No hay regresiones."
+          emptyMessage="No hay retrocesos."
         />
         <UnitSection
           title="Sin cobertura"

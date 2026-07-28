@@ -129,7 +129,7 @@ describe('ComparisonDashboardPage', () => {
     getComparisonMock.mockResolvedValue(makeResult());
     renderDashboard();
 
-    expect(await screen.findByRole('heading', { name: 'Regresiones 1' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Retrocesos 1' })).toBeInTheDocument();
     expect(screen.getByText('com.example.TaxCalculator')).toBeInTheDocument();
 
     expect(screen.getByRole('heading', { name: 'Sin cobertura 1' })).toBeInTheDocument();

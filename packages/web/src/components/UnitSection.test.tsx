@@ -43,10 +43,10 @@ const REGRESSIONS: UnitComparison[] = [
 describe('UnitSection', () => {
   it('renders the title with the unit count and one row per unit', () => {
     render(
-      <UnitSection title="Regresiones" units={REGRESSIONS} emptyMessage="No hay regresiones." />,
+      <UnitSection title="Retrocesos" units={REGRESSIONS} emptyMessage="No hay retrocesos." />,
     );
 
-    expect(screen.getByRole('heading', { name: 'Regresiones 2' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Retrocesos 2' })).toBeInTheDocument();
     const row = screen.getByText('com.example.TaxCalculator').closest('tr') as HTMLElement;
     expect(within(row).getByText('90.0%')).toBeInTheDocument();
     expect(within(row).getByText('55.0%')).toBeInTheDocument();
@@ -55,7 +55,7 @@ describe('UnitSection', () => {
 
   it('preserves the order of the units it receives', () => {
     render(
-      <UnitSection title="Regresiones" units={REGRESSIONS} emptyMessage="No hay regresiones." />,
+      <UnitSection title="Retrocesos" units={REGRESSIONS} emptyMessage="No hay retrocesos." />,
     );
 
     const [, body] = screen.getAllByRole('rowgroup');
@@ -90,10 +90,10 @@ describe('UnitSection', () => {
   });
 
   it('shows the empty message and no table when there are no units', () => {
-    render(<UnitSection title="Regresiones" units={[]} emptyMessage="No hay regresiones." />);
+    render(<UnitSection title="Retrocesos" units={[]} emptyMessage="No hay retrocesos." />);
 
-    expect(screen.getByRole('heading', { name: 'Regresiones 0' })).toBeInTheDocument();
-    expect(screen.getByText('No hay regresiones.')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Retrocesos 0' })).toBeInTheDocument();
+    expect(screen.getByText('No hay retrocesos.')).toBeInTheDocument();
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
   });
 });

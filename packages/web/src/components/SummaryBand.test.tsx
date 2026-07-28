@@ -116,16 +116,16 @@ describe('SummaryBand', () => {
 
   it('counts the regressions, in singular and plural', () => {
     renderBand({ regressionCount: 3 });
-    expect(screen.getByText('3 regresiones')).toBeInTheDocument();
+    expect(screen.getByText('3 retrocesos')).toBeInTheDocument();
 
     renderBand({ regressionCount: 1 });
-    expect(screen.getByText('1 regresión')).toBeInTheDocument();
+    expect(screen.getByText('1 retroceso')).toBeInTheDocument();
   });
 
   it('says so plainly when nothing regressed', () => {
     renderBand({ regressionCount: 0 });
 
-    expect(screen.getByText('Sin regresiones')).toBeInTheDocument();
+    expect(screen.getByText('Sin retrocesos')).toBeInTheDocument();
   });
 
   it('offers the HTML export as a download link', () => {

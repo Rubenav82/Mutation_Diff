@@ -145,7 +145,7 @@ export function NewComparisonPage() {
         <fieldset className="grid gap-4 sm:grid-cols-2">
           <legend className="eyebrow mb-2 w-full">Umbrales (opcional)</legend>
           <label className="flex flex-col gap-1.5 text-sm text-muted">
-            Umbral de regresión (%)
+            Umbral de retroceso (%)
             <input
               type="number"
               value={regressionThreshold}

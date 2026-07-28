@@ -13,7 +13,7 @@ import { formatOptionalPct, formatOptionalSignedPct } from '../lib/format';
 
 const KIND_LABELS: Record<UnitChangeKind, string> = {
   improved: 'Mejora ▲',
-  regressed: 'Regresión ▼',
+  regressed: 'Retroceso ▼',
   unchanged: 'Igual',
   added: 'Nueva',
   removed: 'Eliminada',

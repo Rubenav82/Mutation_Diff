@@ -56,7 +56,7 @@ test.describe('flujo completo de comparación', () => {
 
     // HU-05: cada clase de la fixture cae en la sección que le corresponde.
     await expect(
-      page.getByRole('region', { name: 'Regresiones' }).getByText('com.acme.billing.TaxCalculator'),
+      page.getByRole('region', { name: 'Retrocesos' }).getByText('com.acme.billing.TaxCalculator'),
     ).toBeVisible();
     await expect(
       page.getByRole('region', { name: 'Nuevas' }).getByText('com.acme.billing.RefundService'),

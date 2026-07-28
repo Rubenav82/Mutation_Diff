@@ -110,7 +110,7 @@ describe('NewComparisonPage', () => {
     renderWizard();
     await selectFiles(user, 'base.xml', 'head.xml');
 
-    await user.type(screen.getByLabelText(/umbral de regresión/i), '5');
+    await user.type(screen.getByLabelText(/umbral de retroceso/i), '5');
     await user.type(screen.getByLabelText(/umbral sin cobertura/i), '90');
     await user.click(screen.getByRole('button', { name: /comparar/i }));
 
