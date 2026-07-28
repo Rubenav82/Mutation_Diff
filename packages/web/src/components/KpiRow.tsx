@@ -1,4 +1,5 @@
 import type { ComparisonResult } from 'core';
+import { trendOf, TREND_ARROW, type Trend } from '../lib/format';
 
 type Polarity = 'higher-better' | 'higher-worse' | 'neutral';
 type Variant = 'positive' | 'negative' | 'neutral';
@@ -9,6 +10,7 @@ interface CardSpec {
   headText: string;
   deltaText: string;
   variant: Variant;
+  trend: Trend;
 }
 
 function trendVariant(delta: number, polarity: Polarity): Variant {
@@ -29,6 +31,7 @@ function countCard(label: string, base: number, head: number, polarity: Polarity
     headText: String(head),
     deltaText: formatCountDelta(delta),
     variant: trendVariant(delta, polarity),
+    trend: trendOf(delta),
   };
 }
 
@@ -67,7 +70,8 @@ export function KpiRow({ global }: { global: ComparisonResult['global'] }) {
           <li
             key={card.label}
             data-variant={card.variant}
-            className={`rise border-t-2 bg-raised px-4 pt-3 pb-4 ${VARIANT_RULE_CLASS[card.variant]}`}
+            data-trend={card.trend}
+            className={`rise border-t-2 bg-raised px-4 pt-3 pb-4 text-center ${VARIANT_RULE_CLASS[card.variant]}`}
             style={{ animationDelay: `${index * 45}ms` }}
           >
             <span className="eyebrow block">{card.label}</span>
@@ -79,6 +83,15 @@ export function KpiRow({ global }: { global: ComparisonResult['global'] }) {
               {card.headText}
             </span>
             <span className="mt-1 block font-mono text-xs tabular-nums">
+              {/* Decorativa: el delta con signo ya dice la dirección. */}
+              {card.trend !== 'flat' && (
+                <span
+                  aria-hidden="true"
+                  className={`mr-1 font-semibold ${VARIANT_DELTA_CLASS[card.variant]}`}
+                >
+                  {TREND_ARROW[card.trend]}
+                </span>
+              )}
               <span className={`font-semibold ${VARIANT_DELTA_CLASS[card.variant]}`}>
                 {card.deltaText}
               </span>

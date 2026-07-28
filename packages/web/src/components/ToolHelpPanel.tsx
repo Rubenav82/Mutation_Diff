@@ -38,11 +38,13 @@ export function ToolHelpPanel({ tool, id }: ToolHelpPanelProps) {
   }
 
   return (
+    // `text-left` propio: son instrucciones y un snippet de código, que se leen
+    // alineados a la izquierda aunque la página que los muestra vaya centrada.
     <div
       id={id}
       role="region"
       aria-label="Ayuda de configuración"
-      className="rise rounded-lg border border-line bg-raised p-5"
+      className="rise rounded-lg border border-line bg-raised p-5 text-left"
     >
       <p className="text-sm leading-relaxed text-muted">{help.description}</p>
       <div className="mt-3 flex items-center gap-3">

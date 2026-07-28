@@ -82,6 +82,38 @@ describe('SummaryBand', () => {
     expect(figure('Mutation score')).toHaveAttribute('data-variant', 'neutral');
   });
 
+  // La flecha marca la dirección del cambio y el color si esa dirección es buena o
+  // mala: son dos ejes distintos, y en KpiRow llegan a contradecirse (+3 supervivientes
+  // sube y empeora a la vez). Aquí coinciden, pero la flecha se deriva del signo.
+  it('points the arrow up on a rise and down on a drop', () => {
+    renderBand();
+
+    const score = figure('Mutation score');
+    expect(score).toHaveAttribute('data-trend', 'up');
+    expect(within(score).getByText('▲')).toBeInTheDocument();
+
+    const coverage = figure('Mutantes cubiertos');
+    expect(coverage).toHaveAttribute('data-trend', 'down');
+    expect(within(coverage).getByText('▼')).toBeInTheDocument();
+  });
+
+  it('shows no arrow at all when the figure did not move', () => {
+    renderBand({ global: makeGlobal(metrics({ score: 80 }), metrics({ score: 80 })) });
+
+    const score = figure('Mutation score');
+    expect(score).toHaveAttribute('data-trend', 'flat');
+    expect(within(score).queryByText('▲')).not.toBeInTheDocument();
+    expect(within(score).queryByText('▼')).not.toBeInTheDocument();
+  });
+
+  // El delta con signo ya dice la dirección; anunciar además "triángulo hacia arriba"
+  // solo añade ruido a un lector de pantalla.
+  it('hides the arrow from assistive tech', () => {
+    renderBand();
+
+    expect(within(figure('Mutation score')).getByText('▲')).toHaveAttribute('aria-hidden', 'true');
+  });
+
   it('counts the regressions, in singular and plural', () => {
     renderBand({ regressionCount: 3 });
     expect(screen.getByText('3 regresiones')).toBeInTheDocument();

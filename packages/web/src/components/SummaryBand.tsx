@@ -1,5 +1,5 @@
 import type { ComparisonResult, Tool } from 'core';
-import { formatPct, formatSignedPct } from '../lib/format';
+import { formatPct, formatSignedPct, trendOf, TREND_ARROW, type Trend } from '../lib/format';
 
 type Variant = 'positive' | 'negative' | 'neutral';
 
@@ -47,6 +47,7 @@ export function SummaryBand({ tool, global, regressionCount, reportUrl }: Summar
               from={formatPct(base.score)}
               delta={formatSignedPct(scoreDelta)}
               variant={trendVariant(scoreDelta)}
+              trend={trendOf(scoreDelta)}
             />
             <Figure
               label="Mutantes cubiertos"
@@ -54,6 +55,7 @@ export function SummaryBand({ tool, global, regressionCount, reportUrl }: Summar
               from={formatPct(base.coveredPct)}
               delta={formatSignedPct(coverageDelta)}
               variant={trendVariant(coverageDelta)}
+              trend={trendOf(coverageDelta)}
             />
           </div>
         </div>
@@ -85,15 +87,17 @@ function Figure({
   from,
   delta,
   variant,
+  trend,
 }: {
   label: string;
   value: string;
   from: string;
   delta: string;
   variant: Variant;
+  trend: Trend;
 }) {
   return (
-    <div data-variant={variant}>
+    <div data-variant={variant} data-trend={trend}>
       <p className="eyebrow !text-deep-muted">{label}</p>
       <p className="mt-1 font-mono text-4xl font-semibold tabular-nums">{value}</p>
       <p className="mt-1 font-mono text-xs tabular-nums">
@@ -101,6 +105,13 @@ function Figure({
         <span aria-hidden="true" className="text-deep-muted">
           {' → '}
         </span>
+        {/* Decorativa: el delta con signo ya dice la dirección, y va en su propio
+            nodo para que una consulta por la cifra siga encontrándola. */}
+        {trend !== 'flat' && (
+          <span aria-hidden="true" className={`mr-1 ${VARIANT_CLASS[variant]}`}>
+            {TREND_ARROW[trend]}
+          </span>
+        )}
         <span className={VARIANT_CLASS[variant]}>{delta}</span>
       </p>
     </div>

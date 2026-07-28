@@ -93,6 +93,45 @@ describe('KpiRow', () => {
     expect(within(cardByLabel('Timeouts')).getByText('+1')).toBeInTheDocument();
   });
 
+  // Dirección y polaridad son ejes independientes: subir es un hecho del dato, que
+  // suba sea bueno es una interpretación. Aquí se contradicen, así que la flecha no
+  // puede derivarse del variant.
+  it('points the arrow up on a rise even when rising is the bad direction', () => {
+    render(<KpiRow global={makeGlobal(metrics({ survived: 1 }), metrics({ survived: 4 }))} />);
+
+    const survivors = cardByLabel('Survivors');
+    expect(survivors).toHaveAttribute('data-trend', 'up');
+    expect(survivors).toHaveAttribute('data-variant', 'negative');
+    expect(within(survivors).getByText('▲')).toBeInTheDocument();
+  });
+
+  it('points the arrow down on a fall', () => {
+    render(<KpiRow global={makeGlobal(metrics({ killed: 9 }), metrics({ killed: 8 }))} />);
+
+    const killed = cardByLabel('Killed');
+    expect(killed).toHaveAttribute('data-trend', 'down');
+    expect(within(killed).getByText('▼')).toBeInTheDocument();
+  });
+
+  it('shows no arrow on a count that did not move', () => {
+    render(<KpiRow global={makeGlobal(metrics({ killed: 8 }), metrics({ killed: 8 }))} />);
+
+    const killed = cardByLabel('Killed');
+    expect(killed).toHaveAttribute('data-trend', 'flat');
+    expect(within(killed).queryByText('▲')).not.toBeInTheDocument();
+    expect(within(killed).queryByText('▼')).not.toBeInTheDocument();
+  });
+
+  // Timeouts no lleva color por no tener polaridad clara, pero la dirección del
+  // cambio sigue siendo un dato objetivo que sí se puede mostrar.
+  it('still shows a direction for timeouts, which carry no good/bad color', () => {
+    render(<KpiRow global={makeGlobal(metrics({ timeout: 0 }), metrics({ timeout: 3 }))} />);
+
+    const timeouts = cardByLabel('Timeouts');
+    expect(timeouts).toHaveAttribute('data-variant', 'neutral');
+    expect(timeouts).toHaveAttribute('data-trend', 'up');
+  });
+
   it('marks a zero delta as a neutral trend', () => {
     render(<KpiRow global={makeGlobal(metrics({ killed: 8 }), metrics({ killed: 8 }))} />);
 

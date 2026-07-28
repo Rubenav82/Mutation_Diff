@@ -102,7 +102,10 @@ export function FileDropZone({
         </button>
       )}
       {error && (
-        <p role="alert" className="mt-2 flex flex-wrap items-center gap-2 text-sm text-loss">
+        <p
+          role="alert"
+          className="mt-2 flex flex-wrap items-center justify-center gap-2 text-sm text-loss"
+        >
           {error}
           {onShowHelp && (
             <button

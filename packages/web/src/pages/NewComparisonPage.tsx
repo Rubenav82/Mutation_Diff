@@ -63,9 +63,10 @@ export function NewComparisonPage() {
   }
 
   return (
-    // Sin `mx-auto`: el formulario se alinea con la marca de la cabecera en vez
-    // de quedar centrado respecto a un contenedor más ancho que él.
-    <main className="rise max-w-3xl">
+    // Centrado dentro del contenedor de `App`, que es más ancho: alineado a la
+    // izquierda dejaba el formulario pegado a un lado con la mitad derecha vacía.
+    // El texto se centra con él; el panel de ayuda se exceptúa (lleva un snippet).
+    <main className="rise mx-auto max-w-3xl text-center">
       <h1>Nueva comparación</h1>
       <p className="mt-2 mb-8 text-sm text-balance text-muted">
         Sube la ejecución de referencia y la nueva. MutaDiff te dice qué clases han perdido score,
@@ -75,7 +76,7 @@ export function NewComparisonPage() {
       <form onSubmit={(event) => void handleSubmit(event)} className="flex flex-col gap-7">
         <fieldset>
           <legend className="eyebrow mb-2">Herramienta</legend>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center justify-center gap-2">
             {/* Control segmentado: radios reales, con el input oculto y el
                 estado visual sobre el propio <label>. */}
             <div className="inline-flex overflow-hidden rounded-md border border-line bg-raised">
@@ -169,7 +170,7 @@ export function NewComparisonPage() {
             button's own label is not reliably announced by screen readers. */}
         {isSubmitting && <LoadingIndicator label="Comparando…" />}
 
-        <div className="rule flex items-center gap-4 pt-6">
+        <div className="rule flex flex-wrap items-center justify-center gap-4 pt-6">
           <button
             type="submit"
             disabled={!canSubmit}
