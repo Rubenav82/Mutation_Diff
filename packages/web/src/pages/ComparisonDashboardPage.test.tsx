@@ -13,6 +13,26 @@ vi.mock('../lib/comparisons', async (importOriginal) => {
 
 const getComparisonMock = vi.mocked(getComparison);
 
+/**
+ * jsdom no implementa la Object URL API, así que no basta con espiarla: hay que
+ * ponerla. Se retira al terminar para no dejar un global que jsdom no tiene.
+ */
+function stubObjectUrl() {
+  // Tipadas explícitamente: sin firma, `mock.calls[0][0]` indexa una tupla vacía.
+  const createObjectURL = vi.fn<(blob: Blob) => string>(() => 'blob:mutadiff');
+  const revokeObjectURL = vi.fn<(url: string) => void>();
+  Object.assign(URL, { createObjectURL, revokeObjectURL });
+
+  return {
+    createObjectURL,
+    revokeObjectURL,
+    restoreObjectUrl: () => {
+      Reflect.deleteProperty(URL, 'createObjectURL');
+      Reflect.deleteProperty(URL, 'revokeObjectURL');
+    },
+  };
+}
+
 function metrics(over: Partial<UnitMetrics> = {}): UnitMetrics {
   return {
     total: 0,
@@ -142,14 +162,27 @@ describe('ComparisonDashboardPage', () => {
     expect(screen.getByText('No hay unidades eliminadas.')).toBeInTheDocument();
   });
 
-  it('offers an HTML export link pointing at the report endpoint', async () => {
+  it('generates the HTML report in the browser and hands it over as a download', async () => {
     getComparisonMock.mockResolvedValue(makeResult());
+    const { createObjectURL, revokeObjectURL, restoreObjectUrl } = stubObjectUrl();
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
     renderDashboard('abc 123');
 
-    const link = await screen.findByRole('link', { name: 'Exportar HTML' });
-    // the id is encoded so a key with spaces/slashes still resolves
-    expect(link).toHaveAttribute('href', '/api/comparisons/abc%20123/report');
-    expect(link).toHaveAttribute('download');
+    await userEvent.setup().click(await screen.findByRole('button', { name: 'Exportar HTML' }));
+
+    const blob = createObjectURL.mock.calls[0]?.[0] as Blob;
+    expect(blob.type).toBe('text/html;charset=utf-8');
+    await expect(blob.text()).resolves.toContain('<!doctype html>');
+
+    // El nombre del fichero lo ponía el `Content-Disposition` del servidor; sin
+    // servidor, la única fuente de verdad es este atributo.
+    const anchor = click.mock.contexts[0] as HTMLAnchorElement;
+    expect(anchor.download).toBe('mutadiff-report-abc 123.html');
+    // Sin revoke, cada export deja el informe entero retenido en memoria.
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:mutadiff');
+
+    click.mockRestore();
+    restoreObjectUrl();
   });
 
   // El rail de contexto (T-046): al reabrir una comparación por su id, es lo único

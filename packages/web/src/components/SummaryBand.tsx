@@ -7,7 +7,7 @@ interface SummaryBandProps {
   tool: Tool;
   global: ComparisonResult['global'];
   regressionCount: number;
-  reportUrl: string;
+  onExport: () => void;
 }
 
 /** Sobre la banda oscura, no los tokens del tema claro: ahí dan 1.9:1. */
@@ -32,7 +32,7 @@ function regressionSummary(count: number): string {
  * got better or worse", so the tool name lives here rather than being repeated
  * from the context rail, which covers where the result came from.
  */
-export function SummaryBand({ tool, global, regressionCount, reportUrl }: SummaryBandProps) {
+export function SummaryBand({ tool, global, regressionCount, onExport }: SummaryBandProps) {
   const { base, head, scoreDelta, coverageDelta } = global;
 
   return (
@@ -61,15 +61,15 @@ export function SummaryBand({ tool, global, regressionCount, reportUrl }: Summar
         </div>
 
         <div className="flex flex-col items-start gap-3">
-          {/* Plain anchor, not fetch+blob: the endpoint already sends
-              Content-Disposition: attachment with the filename. */}
-          <a
-            href={reportUrl}
-            download
+          {/* A button, not an anchor: there is no server left to link to, and
+              building the report is an action rather than a navigation. */}
+          <button
+            type="button"
+            onClick={onExport}
             className="border-2 border-inverse px-4 py-2 text-sm font-semibold transition-colors hover:bg-inverse hover:text-ink"
           >
             Exportar HTML
-          </a>
+          </button>
           <span
             className={`font-mono text-xs ${regressionCount > 0 ? 'text-loss-inverse' : 'text-deep-muted'}`}
           >

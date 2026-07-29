@@ -106,7 +106,7 @@ test.describe('flujo completo de comparación', () => {
     await submitComparison(page, { tool: 'pitest' });
 
     const downloadPromise = page.waitForEvent('download');
-    await page.getByRole('link', { name: 'Exportar HTML' }).click();
+    await page.getByRole('button', { name: 'Exportar HTML' }).click();
     const download = await downloadPromise;
 
     expect(download.suggestedFilename()).toMatch(/^mutadiff-report-[0-9a-f-]+\.html$/);

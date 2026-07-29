@@ -1,11 +1,6 @@
 import type { Tool } from 'core';
 import { describe, expect, it } from 'vitest';
-import {
-  ComparisonError,
-  createComparison,
-  getComparison,
-  getComparisonReportUrl,
-} from './comparisons';
+import { ComparisonError, createComparison, getComparison } from './comparisons';
 // Las mismas fixtures que usan los tests de `core` y los e2e: si cambian las
 // clases esperadas, salta en los tres sitios a la vez. Se cargan con `?raw` en
 // vez de `node:fs` porque bajo jsdom `import.meta.url` llega como URL `/@fs/`
@@ -110,18 +105,6 @@ describe('createComparison', () => {
       code: 'INVALID_REPORT',
     });
     await expect(promise).rejects.toThrow(/Invalid PiTest report/);
-  });
-});
-
-describe('getComparisonReportUrl', () => {
-  it('builds the report download URL for a comparison id', () => {
-    expect(getComparisonReportUrl('abc-123')).toBe('/api/comparisons/abc-123/report');
-  });
-
-  it('URL-encodes the comparison id', () => {
-    expect(getComparisonReportUrl('id with spaces')).toBe(
-      '/api/comparisons/id%20with%20spaces/report',
-    );
   });
 });
 

@@ -94,14 +94,6 @@ export async function createComparison(
   return { comparisonId, result };
 }
 
-/**
- * @deprecated Still points at the server. Replaced in T-071 by generating the
- * report from `core` and handing it to the browser as a blob.
- */
-export function getComparisonReportUrl(id: string): string {
-  return `/api/comparisons/${encodeURIComponent(id)}/report`;
-}
-
 export async function getComparison(id: string): Promise<ComparisonResult> {
   const result = comparisonStore.load(id);
   if (!result) {
