@@ -1,4 +1,5 @@
 import { Link, Route, Routes } from 'react-router-dom';
+import { LogoAqa } from './components/LogoAqa';
 import { ComparisonDashboardPage } from './pages/ComparisonDashboardPage';
 import { NewComparisonPage } from './pages/NewComparisonPage';
 
@@ -11,9 +12,14 @@ function AppHeader() {
   return (
     <header className="border-b border-line bg-raised">
       <div className="h-0.5 bg-accent" />
-      <div className="mx-auto flex max-w-6xl items-baseline gap-3 px-6 py-4">
-        <Link to="/" className="font-mono text-base font-semibold tracking-tight text-ink">
-          Mutator <span className="text-accent">Assessment</span> Report
+      {/* `items-center`, no `items-baseline`: con el logotipo al lado, alinear
+          por la línea base de un SVG lo descuadra respecto al texto. */}
+      <div className="mx-auto flex max-w-6xl items-center gap-3 px-6 py-4">
+        <Link to="/" className="flex items-center gap-3">
+          <LogoAqa className="h-9 w-auto shrink-0" />
+          <span className="border-l border-line pl-3 font-mono text-base font-semibold tracking-tight text-ink">
+            Mutator <span className="text-accent">Assessment</span> Report
+          </span>
         </Link>
       </div>
     </header>

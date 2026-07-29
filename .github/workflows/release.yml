@@ -2,14 +2,25 @@ name: Release
 
 on:
   push:
-    tags: ['v*']
-  # Para publicar una release desde un tag ya existente sin volver a etiquetar.
+    branches: [master]
+    # Un cambio solo de documentación produce exactamente el mismo `dist`, así
+    # que no merece una release nueva ni que la máquina interna se redescargue.
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+  # Para republicar sin tener que tocar código.
   workflow_dispatch:
+
+# Dos merges seguidos publican dos releases en orden, en vez de pisarse. Sin
+# cancelar: cada merge a master debe acabar teniendo su artefacto.
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
   release:
     runs-on: ubuntu-latest
-    # El resto de workflows no escriben nada; este sí, para adjuntar el zip.
+    # El resto de workflows no escriben nada; este sí, para crear la release.
     permissions:
       contents: write
     steps:
@@ -22,8 +33,10 @@ jobs:
 
       - run: npm ci
 
-      # No se publica nada que no pase la misma barra que un PR: el artefacto
-      # va a servirse dentro de la empresa y no hay despliegue que revertir.
+      # Se repiten aquí aunque CI también los corra sobre master: CI y Release
+      # arrancan en paralelo con el mismo push, así que un CI en rojo no
+      # detendría la publicación. La única forma de que esto sea una barrera de
+      # verdad es que la barrera viva dentro de este workflow.
       - run: npm run lint
 
       - run: npm run typecheck
@@ -41,13 +54,23 @@ jobs:
       - name: Empaquetar el artefacto estático
         run: cd packages/web/dist && zip -r ../../../mutadiff-latest.zip .
 
-      # Con el `gh` que ya trae el runner, en vez de una acción de terceros.
-      # El `||` hace la publicación reejecutable: si la release ya existe (p. ej.
-      # al relanzar con workflow_dispatch), sustituye el zip en vez de fallar.
+      # Etiqueta fecha + número de ejecución: monotónica, única y sin necesidad
+      # de que nadie acuerde ni suba una versión a mano. El nombre del asset se
+      # mantiene fijo a propósito, porque es lo que hace que
+      # `releases/latest/download/mutadiff-latest.zip` sea una URL estable.
+      #
+      # El `||` cubre el caso de relanzar una ejecución ya publicada, que
+      # reutiliza el mismo run_number: sustituye el zip en vez de fallar.
       - name: Publicar la release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ github.ref_name }}
+          SHA: ${{ github.sha }}
+          RUN_NUMBER: ${{ github.run_number }}
         run: |
-          gh release create "$TAG" mutadiff-latest.zip --generate-notes --verify-tag \
-            || gh release upload "$TAG" mutadiff-latest.zip --clobber
+          TAG="v$(date -u +%Y.%m.%d).${RUN_NUMBER}"
+          gh release create "$TAG" mutadiff-latest.zip \
+            --target "$SHA" \
+            --title "MutaDiff $TAG" \
+            --generate-notes \
+            --latest \
+          || gh release upload "$TAG" mutadiff-latest.zip --clobber

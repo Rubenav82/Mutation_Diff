@@ -9,6 +9,22 @@ vi.mock('./lib/comparisons', async (importOriginal) => {
   return { ...actual, getComparison: vi.fn(() => new Promise(() => {})) };
 });
 
+describe('AppHeader', () => {
+  it('shows the brand mark next to the product name, both linking home', () => {
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    // Con nombre accesible propio, no `aria-hidden`: identifica a la
+    // organización, que es un dato que el texto de al lado no da.
+    const logo = screen.getByRole('img', { name: /agile quality assurance/i });
+    expect(logo).toBeInTheDocument();
+    expect(logo.closest('a')).toHaveAttribute('href', '/');
+  });
+});
+
 describe('App routing', () => {
   it('renders the new comparison page at /', () => {
     render(
