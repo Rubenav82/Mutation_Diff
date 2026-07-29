@@ -69,8 +69,8 @@ export function NewComparisonPage() {
     <main className="rise mx-auto max-w-3xl text-center">
       <h1>Nueva comparación</h1>
       <p className="mt-2 mb-8 text-sm text-balance text-muted">
-        Sube la ejecución de referencia y la nueva. Mutator Assessment Report te dice qué clases han perdido score,
-        cuáles se han quedado sin tests y qué ha entrado o desaparecido.
+        Sube la ejecución de referencia y la nueva. Mutator Assessment Report te dice qué clases han
+        perdido score, cuáles se han quedado sin tests y qué ha entrado o desaparecido.
       </p>
 
       <form onSubmit={(event) => void handleSubmit(event)} className="flex flex-col gap-7">
