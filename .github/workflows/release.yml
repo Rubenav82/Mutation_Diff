@@ -1,0 +1,53 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  # Para publicar una release desde un tag ya existente sin volver a etiquetar.
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    # El resto de workflows no escriben nada; este sí, para adjuntar el zip.
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      # No se publica nada que no pase la misma barra que un PR: el artefacto
+      # va a servirse dentro de la empresa y no hay despliegue que revertir.
+      - run: npm run lint
+
+      - run: npm run typecheck
+
+      - run: npm test
+
+      # `npm run build` es `tsc -b` (core + server) y NO construye el bundle de
+      # web, que es `noEmit` y queda fuera del grafo de project references.
+      - run: npm run build
+
+      - run: npm run build -w web
+
+      # El zip contiene el `dist` en su raíz (index.html + assets/), para que
+      # descomprimirlo deje la carpeta lista para servir sin niveles de más.
+      - name: Empaquetar el artefacto estático
+        run: cd packages/web/dist && zip -r ../../../mutadiff-latest.zip .
+
+      # Con el `gh` que ya trae el runner, en vez de una acción de terceros.
+      # El `||` hace la publicación reejecutable: si la release ya existe (p. ej.
+      # al relanzar con workflow_dispatch), sustituye el zip en vez de fallar.
+      - name: Publicar la release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release create "$TAG" mutadiff-latest.zip --generate-notes --verify-tag \
+            || gh release upload "$TAG" mutadiff-latest.zip --clobber

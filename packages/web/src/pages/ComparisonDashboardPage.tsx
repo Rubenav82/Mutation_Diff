@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import type { ComparisonResult } from 'core';
-import { ApiClientError, getComparison, getComparisonReportUrl } from '../api/client';
+import { generateHtmlReport, type ComparisonResult } from 'core';
+import { ComparisonError, getComparison } from '../lib/comparisons';
 import { ComparisonContextRail } from '../components/ComparisonContextRail';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { KpiRow } from '../components/KpiRow';
@@ -30,7 +30,7 @@ export function ComparisonDashboardPage() {
       .catch((err: unknown) => {
         if (!cancelled) {
           setError(
-            err instanceof ApiClientError
+            err instanceof ComparisonError
               ? err.message
               : 'Error inesperado al cargar la comparación',
           );
@@ -54,6 +54,18 @@ export function ComparisonDashboardPage() {
     return null;
   }
 
+  // Built on click rather than up front: nobody should pay for rendering a
+  // report they never export, and there is no blob URL left dangling.
+  const handleExport = () => {
+    const blob = new Blob([generateHtmlReport(result)], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `mutadiff-report-${id}.html`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     // Dos paneles: el rail conserva el contexto a la vista mientras se recorren
     // las tablas (`sticky`), y se apila encima del contenido en pantallas estrechas.
@@ -64,7 +76,7 @@ export function ComparisonDashboardPage() {
           tool={result.tool}
           global={result.global}
           regressionCount={result.regressions.length}
-          reportUrl={getComparisonReportUrl(id)}
+          onExport={handleExport}
         />
         <KpiRow global={result.global} />
         <UnitSection

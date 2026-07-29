@@ -17,10 +17,11 @@ export default defineConfig({
   // Solo Chromium: estos tests verifican el cableado wizard → API → dashboard →
   // export, no el renderizado específico de cada motor.
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
-  // `npm run dev` levanta server (3000) y web (5173) vía concurrently. Se espera
-  // por Vite porque es el más lento de los dos en arrancar.
+  // Solo el front: desde la Fase 4.6 la comparación entera ocurre en el
+  // navegador, así que levantar también el Express no probaría nada — y con él
+  // delante, un fallo de red pasaría desapercibido en vez de romper el test.
   webServer: {
-    command: 'npm run dev',
+    command: 'npm run dev -w web',
     url: WEB_URL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

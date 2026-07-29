@@ -1,11 +1,11 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
-import { getComparison } from './api/client';
+import { getComparison } from './lib/comparisons';
 import { App } from './App';
 
-vi.mock('./api/client', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('./api/client')>();
+vi.mock('./lib/comparisons', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./lib/comparisons')>();
   return { ...actual, getComparison: vi.fn(() => new Promise(() => {})) };
 });
 

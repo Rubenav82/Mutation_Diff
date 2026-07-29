@@ -30,7 +30,9 @@ async function submitComparison(page: Page, { tool, uncoveredThreshold }: Submit
     await page.getByLabel('Umbral sin cobertura (%)').fill(uncoveredThreshold);
   }
   await page.getByRole('button', { name: 'Comparar' }).click();
-  await expect(page).toHaveURL(/\/comparisons\/[0-9a-f-]{36}$/);
+  // Rutas en el hash: el artefacto se sirve como ficheros estáticos y un
+  // servidor de ficheros no reescribe `/comparisons/<id>` a `index.html`.
+  await expect(page).toHaveURL(/#\/comparisons\/[0-9a-f-]{36}$/);
 }
 
 test.describe('flujo completo de comparación', () => {
@@ -106,7 +108,7 @@ test.describe('flujo completo de comparación', () => {
     await submitComparison(page, { tool: 'pitest' });
 
     const downloadPromise = page.waitForEvent('download');
-    await page.getByRole('link', { name: 'Exportar HTML' }).click();
+    await page.getByRole('button', { name: 'Exportar HTML' }).click();
     const download = await downloadPromise;
 
     expect(download.suggestedFilename()).toMatch(/^mutadiff-report-[0-9a-f-]+\.html$/);
@@ -133,6 +135,9 @@ test.describe('flujo completo de comparación', () => {
     const alert = page.getByRole('alert');
     await expect(alert).toContainText('Invalid PiTest report');
     await expect(alert).not.toContainText('node_modules');
-    await expect(page).toHaveURL('/');
+    // Se queda en el wizard. Se comprueba por lo que importa —que no navegó a
+    // ninguna comparación— y no por la forma exacta de la URL: `HashRouter` no
+    // reescribe la entrada inicial, así que `/` sigue sin `#/` hasta navegar.
+    await expect(page).not.toHaveURL(/comparisons/);
   });
 });

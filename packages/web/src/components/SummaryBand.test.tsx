@@ -1,5 +1,6 @@
 import { render, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
 import type { ComparisonResult, UnitMetrics } from 'core';
 import { SummaryBand } from './SummaryBand';
 
@@ -37,7 +38,7 @@ function renderBand(over: Partial<Parameters<typeof SummaryBand>[0]> = {}) {
         metrics({ score: 85, coveredPct: 88 }),
       )}
       regressionCount={0}
-      reportUrl="/api/comparisons/abc/report"
+      onExport={() => {}}
       {...over}
     />,
   );
@@ -128,11 +129,14 @@ describe('SummaryBand', () => {
     expect(screen.getByText('Sin retrocesos')).toBeInTheDocument();
   });
 
-  it('offers the HTML export as a download link', () => {
-    renderBand();
+  // Botón y no enlace: ya no hay ningún recurso al que apuntar. El informe lo
+  // genera el navegador en el momento, que es una acción, no una navegación.
+  it('asks for the HTML export on demand', async () => {
+    const onExport = vi.fn();
+    renderBand({ onExport });
 
-    const link = screen.getByRole('link', { name: 'Exportar HTML' });
-    expect(link).toHaveAttribute('href', '/api/comparisons/abc/report');
-    expect(link).toHaveAttribute('download');
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Exportar HTML' }));
+
+    expect(onExport).toHaveBeenCalledOnce();
   });
 });

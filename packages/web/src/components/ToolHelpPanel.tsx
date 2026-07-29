@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Tool } from 'core';
+import { copyText } from '../lib/clipboard';
 
 interface ToolHelp {
   description: string;
@@ -33,7 +34,7 @@ export function ToolHelpPanel({ tool, id }: ToolHelpPanelProps) {
   }, [tool]);
 
   async function handleCopy() {
-    await navigator.clipboard.writeText(help.snippet);
+    await copyText(help.snippet);
     setCopied(true);
   }
 

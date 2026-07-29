@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Tool } from 'core';
-import { ApiClientError, createComparison } from '../api/client';
+import { ComparisonError, createComparison } from '../lib/comparisons';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { FileDropZone } from '../components/FileDropZone';
 import { LoadingIndicator } from '../components/LoadingIndicator';
@@ -56,7 +56,7 @@ export function NewComparisonPage() {
       });
       navigate(`/comparisons/${comparisonId}`);
     } catch (err) {
-      setSubmitError(err instanceof ApiClientError ? err.message : 'Error inesperado al comparar');
+      setSubmitError(err instanceof ComparisonError ? err.message : 'Error inesperado al comparar');
     } finally {
       setIsSubmitting(false);
     }
