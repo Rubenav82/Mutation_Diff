@@ -2,12 +2,12 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ApiClientError, createComparison, getComparison } from '../api/client';
+import { ComparisonError, createComparison, getComparison } from '../lib/comparisons';
 import { ComparisonDashboardPage } from './ComparisonDashboardPage';
 import { NewComparisonPage } from './NewComparisonPage';
 
-vi.mock('../api/client', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../api/client')>();
+vi.mock('../lib/comparisons', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../lib/comparisons')>();
   return { ...actual, createComparison: vi.fn(), getComparison: vi.fn() };
 });
 
@@ -136,7 +136,7 @@ describe('NewComparisonPage', () => {
   it('shows the API error message and stays on the wizard when the request fails', async () => {
     const user = userEvent.setup();
     createComparisonMock.mockRejectedValue(
-      new ApiClientError(422, 'INVALID_REPORT', 'Invalid PiTest report'),
+      new ComparisonError(422, 'INVALID_REPORT', 'Invalid PiTest report'),
     );
     renderWizard();
     await selectFiles(user, 'base.xml', 'head.xml');

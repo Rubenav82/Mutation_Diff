@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import type { ComparisonResult } from 'core';
-import { ApiClientError, getComparison, getComparisonReportUrl } from '../api/client';
+import { ComparisonError, getComparison, getComparisonReportUrl } from '../lib/comparisons';
 import { ComparisonContextRail } from '../components/ComparisonContextRail';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { KpiRow } from '../components/KpiRow';
@@ -30,7 +30,7 @@ export function ComparisonDashboardPage() {
       .catch((err: unknown) => {
         if (!cancelled) {
           setError(
-            err instanceof ApiClientError
+            err instanceof ComparisonError
               ? err.message
               : 'Error inesperado al cargar la comparación',
           );

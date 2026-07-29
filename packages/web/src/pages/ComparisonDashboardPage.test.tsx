@@ -3,11 +3,11 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ComparisonResult, UnitMetrics } from 'core';
-import { ApiClientError, getComparison } from '../api/client';
+import { ComparisonError, getComparison } from '../lib/comparisons';
 import { ComparisonDashboardPage } from './ComparisonDashboardPage';
 
-vi.mock('../api/client', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../api/client')>();
+vi.mock('../lib/comparisons', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../lib/comparisons')>();
   return { ...actual, getComparison: vi.fn() };
 });
 
@@ -204,7 +204,7 @@ describe('ComparisonDashboardPage', () => {
 
   it('shows the API error message when the comparison cannot be loaded', async () => {
     getComparisonMock.mockRejectedValue(
-      new ApiClientError(404, 'COMPARISON_NOT_FOUND', 'Comparison not found'),
+      new ComparisonError(404, 'COMPARISON_NOT_FOUND', 'Comparison not found'),
     );
     renderDashboard();
 
@@ -214,7 +214,7 @@ describe('ComparisonDashboardPage', () => {
   it('refetches the comparison when the user retries after a failed load', async () => {
     const user = userEvent.setup();
     getComparisonMock.mockRejectedValueOnce(
-      new ApiClientError(500, 'INTERNAL_ERROR', 'Unexpected error'),
+      new ComparisonError(500, 'INTERNAL_ERROR', 'Unexpected error'),
     );
     getComparisonMock.mockResolvedValueOnce(makeResult());
     renderDashboard('abc-123');
