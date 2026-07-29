@@ -13,11 +13,8 @@ function AppHeader() {
       <div className="h-0.5 bg-accent" />
       <div className="mx-auto flex max-w-6xl items-baseline gap-3 px-6 py-4">
         <Link to="/" className="font-mono text-base font-semibold tracking-tight text-ink">
-          Muta<span className="text-accent">Diff</span>
+          Mutator <span className="text-accent">Assessment</span> Report
         </Link>
-        <span className="hidden text-sm text-muted sm:inline">
-          Comparador de ejecuciones de mutation testing
-        </span>
       </div>
     </header>
   );
