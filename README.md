@@ -4,21 +4,33 @@ Compara dos ejecuciones de mutation testing —[PiTest](https://pitest.org/) o [
 
 Mirar dos `mutations.xml` en paralelo para averiguar qué clase ha bajado de score es tedioso y se hace mal. Esto lo automatiza.
 
-## Requisitos
+**MutaDiff corre entero en el navegador.** No hay backend, ni base de datos, ni nada que instalar para usarlo: se sirve como ficheros estáticos y tus reportes no salen de tu máquina.
 
-- Node.js ≥ 20
-- npm ≥ 10 (workspaces)
+## Usarlo
 
-## Quickstart
+Descarga `mutadiff-latest.zip` de la [última release](https://github.com/Rubenav82/Mutation_Diff/releases/latest), descomprímelo y sirve la carpeta con cualquier servidor de ficheros:
+
+```bash
+unzip mutadiff-latest.zip -d mutadiff
+npx serve mutadiff        # o nginx, IIS, Apache, GitHub Pages, un recurso compartido…
+```
+
+No necesita configuración: las rutas van en el hash y los assets son relativos, así que funciona igual en la raíz de un dominio (`https://tuservidor/`) que colgando de un subpath (`https://tuservidor/mutadiff/`).
+
+> Tiene que servirse por HTTP, no vale abrir `index.html` con doble clic: los navegadores bloquean los módulos ES sobre `file://`.
+
+## Desarrollo
+
+Requiere Node.js ≥ 20 y npm ≥ 10 (workspaces).
 
 ```bash
 git clone https://github.com/Rubenav82/Mutation_Diff.git
 cd Mutation_Diff
 npm install
-npm run dev
+npm run dev -w web
 ```
 
-Abre <http://localhost:5173>. El backend queda en el 3000 y el dev server de Vite le proxya `/api`.
+Abre <http://localhost:5173>. Para construir el mismo artefacto que publica la release: `npm run build && npm run build -w web` deja el resultado en `packages/web/dist`.
 
 Si quieres probarlo sin generar tus propios reportes, usa las fixtures del repo:
 
@@ -62,9 +74,17 @@ La misma información está dentro de la app, detrás del icono ⓘ junto al sel
 3. El dashboard muestra las métricas globales con su delta, las secciones de retrocesos / sin cobertura / nuevas / eliminadas, y la tabla completa con filtro y orden por columna.
 4. **Exportar HTML** descarga el informe completo como un único fichero, sin CSS ni JS externos: se abre offline y se puede adjuntar donde sea.
 
-## API REST
+## API REST (opcional, autoalojada)
 
-La SPA no hace nada que no puedas hacer con `curl`. Los tres endpoints:
+**No hace falta para usar la aplicación** y no forma parte del artefacto estático: la web no llama a ningún endpoint. El repo mantiene un servidor Express equivalente por si algún equipo quiere lanzar comparaciones desde su CI. Se levanta aparte, desde el código fuente:
+
+```bash
+npm run build && npm run dev -w server   # escucha en el 3000
+```
+
+Ojo con dos cosas si lo despliegas: guarda los resultados **en memoria** con un TTL de 1 hora, así que necesita **una sola instancia** (con varias réplicas, un `GET` puede caer en la que no tiene el resultado) y los pierde en cada reinicio.
+
+Los tres endpoints:
 
 ```bash
 # Crear una comparación. Devuelve { comparisonId, result }
@@ -100,7 +120,8 @@ Los errores tienen siempre la misma forma, sin stack traces:
 ## Comandos
 
 ```bash
-npm run dev        # server (3000) + web (5173)
+npm run dev -w web # la aplicación (5173)
+npm run dev        # además, el servidor REST opcional (3000)
 npm test           # suite completa (Vitest)
 npm run test:e2e   # e2e con Playwright — requiere `npx playwright install chromium`
 npm run typecheck  # tsc --noEmit en todos los workspaces + e2e
@@ -111,32 +132,35 @@ npm run build      # tsc -b
 
 ## Arquitectura
 
-Monorepo npm workspaces, TypeScript strict, ESM. La regla de dependencias es `web → server → core`:
+Monorepo npm workspaces, TypeScript strict, ESM:
 
 | Paquete           | Qué hay dentro                                                                                                         |
 | ----------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | `packages/core`   | Dominio puro, sin I/O. Parsers PiTest/Stryker → modelo normalizado, motor de comparación y generador del informe HTML.   |
-| `packages/server` | Express 5: upload con multer, validación con Zod, endpoints REST, errores homogéneos.                                    |
-| `packages/web`    | Vite + React 18: wizard, dashboard, tablas con TanStack Table.                                                           |
+| `packages/web`    | Vite + React 18: wizard, dashboard, tablas con TanStack Table. Es lo que se publica.                                     |
+| `packages/server` | Express 5 con la API REST opcional. No entra en el artefacto estático.                                                   |
 
-`core` no importa nada de los otros dos, así que el motor de comparación se puede reutilizar tal cual desde un CLI.
+Que `core` sea dominio puro —sin I/O, sin Node— es lo que permite que la misma lógica corra en el navegador, en el servidor opcional y, en su día, en un CLI. Ninguno de los tres duplica una línea de comparación.
 
 PiTest trabaja por clase y Stryker por fichero; el modelo usa una `key` genérica para ambos.
 
 ## Privacidad
 
-Los reportes que subes **no salen de tu servidor**: no hay llamadas a terceros con su contenido. Los ficheros se procesan en memoria y nunca se escriben a disco — solo se guarda en memoria el resultado ya normalizado de la comparación, con un TTL de 1 hora, para poder recargar el dashboard o descargar el informe.
+Los reportes que subes **no salen de tu navegador**. No se envían a ningún servidor, ni siquiera al que sirve la aplicación: los ficheros se leen y se comparan en local, y el resultado se guarda solo en el `sessionStorage` de tu pestaña, que el navegador borra al cerrarla. Puedes comprobarlo tú mismo: abre las herramientas de desarrollo en la pestaña de red y verás que comparar no genera ni una petición.
+
+Importa porque un `mutations.xml` lleva dentro los nombres de clases y las rutas de ficheros de tu código.
 
 ## Estado y limitaciones
 
-Funcional para el flujo completo de comparación puntual (fases 0 a 4). Sabidas y pendientes:
+Funcional para el flujo completo de comparación puntual. Sabidas y pendientes:
 
-- **Un fichero por lado.** Subir la carpeta `pit-reports` completa o un ZIP y fusionar varios `mutations.xml` (HU-12) todavía no está implementado; hace falta trabajo en `server` y `core`, no solo en la UI.
-- **Sin persistencia.** No hay histórico: el store es en memoria con TTL de 1 hora y se pierde al reiniciar. La persistencia SQLite opt-in, la atribución de autor vía `git log` y el modo CLI son la fase 5.
+- **Un fichero por lado.** Subir la carpeta `pit-reports` completa o un ZIP y fusionar varios `mutations.xml` (HU-12) todavía no está implementado; hace falta trabajo en `core`, no solo en la UI.
+- **Sin histórico.** Una comparación vive en la pestaña que la creó: sobrevive a recargar, pero no a cerrar el navegador, y no se puede compartir por enlace. Para conservar o mandar un resultado, exporta el HTML. La persistencia opt-in, la atribución de autor vía `git log` y el modo CLI son la fase 5.
+- **Los reportes se procesan en memoria del navegador.** Con ficheros muy grandes (decenas de MB) el consumo lo paga tu pestaña. A cambio, nadie compite por la memoria de un servidor compartido.
 
 ## Calidad
 
-El proyecto se somete a su propio tipo de análisis: mutation testing con Stryker sobre `packages/core`, con el umbral en 70 y el score actual en **99,41 %**. La suite tiene 185 tests unitarios/integración y 5 e2e sobre el flujo real en navegador. CI ejecuta lint, typecheck, tests y e2e en cada PR; Stryker va en un workflow nocturno aparte.
+El proyecto se somete a su propio tipo de análisis: mutation testing con Stryker sobre `packages/core`, con el umbral en 70 y el score actual en **99,44 %**. La suite tiene 230 tests unitarios/integración y 5 e2e sobre el flujo real en navegador. CI ejecuta lint, typecheck, tests y e2e en cada PR; Stryker va en un workflow nocturno aparte, y la release no se publica sin pasar la misma barra.
 
 ## Documentación
 

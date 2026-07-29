@@ -156,3 +156,7 @@ test-results/
 playwright-report/
 blob-report/
 playwright/.cache/
+
+# Artefacto de release: lo construye el workflow en la raíz y se adjunta a la
+# release. Nunca se versiona.
+mutadiff-latest.zip

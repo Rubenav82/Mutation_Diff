@@ -29,6 +29,25 @@ Flujo: `upload ficheros → detectar herramienta → parser → NormalizedRun (x
 
 Decisión clave (trade-off): el motor de comparación vive en `core` sin dependencias de Express ni React → se testea de forma aislada, se puede reutilizar como CLI en el futuro, y es el objetivo perfecto para el mutation testing del propio proyecto.
 
+#### 2.2.1 Dos consumidores de `core` (desde la Fase 4.6)
+
+Esa decisión acabó dando un retorno que no se había previsto: **`core` corre igual en el navegador**, porque no importa nada de `node:` y su única dependencia (`fast-xml-parser`) tampoco. Así que hay dos formas de consumir el mismo dominio, sin duplicar una línea de lógica de comparación:
+
+| Consumidor | Quién lo usa | Estado |
+| --- | --- | --- |
+| `web` llamando a `core` en el navegador | el despliegue real: `packages/web/dist` servido como ficheros estáticos | **es lo que se publica** |
+| `server` exponiendo `core` por HTTP | integraciones desde CI que prefieran `curl` | opcional, se autoaloja |
+
+Motivo del cambio: la aplicación se consume dentro de una empresa por varios equipos y no necesita histórico todavía (eso es la Fase 5). Un servicio Node compartido solo habría aportado coste operativo — el store en memoria obliga a instancia única y pierde los resultados de todos en cada reinicio — mientras que un artefacto estático escala sin operar nada.
+
+Efecto colateral en la privacidad, que refuerza el principio #4 de la constitución: los reportes ya no salen del navegador del desarrollador, ni siquiera hacia el servidor que sirve la aplicación.
+
+Restricciones que impone el despliegue estático, y que hay que respetar al añadir código a `web`:
+
+- **Nada de APIs *secure-context only*** sin fallback: la máquina que sirve el zip puede hablar HTTP plano, y ahí `navigator.clipboard` y `crypto.randomUUID` no existen (ver `lib/clipboard.ts` y `lib/id.ts`).
+- **Rutas en el hash y assets relativos** (`base: './'`): un servidor de ficheros no reescribe rutas ni sabe en qué subpath está colgado.
+- **El estado vive en la pestaña** (`lib/comparisonStore.ts`): `Map` + `sessionStorage`. No hay nada compartido entre usuarios ni entre pestañas.
+
 ### 2.3 Modelo de dominio normalizado
 
 ```ts
