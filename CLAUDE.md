@@ -307,6 +307,18 @@ Sustituye la paleta cobre/papel de T-037 por el sistema Modernist. Las decisione
 - **Usar `reducedMotion: 'reduce'` en el contexto del navegador.** Sin esto, `.rise` y las transiciones se capturan a mitad de fotograma y producen falsos positivos convincentes: en esta tarea el botón "Comparar" salió gris (parecía deshabilitado con los dos ficheros ya puestos) y la mitad de las tarjetas del dashboard salieron invisibles. Ambas cosas eran artefactos de la captura, confirmado midiendo `getComputedStyle` y las reglas CSS que realmente matcheaban en vez de razonar sobre el píxel.
 - Un comentario `{/* … */}` **no puede ser hermano del elemento raíz** dentro de un `return ( … )`: rompe el parseo con un `PARSE_ERROR` de oxc que apunta al elemento siguiente, no al comentario. Va antes del `return`, como comentario JS.
 
+## Distribución estática (Fase 4.6)
+
+La app se despliega como **ficheros estáticos**: `packages/web/dist` (un `index.html` + `assets/`) comprimido y servido por una máquina interna. No hay servidor en el despliegue — `packages/server` sigue en el repo, con sus tests, porque es lo que necesitará la Fase 5 y porque el README documenta cómo autoalojarlo para quien quiera la API REST.
+
+- **Toda la lógica corre en el navegador**: `packages/web/src/lib/comparisons.ts` llama a los parsers y a `compareRuns` de `core` directamente. `core` no tiene ninguna importación de `node:` en producción, así que bundlea limpio (~71 kB antes de React). El `createdAt` y el `label` los pone el navegador; `core` sigue puro.
+- **`packages/web/src/lib/comparisonStore.ts`** sustituye al store con TTL del servidor: `Map` de módulo como fuente de verdad + `sessionStorage` best-effort. El `try/catch` **no es defensivo**: un resultado de miles de unidades agota la cuota de ~5 MB, y ahí perder solo la recarga es preferible a perder la comparación.
+- **Contexto seguro**: servido por HTTP plano, `navigator.clipboard` y `crypto.randomUUID` **no existen** (no es que fallen: no están). Por eso `lib/clipboard.ts` cae a `execCommand('copy')` y `lib/id.ts` construye el UUID v4 con `getRandomValues`, que sí está disponible. Antes de usar cualquier otra API *secure-context only*, comprobar esto — el síntoma es un `TypeError` que solo aparece en la máquina interna, nunca en `localhost` (que sí es contexto seguro).
+- **`HashRouter`, no `BrowserRouter`**, y **`base: './'`** en `vite.config.ts`. Un servidor de ficheros pelado no reescribe `/comparisons/<id>` a `index.html`, y `index.html` referenciaba `/src/main.tsx` en absoluto. Con ambos, el mismo zip funciona en la raíz o en cualquier subpath sin rebuild ni configuración. Verificado sirviendo el `dist` bajo `/mutadiff/` con un servidor sin fallback: recargar un enlace a una comparación funciona, y no sale ni una petición de red.
+- **`HashRouter` no reescribe la URL de entrada**: tras `goto('/')` la barra sigue en `/`, sin `#/`, hasta la primera navegación. Un test que asertaba `toHaveURL('/#/')` falla por esto; el e2e comprueba ahora que *no* se navegó (`not.toHaveURL(/comparisons/)`), que es lo que de verdad importaba.
+- El `webServer` de Playwright es `npm run dev -w web`, sin el Express: con él delante, un fallo de red pasaría desapercibido en vez de romper el test.
+- **Levantar un servidor de prueba desde Bash en Windows**: Git Bash convierte un argumento como `/mutadiff/` en `C:/Program Files/Git/mutadiff/` (MSYS path conversion) y el síntoma es un 404 que parece del código. Lanzarlo con `Start-Process` desde PowerShell, o `MSYS_NO_PATHCONV=1`.
+
 ## Convenciones
 
 - Nombres de código, tipos y comentarios de API en inglés; documentación de producto (docs/) en español.
