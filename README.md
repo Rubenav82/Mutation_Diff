@@ -11,13 +11,18 @@ Mirar dos `mutations.xml` en paralelo para averiguar qué clase ha bajado de sco
 Descarga `mutadiff-latest.zip` de la [última release](https://github.com/Rubenav82/Mutation_Diff/releases/latest), descomprímelo y sirve la carpeta con cualquier servidor de ficheros:
 
 ```bash
+curl -LO https://github.com/Rubenav82/Mutation_Diff/releases/latest/download/mutadiff-latest.zip
 unzip mutadiff-latest.zip -d mutadiff
 npx serve mutadiff        # o nginx, IIS, Apache, GitHub Pages, un recurso compartido…
 ```
 
+Esa URL es **estable**: siempre sirve la última versión publicada, así que un servidor que la descargue periódicamente se mantiene al día sin tocar su configuración.
+
 No necesita configuración: las rutas van en el hash y los assets son relativos, así que funciona igual en la raíz de un dominio (`https://tuservidor/`) que colgando de un subpath (`https://tuservidor/mutadiff/`).
 
 > Tiene que servirse por HTTP, no vale abrir `index.html` con doble clic: los navegadores bloquean los módulos ES sobre `file://`.
+
+Se publica una release por cada cambio que llegue a `master`, etiquetada `vAÑO.MES.DÍA.N` (la `N` es el número de ejecución, para distinguir varias del mismo día). Para volver a una anterior, descarga su zip desde la [lista de releases](https://github.com/Rubenav82/Mutation_Diff/releases) en vez de usar la URL de `latest`.
 
 ## Desarrollo
 
