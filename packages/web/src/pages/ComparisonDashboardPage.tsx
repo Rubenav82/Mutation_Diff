@@ -71,7 +71,11 @@ export function ComparisonDashboardPage() {
     // las tablas (`sticky`), y se apila encima del contenido en pantallas estrechas.
     <div className="rise grid items-start gap-8 lg:grid-cols-[15rem_1fr] lg:gap-10">
       <ComparisonContextRail context={result.context} />
-      <main className="flex flex-col gap-10">
+      {/* `min-w-0`: un hijo de grid vale por defecto `min-width: auto`, así que
+          no encoge por debajo de su contenido. Sin esto, la tabla ancha estira
+          la columna y desborda la página entera en vez de scrollear dentro de su
+          propio contenedor. */}
+      <main className="flex min-w-0 flex-col gap-10">
         <SummaryBand
           tool={result.tool}
           global={result.global}

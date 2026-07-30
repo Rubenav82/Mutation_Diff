@@ -192,8 +192,9 @@ export function UnitsTable({ units }: { units: UnitComparison[] }) {
                               : ''}
                         </button>
                       ) : (
-                        // Cabecera de grupo: rotula, no ordena.
-                        <span className="eyebrow block px-3 py-2.5 whitespace-nowrap">
+                        // Cabecera de grupo: rotula, no ordena. Centrada sobre
+                        // las tres columnas que abarca.
+                        <span className="eyebrow block px-3 py-2.5 text-center whitespace-nowrap">
                           {flexRender(header.column.columnDef.header, header.getContext())}
                         </span>
                       )}

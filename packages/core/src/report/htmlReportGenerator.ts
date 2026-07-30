@@ -59,6 +59,8 @@ const STYLE = `
     border-bottom: 2px solid #201e1d;
   }
   th, td { padding: 0.5rem 0.75rem; text-align: left; }
+  /* Cabecera de grupo (Score / Mutantes cubiertos): centrada sobre sus columnas. */
+  th[colspan] { text-align: center; }
   td { border-bottom: 1px solid #d7d3d3; font-family: ui-monospace, Consolas, monospace; font-size: 0.8125rem; font-variant-numeric: tabular-nums; }
   tbody tr:last-child td { border-bottom: 0; }
   tr.kind-regressed td:last-child { color: #ae1800; }
