@@ -26,6 +26,25 @@ function AppHeader() {
   );
 }
 
+/**
+ * Legal disclaimer about the AQA mark. It lives outside the routed content, next
+ * to nothing else: what it qualifies is the logo in the header, which is on every
+ * page, so the notice has to be on every page too.
+ */
+function AppFooter() {
+  return (
+    <footer className="border-t border-line px-6 py-10">
+      <p className="mx-auto max-w-4xl text-center text-xs leading-relaxed text-muted">
+        Aclaración: El logotipo de AQA (Agile Quality Assurance) presentado en este material es una
+        imagen de referencia conceptual diseñada exclusivamente para el programa de formación
+        interno como parte de la estrategia de calidad. El uso e inclusión de este diseño es de
+        carácter ilustrativo y no constituye ni implica ninguna obligación contractual, afiliación,
+        endoso o asociación con ninguna empresa, entidad legal o marca registrada externa.
+      </p>
+    </footer>
+  );
+}
+
 export function App() {
   return (
     <>
@@ -36,6 +55,7 @@ export function App() {
           <Route path="/comparisons/:id" element={<ComparisonDashboardPage />} />
         </Routes>
       </div>
+      <AppFooter />
     </>
   );
 }
