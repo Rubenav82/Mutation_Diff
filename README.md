@@ -8,19 +8,24 @@ Mirar dos `mutations.xml` en paralelo para averiguar qué clase ha bajado de sco
 
 ## Usarlo
 
-Descarga `mutadiff-latest.zip` de la [última release](https://github.com/Rubenav82/Mutation_Diff/releases/latest), descomprímelo y sirve la carpeta con cualquier servidor de ficheros:
+Descarga `mutadiff-latest.zip` de la [última release](https://github.com/Rubenav82/Mutation_Diff/releases/latest), descomprímelo y **abre `index.html`**. Ya está: no hay nada que instalar ni que levantar.
 
 ```bash
 curl -LO https://github.com/Rubenav82/Mutation_Diff/releases/latest/download/mutadiff-latest.zip
 unzip mutadiff-latest.zip -d mutadiff
-npx serve mutadiff        # o nginx, IIS, Apache, GitHub Pages, un recurso compartido…
 ```
 
-Esa URL es **estable**: siempre sirve la última versión publicada, así que un servidor que la descargue periódicamente se mantiene al día sin tocar su configuración.
+El zip contiene un **único `index.html`** con el CSS y el JavaScript dentro, así que funciona de las tres formas:
 
-No necesita configuración: las rutas van en el hash y los assets son relativos, así que funciona igual en la raíz de un dominio (`https://tuservidor/`) que colgando de un subpath (`https://tuservidor/mutadiff/`).
+| Cómo | Sirve para |
+| --- | --- |
+| Doble clic en `index.html` | Probarlo en tu equipo sin montar nada |
+| Un servidor de ficheros (`npx serve mutadiff`, nginx, IIS, Apache…) | Compartirlo con un equipo |
+| Copiarlo a un recurso compartido o a GitHub Pages | Distribuirlo sin infraestructura |
 
-> Tiene que servirse por HTTP, no vale abrir `index.html` con doble clic: los navegadores bloquean los módulos ES sobre `file://`.
+No necesita configuración en ninguno de los tres casos: las rutas van en el hash y no hay ningún fichero externo que cargar, así que da igual si cuelga de la raíz de un dominio o de un subpath.
+
+La URL de descarga de arriba es **estable**: siempre sirve la última versión publicada, así que un servidor que la descargue periódicamente se mantiene al día sin tocar su configuración.
 
 Se publica una release por cada cambio que llegue a `master`, etiquetada `vAÑO.MES.DÍA.N` (la `N` es el número de ejecución, para distinguir varias del mismo día). Para volver a una anterior, descarga su zip desde la [lista de releases](https://github.com/Rubenav82/Mutation_Diff/releases) en vez de usar la URL de `latest`.
 
@@ -165,7 +170,7 @@ Funcional para el flujo completo de comparación puntual. Sabidas y pendientes:
 
 ## Calidad
 
-El proyecto se somete a su propio tipo de análisis: mutation testing con Stryker sobre `packages/core`, con el umbral en 70 y el score actual en **99,44 %**. La suite tiene 230 tests unitarios/integración y 5 e2e sobre el flujo real en navegador. CI ejecuta lint, typecheck, tests y e2e en cada PR; Stryker va en un workflow nocturno aparte, y la release no se publica sin pasar la misma barra.
+El proyecto se somete a su propio tipo de análisis: mutation testing con Stryker sobre `packages/core`, con el umbral en 70 y el score actual en **99,44 %**. La suite tiene 231 tests unitarios/integración y 6 e2e en navegador real; uno de ellos ejercita el `index.html` **ya construido** abriéndolo desde el sistema de ficheros, que es la única forma de detectar que el artefacto publicado se ha roto. CI ejecuta lint, typecheck, tests y e2e en cada PR; Stryker va en un workflow nocturno aparte, y la release no se publica sin pasar la misma barra.
 
 ## Documentación
 

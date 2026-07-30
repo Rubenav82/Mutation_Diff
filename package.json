@@ -20,7 +20,7 @@
     "pretest": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",
-    "pretest:e2e": "tsc -b",
+    "pretest:e2e": "tsc -b && npm run build -w web",
     "test:e2e": "playwright test --tsconfig=e2e/tsconfig.json",
     "coverage": "vitest run --coverage",
     "pretypecheck": "tsc -b",

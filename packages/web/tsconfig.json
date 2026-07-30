@@ -9,6 +9,6 @@
     "noEmit": true,
     "isolatedModules": true
   },
-  "include": ["src", "vite.config.ts"],
+  "include": ["src", "vite.config.ts", "vite-plugin-single-file.ts"],
   "references": [{ "path": "../core" }]
 }
