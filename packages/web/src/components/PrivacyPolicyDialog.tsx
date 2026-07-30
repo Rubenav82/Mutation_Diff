@@ -113,7 +113,8 @@ export function PrivacyPolicyDialog({ onClose }: PrivacyPolicyDialogProps) {
                 línea siguiente y justificar la anterior la deja con huecos enormes
                 entre palabras. */}
             <p className="mt-2 text-left">
-              Para cualquier consulta sobre privacidad o para notificar un problema, escríbenos a{' '}<br></br>
+              Para cualquier consulta sobre privacidad o para notificar un problema, escríbenos a{' '}
+              <br></br>
               <a
                 href={`mailto:${CONTACT_EMAIL}`}
                 className="text-ink underline decoration-line underline-offset-2 hover:decoration-accent"

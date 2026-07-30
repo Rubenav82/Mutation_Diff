@@ -39,11 +39,12 @@ function AppFooter() {
   return (
     <footer className="border-t border-line bg-raised px-6 py-10">
       <p className="mx-auto max-w-4xl text-center text-xs leading-relaxed text-muted">
-        <span className='font-bold'>Aclaración:</span> El logotipo de AQA (Agile Quality Assurance) presentado en este material es una
-        imagen de referencia conceptual diseñada exclusivamente para el programa de formación
-        interno como parte de la estrategia de calidad. El uso e inclusión de este diseño es de
-        carácter ilustrativo y no constituye ni implica ninguna obligación contractual, afiliación,
-        endoso o asociación con ninguna empresa, entidad legal o marca registrada externa.
+        <span className="font-bold">Aclaración:</span> El logotipo de AQA (Agile Quality Assurance)
+        presentado en este material es una imagen de referencia conceptual diseñada exclusivamente
+        para el programa de formación interno como parte de la estrategia de calidad. El uso e
+        inclusión de este diseño es de carácter ilustrativo y no constituye ni implica ninguna
+        obligación contractual, afiliación, endoso o asociación con ninguna empresa, entidad legal o
+        marca registrada externa.
       </p>
     </footer>
   );
