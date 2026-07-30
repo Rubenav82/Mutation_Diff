@@ -169,6 +169,7 @@ POST /api/projects/:id/compare   (fase 2) comparar dos runs guardados { baseRunI
    Cada panel incluye el snippet de configuración copiable. Si el usuario sube un fichero con extensión incorrecta para la herramienta elegida, el mensaje de error enlaza a esta misma ayuda.
 2. **Dashboard de resultados**: layout de dos paneles — rail lateral de contexto (herramienta, ficheros comparados, umbrales aplicados, todo en solo lectura) + panel principal con banda de resumen, KPIs, secciones "Regresiones", "Sin cobertura", "Nuevas", "Eliminadas", tabla completa filtrable/ordenable y botón "Exportar HTML".
 3. **Histórico** (fase 2): lista de runs guardados, selección de par a comparar, gráfico de evolución del score.
+4. **Cromo persistente** (presente en todas las pantallas): cabecera con el logotipo de AQA, el nombre del producto y, a la derecha, un **icono `?`** que abre el panel «Acerca de» (nombre, versión, licencia MIT, contacto por `mailto` para notificar un problema y acceso a la **política de privacidad**, en un diálogo modal); y pie de página con la **nota legal del logotipo** (aclara que la marca es una imagen de referencia conceptual del programa de formación interno, sin implicación contractual ni afiliación). La nota vive en el cromo, no en una pantalla, porque matiza el logotipo de la cabecera, que también está siempre visible.
 
 #### 2.5.1 Sistema visual (Modernist, adoptado en T-045)
 

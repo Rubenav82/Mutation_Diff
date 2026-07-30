@@ -319,6 +319,16 @@ La app se despliega como **ficheros estáticos**: `packages/web/dist` (un `index
 - El `webServer` de Playwright es `npm run dev -w web`, sin el Express: con él delante, un fallo de red pasaría desapercibido en vez de romper el test.
 - **Levantar un servidor de prueba desde Bash en Windows**: Git Bash convierte un argumento como `/mutadiff/` en `C:/Program Files/Git/mutadiff/` (MSYS path conversion) y el síntoma es un 404 que parece del código. Lanzarlo con `Start-Process` desde PowerShell, o `MSYS_NO_PATHCONV=1`.
 
+## Cromo persistente: nota legal y panel «Acerca de» (fijado en T-076/T-077)
+
+- **La nota legal del logotipo va en el `<footer>` de `App.tsx`, fuera del contenido enrutado**, igual que la cabecera: lo que matiza es la marca de la cabecera, presente en todas las pantallas. Si algún día hay una pantalla sin cabecera, la nota tiene que seguir a la marca, no quedarse por inercia.
+- **El producto se llama «Mutator Assessment Report»** (confirmado por el usuario en T-077, que había un «Mutation» suelto en el panel). `MutaDiff` es el nombre del repo y del paquete, no lo que ve el usuario. `APP_NAME` en `lib/appInfo.ts` es la fuente; la cabecera lo repite partido en `<span>` para acentuar «Assessment», así que un renombrado toca dos sitios.
+- **`src/lib/appInfo.ts` es la única fuente del nombre, versión, copyright y email.** La versión se importa **nombrada** de `package.json` (`import { version } from '../../package.json'`): Vite, Vitest y `tsc` la resuelven (`resolveJsonModule` está en `tsconfig.base.json`) y solo entra ese campo al bundle — verificado que la lista de dependencias no aparece en `dist`. Un literal duplicado a mano se queda atrás en cuanto alguien publica sin acordarse. El copyright se copia de `LICENSE` en vez de derivarse de `new Date()`: si divergen, uno de los dos miente.
+- **El texto de la política de privacidad es un contrato con el código, no marketing.** Sus tres afirmaciones verificables son: cero peticiones de red al comparar (`lib/comparisons.ts` llama a `core` directamente), el resultado solo vive en `sessionStorage` (`lib/comparisonStore.ts`) y el informe exportado no tiene recursos externos (CA-HU-07). Si se toca cualquiera de las tres, el texto pasa a ser falso y hay que actualizarlo en el mismo commit. Por eso el diálogo invita explícitamente a comprobarlo en la pestaña de red.
+- **Sin `<dialog>` nativo**: `showModal()` no está implementado de forma fiable en jsdom, así que el modal se construye a mano (overlay + `role="dialog"` + `aria-modal` + Escape + foco al botón de cerrar al montar). Es también todo lo que hace falta; un focus trap completo sería sobreingeniería para un panel informativo. Si aparece otro modal en el proyecto, seguir este patrón antes de meter una librería.
+- El cierre del panel al **clicar fuera** escucha `mousedown` y no `pointerdown`: `user-event` v14 dispara ambos, pero el soporte de `PointerEvent` en jsdom no es algo que convenga dar por hecho.
+- El contacto es un `mailto` con asunto prerrellenado, no un issue de GitHub: la app se sirve en una red interna que puede no tener salida a internet, y quien la use no necesariamente tiene cuenta en GitHub.
+
 ## Convenciones
 
 - Nombres de código, tipos y comentarios de API en inglés; documentación de producto (docs/) en español.

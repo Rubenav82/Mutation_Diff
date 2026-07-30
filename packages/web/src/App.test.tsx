@@ -23,6 +23,33 @@ describe('AppHeader', () => {
     expect(logo).toBeInTheDocument();
     expect(logo.closest('a')).toHaveAttribute('href', '/');
   });
+
+  it('offers the about panel from every page', () => {
+    render(
+      <MemoryRouter initialEntries={['/comparisons/abc-123']}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('button', { name: /acerca de/i })).toBeInTheDocument();
+  });
+});
+
+describe('AppFooter', () => {
+  it('qualifies the AQA mark with the legal disclaimer', () => {
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    const footer = screen.getByRole('contentinfo');
+    expect(footer).toHaveTextContent(/imagen de referencia conceptual/i);
+    expect(footer).toHaveTextContent(/programa de formación interno/i);
+    expect(footer).toHaveTextContent(
+      /no constituye ni implica ninguna obligación contractual, afiliación, endoso o asociación/i,
+    );
+  });
 });
 
 describe('App routing', () => {
