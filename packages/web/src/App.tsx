@@ -37,9 +37,9 @@ function AppHeader() {
  */
 function AppFooter() {
   return (
-    <footer className="border-t border-line px-6 py-10">
+    <footer className="border-t border-line bg-raised px-6 py-10">
       <p className="mx-auto max-w-4xl text-center text-xs leading-relaxed text-muted">
-        Aclaración: El logotipo de AQA (Agile Quality Assurance) presentado en este material es una
+        <span className='font-bold'>Aclaración:</span> El logotipo de AQA (Agile Quality Assurance) presentado en este material es una
         imagen de referencia conceptual diseñada exclusivamente para el programa de formación
         interno como parte de la estrategia de calidad. El uso e inclusión de este diseño es de
         carácter ilustrativo y no constituye ni implica ninguna obligación contractual, afiliación,
@@ -51,15 +51,17 @@ function AppFooter() {
 
 export function App() {
   return (
-    <>
+    // Columna a altura de viewport: con el pie en blanco, si el contenido no
+    // llega abajo se veía una franja del fondo gris por debajo.
+    <div className="flex min-h-screen flex-col">
       <AppHeader />
-      <div className="mx-auto w-full max-w-6xl px-6 pt-8 pb-24">
+      <div className="mx-auto w-full max-w-6xl flex-1 px-6 pt-8 pb-24">
         <Routes>
           <Route path="/" element={<NewComparisonPage />} />
           <Route path="/comparisons/:id" element={<ComparisonDashboardPage />} />
         </Routes>
       </div>
       <AppFooter />
-    </>
+    </div>
   );
 }

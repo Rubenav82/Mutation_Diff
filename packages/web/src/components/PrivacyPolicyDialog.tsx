@@ -64,7 +64,10 @@ export function PrivacyPolicyDialog({ onClose }: PrivacyPolicyDialogProps) {
           </button>
         </div>
 
-        <div className="space-y-5 px-6 py-5 text-sm leading-relaxed text-muted">
+        {/* Justificado con `hyphens-auto`: sin partición de palabras, una columna
+            estrecha en español abre ríos blancos entre palabras largas. Funciona
+            porque `index.html` declara `lang="es"`. */}
+        <div className="space-y-5 px-6 py-5 text-sm leading-relaxed text-muted hyphens-auto text-justify">
           <p>
             <span className="font-semibold text-ink">{APP_NAME}</span> es una aplicación web que
             funciona íntegramente en tu navegador. No existe ningún servidor backend: los reportes
@@ -106,8 +109,11 @@ export function PrivacyPolicyDialog({ onClose }: PrivacyPolicyDialogProps) {
 
           <section>
             <h3 className="eyebrow">Contacto</h3>
-            <p className="mt-2">
-              Para cualquier consulta sobre privacidad o para notificar un problema, escríbenos a{' '}
+            {/* Sin justificar: la dirección no se parte, así que baja entera a la
+                línea siguiente y justificar la anterior la deja con huecos enormes
+                entre palabras. */}
+            <p className="mt-2 text-left">
+              Para cualquier consulta sobre privacidad o para notificar un problema, escríbenos a{' '}<br></br>
               <a
                 href={`mailto:${CONTACT_EMAIL}`}
                 className="text-ink underline decoration-line underline-offset-2 hover:decoration-accent"
