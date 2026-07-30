@@ -4,7 +4,12 @@
 // solo entra `version` al bundle, no la lista de dependencias.
 import { version } from '../../package.json';
 
-export const APP_NAME = 'Mutation Assessment Report';
+/**
+ * `AppHeader` pinta este mismo nombre partido en `<span>` para acentuar
+ * «Assessment», así que no puede consumir la constante; si se renombra el
+ * producto, hay que tocar los dos sitios.
+ */
+export const APP_NAME = 'Mutator Assessment Report';
 export const APP_VERSION = version;
 
 /** Copyright holder tal cual figura en LICENSE: si divergen, uno de los dos miente. */

@@ -30,7 +30,9 @@ describe('AboutMenu', () => {
     await openPanel();
 
     const panel = screen.getByRole('region', { name: /acerca de/i });
-    expect(panel).toHaveTextContent('Mutation Assessment Report');
+    // El mismo nombre que pinta la cabecera, letra por letra: son dos sitios y
+    // no pueden divergir.
+    expect(panel).toHaveTextContent('Mutator Assessment Report');
     // La versión sale de package.json, no de un literal que se quede atrás.
     expect(panel).toHaveTextContent(`v${version}`);
     expect(panel).toHaveTextContent(/MIT License/);
