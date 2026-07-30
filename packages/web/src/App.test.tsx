@@ -23,6 +23,16 @@ describe('AppHeader', () => {
     expect(logo).toBeInTheDocument();
     expect(logo.closest('a')).toHaveAttribute('href', '/');
   });
+
+  it('offers the about panel from every page', () => {
+    render(
+      <MemoryRouter initialEntries={['/comparisons/abc-123']}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('button', { name: /acerca de/i })).toBeInTheDocument();
+  });
 });
 
 describe('AppFooter', () => {

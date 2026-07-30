@@ -1,4 +1,5 @@
 import { Link, Route, Routes } from 'react-router-dom';
+import { AboutMenu } from './components/AboutMenu';
 import { LogoAqa } from './components/LogoAqa';
 import { ComparisonDashboardPage } from './pages/ComparisonDashboardPage';
 import { NewComparisonPage } from './pages/NewComparisonPage';
@@ -21,6 +22,9 @@ function AppHeader() {
             Mutator <span className="text-accent">Assessment</span> Report
           </span>
         </Link>
+        <div className="ml-auto">
+          <AboutMenu />
+        </div>
       </div>
     </header>
   );
