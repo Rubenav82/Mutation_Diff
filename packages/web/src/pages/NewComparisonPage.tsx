@@ -5,9 +5,11 @@ import { ComparisonError, createComparison } from '../lib/comparisons';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { FileDropZone } from '../components/FileDropZone';
 import { LoadingIndicator } from '../components/LoadingIndicator';
+import { ThresholdHelpPanel } from '../components/ThresholdHelpPanel';
 import { ToolHelpPanel } from '../components/ToolHelpPanel';
 
 const HELP_PANEL_ID = 'tool-help-panel';
+const THRESHOLD_HELP_PANEL_ID = 'threshold-help-panel';
 
 const EXTENSION_BY_TOOL: Record<Tool, string> = {
   pitest: '.xml',
@@ -29,6 +31,7 @@ export function NewComparisonPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [isThresholdHelpOpen, setIsThresholdHelpOpen] = useState(false);
 
   function handleToolChange(nextTool: Tool) {
     setTool(nextTool);
@@ -143,7 +146,20 @@ export function NewComparisonPage() {
         </div>
 
         <fieldset className="grid gap-4 sm:grid-cols-2">
-          <legend className="eyebrow mb-2 w-full">Umbrales (opcional)</legend>
+          <legend className="eyebrow mb-2 w-full">
+            <span className="inline-flex items-center gap-2">
+              Umbrales (opcional)
+              <button
+                type="button"
+                aria-expanded={isThresholdHelpOpen}
+                aria-controls={THRESHOLD_HELP_PANEL_ID}
+                onClick={() => setIsThresholdHelpOpen((open) => !open)}
+                className="flex h-6 w-6 items-center justify-center border border-line text-muted transition-colors hover:border-accent hover:text-ink"
+              >
+                ⓘ<span className="sr-only">Ayuda de umbrales</span>
+              </button>
+            </span>
+          </legend>
           <label className="flex flex-col gap-1.5 text-sm text-muted">
             Umbral de retroceso (%)
             <input
@@ -165,6 +181,8 @@ export function NewComparisonPage() {
             />
           </label>
         </fieldset>
+
+        {isThresholdHelpOpen && <ThresholdHelpPanel id={THRESHOLD_HELP_PANEL_ID} />}
 
         {/* No `onRetry`: the submit button below is the way to retry. */}
         {submitError && <ErrorMessage message={submitError} />}

@@ -167,6 +167,25 @@ describe('NewComparisonPage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('toggles the threshold help panel independently of the tool help', async () => {
+    const user = userEvent.setup();
+    renderWizard();
+
+    expect(screen.queryByRole('region', { name: /ayuda de umbrales/i })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /ayuda de umbrales/i }));
+
+    expect(screen.getByRole('region', { name: /ayuda de umbrales/i })).toBeInTheDocument();
+    // Son dos paneles distintos: abrir uno no abre el otro.
+    expect(
+      screen.queryByRole('region', { name: /ayuda de configuración/i }),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /ayuda de umbrales/i }));
+
+    expect(screen.queryByRole('region', { name: /ayuda de umbrales/i })).not.toBeInTheDocument();
+  });
+
   it('shows Stryker help content when Stryker is selected while the panel is open', async () => {
     const user = userEvent.setup();
     renderWizard();
