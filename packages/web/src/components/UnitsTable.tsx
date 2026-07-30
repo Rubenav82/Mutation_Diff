@@ -56,7 +56,7 @@ const buildColumns = (tool: Tool): ColumnDef<UnitComparison>[] => [
       const key = getValue<string>();
       const { prefix, name } = splitUnitKey(key, tool);
       return (
-        <span title={key} className="flex max-w-[22rem]">
+        <span title={key} className="flex max-w-88">
           {prefix !== '' && (
             // `direction: rtl` recorta por la izquierda: entre dos clases del
             // mismo proyecto, lo que las distingue es el final del paquete, no
