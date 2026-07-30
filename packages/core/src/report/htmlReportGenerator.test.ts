@@ -272,20 +272,26 @@ describe('generateHtmlReport — exact row and delta rendering', () => {
     });
     const html = generateHtmlReport(result);
 
+    // Filas de la tabla completa: score (base, nueva, Δ) + cubiertos (base, nueva, Δ).
     expect(html).toContain(
-      '<tr class="kind-improved"><td>Improved</td><td>50.0%</td><td>62.3%</td><td>+12.3%</td><td>Mejora ▲</td></tr>',
+      '<tr class="kind-improved"><td>Improved</td><td>50.0%</td><td>62.3%</td><td>+12.3%</td><td>100.0%</td><td>100.0%</td><td>0.0%</td><td>Mejora ▲</td></tr>',
     );
+    expect(html).toContain(
+      '<tr class="kind-regressed"><td>Regressed</td><td>90.0%</td><td>81.5%</td><td>-8.5%</td><td>100.0%</td><td>100.0%</td><td>0.0%</td><td>Retroceso ▼</td></tr>',
+    );
+    expect(html).toContain(
+      '<tr class="kind-unchanged"><td>Unchanged</td><td>70.0%</td><td>70.0%</td><td>0.0%</td><td>100.0%</td><td>100.0%</td><td>0.0%</td><td>Igual</td></tr>',
+    );
+    expect(html).toContain(
+      '<tr class="kind-added"><td>Added</td><td>—</td><td>40.0%</td><td>—</td><td>—</td><td>100.0%</td><td>—</td><td>Nueva</td></tr>',
+    );
+    expect(html).toContain(
+      '<tr class="kind-removed"><td>Removed</td><td>40.0%</td><td>—</td><td>—</td><td>100.0%</td><td>—</td><td>—</td><td>Eliminada</td></tr>',
+    );
+
+    // La misma unidad en su sección conserva la fila de cinco celdas.
     expect(html).toContain(
       '<tr class="kind-regressed"><td>Regressed</td><td>90.0%</td><td>81.5%</td><td>-8.5%</td><td>Retroceso ▼</td></tr>',
-    );
-    expect(html).toContain(
-      '<tr class="kind-unchanged"><td>Unchanged</td><td>70.0%</td><td>70.0%</td><td>0.0%</td><td>Igual</td></tr>',
-    );
-    expect(html).toContain(
-      '<tr class="kind-added"><td>Added</td><td>—</td><td>40.0%</td><td>—</td><td>Nueva</td></tr>',
-    );
-    expect(html).toContain(
-      '<tr class="kind-removed"><td>Removed</td><td>40.0%</td><td>—</td><td>—</td><td>Eliminada</td></tr>',
     );
   });
 });
@@ -333,6 +339,78 @@ describe('generateHtmlReport — empty comparison', () => {
     expect(html).toContain('No hay retrocesos.');
     expect(html).toContain('No hay clases/ficheros sin cobertura.');
     expect(html).toContain('No hay unidades.');
+  });
+});
+
+describe('generateHtmlReport — covered-mutant columns', () => {
+  const changed: UnitComparison = {
+    key: 'com.example.Weak',
+    kind: 'regressed',
+    base: metrics({ score: 90, coveredPct: 100 }),
+    head: metrics({ score: 60, coveredPct: 75 }),
+    scoreDelta: -30,
+    coverageDelta: -25,
+    isUncovered: false,
+  };
+
+  it('renders base, head and delta of covered mutants in the full table', () => {
+    const html = generateHtmlReport(resultFrom({ units: [changed] }));
+
+    const full = section(html, 'Todas las unidades');
+    expect(full).toContain('Mutantes cubiertos');
+    expect(full).toContain('<td>100.0%</td>');
+    expect(full).toContain('<td>75.0%</td>');
+    expect(full).toContain('<td>-25.0%</td>');
+  });
+
+  it('leaves the three section tables with score only', () => {
+    const html = generateHtmlReport(
+      resultFrom({ units: [changed], regressions: [changed], uncovered: [changed] }),
+    );
+
+    // Solo la tabla completa las lleva: las secciones son listas cortas
+    // centradas en su motivo, y triplicar celdas en las cuatro tablas se come
+    // el presupuesto de 2 MB de CA-HU-07.
+    expect(section(html, 'Retrocesos')).not.toContain('Mutantes cubiertos');
+    expect(section(html, 'Sin cobertura')).not.toContain('Mutantes cubiertos');
+    expect(section(html, 'Retrocesos')).not.toContain('75.0%');
+  });
+
+  it('renders an em dash per missing cell for added and removed units', () => {
+    const added: UnitComparison = {
+      key: 'com.example.Added',
+      kind: 'added',
+      head: metrics({ score: 50, coveredPct: 50 }),
+      scoreDelta: null,
+      coverageDelta: null,
+      isUncovered: false,
+    };
+    const removed: UnitComparison = {
+      key: 'com.example.Removed',
+      kind: 'removed',
+      base: metrics({ score: 40, coveredPct: 40 }),
+      scoreDelta: null,
+      coverageDelta: null,
+      isUncovered: false,
+    };
+
+    const full = section(
+      generateHtmlReport(resultFrom({ units: [added, removed] })),
+      'Todas las unidades',
+    );
+
+    // Cuatro por fila: el lado que falta de score y de cubiertos, más los dos deltas.
+    expect(full.match(/<td>—<\/td>/g)).toHaveLength(8);
+  });
+
+  it('labels the global covered-mutant cards the same as the app, not "Cobertura"', () => {
+    // `coveredPct` son mutantes cubiertos, no el Line Coverage de PiTest. La SPA
+    // ya lo llama así desde T-032; el informe decía «Cobertura» y divergía.
+    const summary = section(generateHtmlReport(resultFrom()), 'Resumen');
+
+    expect(summary).toContain('Cubiertos base');
+    expect(summary).toContain('Cubiertos nuevos');
+    expect(summary).not.toContain('Cobertura base');
   });
 });
 

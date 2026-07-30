@@ -28,6 +28,22 @@ const KIND_LABEL_CLASS: Record<UnitChangeKind, string> = {
   removed: 'border-line text-muted line-through',
 };
 
+/**
+ * Nombre completo de cada columna, para el `aria-label` del botón de ordenar.
+ * Dentro de un grupo el encabezado visible es «Base»/«Nueva»/«Δ», que fuera de
+ * su columna no dice nada: un lector de pantalla anunciaría «botón Δ».
+ */
+const SORT_LABELS: Record<string, string> = {
+  key: 'Clase / fichero',
+  baseScore: 'Score base',
+  headScore: 'Score nuevo',
+  scoreDelta: 'Δ Score',
+  baseCovered: 'Cubiertos base',
+  headCovered: 'Cubiertos nuevos',
+  coverageDelta: 'Δ Cubiertos',
+  kind: 'Estado',
+};
+
 const COLUMNS: ColumnDef<UnitComparison>[] = [
   {
     id: 'key',
@@ -35,25 +51,62 @@ const COLUMNS: ColumnDef<UnitComparison>[] = [
     header: 'Clase / fichero',
   },
   {
-    id: 'baseScore',
-    accessorFn: (unit) => unit.base?.score,
-    header: 'Score base',
-    cell: ({ getValue }) => formatOptionalPct(getValue<number | undefined>()),
-    sortUndefined: 'last',
+    id: 'score',
+    header: 'Score',
+    columns: [
+      {
+        id: 'baseScore',
+        accessorFn: (unit) => unit.base?.score,
+        header: 'Base',
+        cell: ({ getValue }) => formatOptionalPct(getValue<number | undefined>()),
+        sortUndefined: 'last',
+      },
+      {
+        id: 'headScore',
+        accessorFn: (unit) => unit.head?.score,
+        header: 'Nueva',
+        cell: ({ getValue }) => formatOptionalPct(getValue<number | undefined>()),
+        sortUndefined: 'last',
+      },
+      {
+        id: 'scoreDelta',
+        accessorFn: (unit) => unit.scoreDelta ?? undefined,
+        header: 'Δ',
+        cell: ({ getValue }) => formatOptionalSignedPct(getValue<number | undefined>()),
+        sortUndefined: 'last',
+      },
+    ],
   },
   {
-    id: 'headScore',
-    accessorFn: (unit) => unit.head?.score,
-    header: 'Score nuevo',
-    cell: ({ getValue }) => formatOptionalPct(getValue<number | undefined>()),
-    sortUndefined: 'last',
-  },
-  {
-    id: 'scoreDelta',
-    accessorFn: (unit) => unit.scoreDelta ?? undefined,
-    header: 'Δ Score',
-    cell: ({ getValue }) => formatOptionalSignedPct(getValue<number | undefined>()),
-    sortUndefined: 'last',
+    // «Mutantes cubiertos», nunca «Cobertura»: es
+    // (válidos − sin cubrir) / válidos, no el Line Coverage de PiTest, que no
+    // está en el informe. Etiquetarlo «Cobertura» junto a una columna de score
+    // invita justo a esa comparación equivocada.
+    id: 'covered',
+    header: 'Mutantes cubiertos',
+    columns: [
+      {
+        id: 'baseCovered',
+        accessorFn: (unit) => unit.base?.coveredPct,
+        header: 'Base',
+        cell: ({ getValue }) => formatOptionalPct(getValue<number | undefined>()),
+        sortUndefined: 'last',
+      },
+      {
+        id: 'headCovered',
+        accessorFn: (unit) => unit.head?.coveredPct,
+        header: 'Nueva',
+        cell: ({ getValue }) => formatOptionalPct(getValue<number | undefined>()),
+        sortUndefined: 'last',
+      },
+      {
+        id: 'coverageDelta',
+        accessorFn: (unit) => unit.coverageDelta ?? undefined,
+        header: 'Δ',
+        cell: ({ getValue }) => formatOptionalSignedPct(getValue<number | undefined>()),
+        sortUndefined: 'last',
+      },
+    ],
   },
   {
     id: 'kind',
@@ -105,28 +158,50 @@ export function UnitsTable({ units }: { units: UnitComparison[] }) {
         />
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse bg-raised text-sm">
+        {/* `min-w-max`: con ocho columnas, repartir un ancho fijo parte los
+            nombres de clase a mitad de palabra. Las columnas se dimensionan por
+            su contenido y, si no caben, scrollea el contenedor de arriba. */}
+        <table className="w-full min-w-max border-collapse bg-raised text-sm">
           <thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th key={header.id} className="border-b-2 border-ink p-0 text-left first:w-1/2">
-                    <button
-                      type="button"
-                      onClick={header.column.getToggleSortingHandler()}
-                      className="eyebrow w-full px-3 py-2.5 text-left whitespace-nowrap transition-colors hover:text-ink"
+            {table.getHeaderGroups().map((headerGroup, groupIndex, groups) => {
+              // La regla de 2px cierra la cabecera entera, así que va solo en la
+              // última fila; la de arriba separa los grupos con una línea fina.
+              const isLastRow = groupIndex === groups.length - 1;
+              return (
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <th
+                      key={header.id}
+                      colSpan={header.colSpan}
+                      className={`p-0 text-left ${
+                        isLastRow ? 'border-b-2 border-ink' : 'border-b border-line'
+                      }`}
                     >
-                      {flexRender(header.column.columnDef.header, header.getContext())}
-                      {header.column.getIsSorted() === 'asc'
-                        ? ' ↑'
-                        : header.column.getIsSorted() === 'desc'
-                          ? ' ↓'
-                          : ''}
-                    </button>
-                  </th>
-                ))}
-              </tr>
-            ))}
+                      {header.isPlaceholder ? null : header.column.getCanSort() ? (
+                        <button
+                          type="button"
+                          onClick={header.column.getToggleSortingHandler()}
+                          aria-label={`Ordenar por ${SORT_LABELS[header.column.id] ?? ''}`}
+                          className="eyebrow w-full px-3 py-2.5 text-left whitespace-nowrap transition-colors hover:text-ink"
+                        >
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                          {header.column.getIsSorted() === 'asc'
+                            ? ' ↑'
+                            : header.column.getIsSorted() === 'desc'
+                              ? ' ↓'
+                              : ''}
+                        </button>
+                      ) : (
+                        // Cabecera de grupo: rotula, no ordena.
+                        <span className="eyebrow block px-3 py-2.5 whitespace-nowrap">
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                        </span>
+                      )}
+                    </th>
+                  ))}
+                </tr>
+              );
+            })}
           </thead>
           <tbody>
             {rows.map((row) => (
@@ -138,7 +213,7 @@ export function UnitsTable({ units }: { units: UnitComparison[] }) {
                 {row.getVisibleCells().map((cell) => (
                   <td
                     key={cell.id}
-                    className="px-3 py-2 font-mono text-sm tabular-nums first:break-all"
+                    className="px-3 py-2 font-mono text-sm whitespace-nowrap tabular-nums"
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>

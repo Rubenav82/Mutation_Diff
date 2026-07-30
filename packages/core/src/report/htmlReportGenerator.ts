@@ -91,18 +91,42 @@ function deltaCardClass(value: number): string {
   return '';
 }
 
-function renderUnitRow(unit: UnitComparison): string {
+function renderUnitRow(unit: UnitComparison, withCoverage: boolean): string {
   const baseScore = unit.base ? formatPct(unit.base.score) : '—';
   const headScore = unit.head ? formatPct(unit.head.score) : '—';
-  return `<tr class="kind-${unit.kind}"><td>${escapeHtml(unit.key)}</td><td>${baseScore}</td><td>${headScore}</td><td>${formatDelta(unit.scoreDelta)}</td><td>${escapeHtml(KIND_LABELS[unit.kind])}</td></tr>`;
+  const coverage = withCoverage
+    ? `<td>${unit.base ? formatPct(unit.base.coveredPct) : '—'}</td><td>${unit.head ? formatPct(unit.head.coveredPct) : '—'}</td><td>${formatDelta(unit.coverageDelta)}</td>`
+    : '';
+  return `<tr class="kind-${unit.kind}"><td>${escapeHtml(unit.key)}</td><td>${baseScore}</td><td>${headScore}</td><td>${formatDelta(unit.scoreDelta)}</td>${coverage}<td>${escapeHtml(KIND_LABELS[unit.kind])}</td></tr>`;
 }
 
-function renderTable(title: string, units: UnitComparison[], emptyMessage: string): string {
+const FLAT_HEAD =
+  '<thead><tr><th>Clase / fichero</th><th>Score base</th><th>Score nuevo</th><th>&Delta; Score</th><th>Estado</th></tr></thead>';
+
+/**
+ * Two header rows so eight columns read as two groups of three instead of a wall
+ * of similar labels. Only the full table uses it.
+ */
+const GROUPED_HEAD =
+  '<thead><tr><th rowspan="2">Clase / fichero</th><th colspan="3">Score</th><th colspan="3">Mutantes cubiertos</th><th rowspan="2">Estado</th></tr><tr><th>Base</th><th>Nueva</th><th>&Delta;</th><th>Base</th><th>Nueva</th><th>&Delta;</th></tr></thead>';
+
+/**
+ * `withCoverage` is off for the three section tables on purpose: they are short
+ * lists focused on one reason each, and three more cells on every row of all four
+ * tables would eat most of the 2 MB budget of CA-HU-07 (a report where every unit
+ * regressed renders each row twice).
+ */
+function renderTable(
+  title: string,
+  units: UnitComparison[],
+  emptyMessage: string,
+  withCoverage = false,
+): string {
   if (units.length === 0) {
     return `<section><h2>${escapeHtml(title)}</h2><p class="empty">${escapeHtml(emptyMessage)}</p></section>`;
   }
-  const rows = units.map(renderUnitRow).join('');
-  return `<section><h2>${escapeHtml(title)} (${units.length})</h2><table><thead><tr><th>Clase / fichero</th><th>Score base</th><th>Score nuevo</th><th>&Delta; Score</th><th>Estado</th></tr></thead><tbody>${rows}</tbody></table></section>`;
+  const rows = units.map((unit) => renderUnitRow(unit, withCoverage)).join('');
+  return `<section><h2>${escapeHtml(title)} (${units.length})</h2><table>${withCoverage ? GROUPED_HEAD : FLAT_HEAD}<tbody>${rows}</tbody></table></section>`;
 }
 
 function renderSummary(result: ComparisonResult): string {
@@ -111,9 +135,9 @@ function renderSummary(result: ComparisonResult): string {
     <div class="card"><span class="label">Score base</span><span class="value">${formatPct(global.base.score)}</span></div>
     <div class="card"><span class="label">Score nuevo</span><span class="value">${formatPct(global.head.score)}</span></div>
     <div class="card ${deltaCardClass(global.scoreDelta)}"><span class="label">&Delta; Score</span><span class="value">${formatDelta(global.scoreDelta)}</span></div>
-    <div class="card"><span class="label">Cobertura base</span><span class="value">${formatPct(global.base.coveredPct)}</span></div>
-    <div class="card"><span class="label">Cobertura nueva</span><span class="value">${formatPct(global.head.coveredPct)}</span></div>
-    <div class="card ${deltaCardClass(global.coverageDelta)}"><span class="label">&Delta; Cobertura</span><span class="value">${formatDelta(global.coverageDelta)}</span></div>
+    <div class="card"><span class="label">Cubiertos base</span><span class="value">${formatPct(global.base.coveredPct)}</span></div>
+    <div class="card"><span class="label">Cubiertos nuevos</span><span class="value">${formatPct(global.head.coveredPct)}</span></div>
+    <div class="card ${deltaCardClass(global.coverageDelta)}"><span class="label">&Delta; Cubiertos</span><span class="value">${formatDelta(global.coverageDelta)}</span></div>
   </div></section>`;
 }
 
@@ -148,7 +172,7 @@ ${renderContext(result)}
 ${renderSummary(result)}
 ${renderTable('Retrocesos', result.regressions, 'No hay retrocesos.')}
 ${renderTable('Sin cobertura', result.uncovered, 'No hay clases/ficheros sin cobertura.')}
-${renderTable('Todas las unidades', result.units, 'No hay unidades.')}
+${renderTable('Todas las unidades', result.units, 'No hay unidades.', true)}
 </body>
 </html>`;
 }

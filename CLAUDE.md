@@ -329,6 +329,13 @@ La app se despliega como **ficheros estáticos**: `packages/web/dist` (un `index
 - El cierre del panel al **clicar fuera** escucha `mousedown` y no `pointerdown`: `user-event` v14 dispara ambos, pero el soporte de `PointerEvent` en jsdom no es algo que convenga dar por hecho.
 - El contacto es un `mailto` con asunto prerrellenado, no un issue de GitHub: la app se sirve en una red interna que puede no tener salida a internet, y quien la use no necesariamente tiene cuenta en GitHub.
 
+## Cubiertos por unidad en la tabla completa (fijado en T-079)
+
+- **`coveredPct` no es cobertura de líneas.** Es `(válidos − sin cubrir) / válidos`: mutantes cubiertos. El *Line Coverage* de PiTest **no está** en `mutations.xml`. La etiqueta es «Mutantes cubiertos» (o «Cubiertos» donde no quepa) en la SPA **y** en el informe; poner «Cobertura» junto a una columna de score invita a compararlo con el informe de origen y no cuadra. Ya pasó una vez (T-032) y volvió a pasar en las tarjetas del informe exportado, que decían «Cobertura base» mientras la SPA decía «Mutantes cubiertos» — corregido aquí.
+- **Solo la tabla completa lleva las tres columnas de cubiertos**; las cuatro secciones (`Retrocesos`, `Sin cobertura`, `Nuevas`, `Eliminadas`) siguen con score. Dos motivos: son listas cortas centradas en un solo motivo, y el presupuesto de 2 MB de CA-HU-07 se mide sobre el peor caso real (5.000 unidades todas en retroceso ⇒ cada fila sale en la tabla completa **y** en su sección). Medido: 1,40 MB antes, **1,62 MB** después; llevarlas también a las secciones lo habría dejado sin margen. `renderTable(..., withCoverage)` en `htmlReportGenerator.ts` es lo que separa los dos casos, y hay test de que las secciones no las llevan.
+- **Cabeceras agrupadas con `aria-label` completo**: dentro del grupo el encabezado visible es `Base`/`Nueva`/`Δ`, así que el botón de ordenar necesita `Ordenar por Δ Cubiertos` — un lector de pantalla anunciando «botón Δ» no dice nada. El mapa está en `SORT_LABELS`. Con columnas agrupadas hay que manejar además `header.colSpan`, `header.isPlaceholder` y `getCanSort()` (las cabeceras de grupo rotulan, no ordenan), y la regla de 2px va solo en la última fila de la cabecera.
+- **La tabla es `min-w-max`, no `w-full` a secas**: con ocho columnas, repartir el ancho del contenedor parte los FQCN a mitad de palabra (con `break-all` daba `com.acme.billing.Invoic` / `eService`). Se dimensiona por contenido y scrollea el `overflow-x-auto` que ya existía.
+
 ## Convenciones
 
 - Nombres de código, tipos y comentarios de API en inglés; documentación de producto (docs/) en español.

@@ -78,13 +78,15 @@ test.describe('flujo completo de comparación', () => {
     await submitComparison(page, { tool: 'pitest' });
 
     const table = page.getByRole('region', { name: 'Todas las unidades' });
-    await expect(table.getByRole('row')).toHaveCount(8); // cabecera + 7 unidades
+    // Dos filas de cabecera: la de los grupos (Score / Mutantes cubiertos) y la
+    // de sus columnas.
+    await expect(table.getByRole('row')).toHaveCount(9); // 2 de cabecera + 7 unidades
 
     await table
       .getByRole('searchbox', { name: 'Filtrar por clase o paquete' })
       .fill('notifications');
 
-    await expect(table.getByRole('row')).toHaveCount(3);
+    await expect(table.getByRole('row')).toHaveCount(4);
     await expect(table.getByText('com.acme.notifications.EmailSender')).toBeVisible();
     await expect(table.getByText('com.acme.billing.TaxCalculator')).toHaveCount(0);
   });
