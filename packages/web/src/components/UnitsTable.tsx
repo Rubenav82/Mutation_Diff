@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   flexRender,
   getCoreRowModel,
@@ -8,8 +8,8 @@ import {
   type ColumnDef,
   type SortingState,
 } from '@tanstack/react-table';
-import type { UnitChangeKind, UnitComparison } from 'core';
-import { formatOptionalPct, formatOptionalSignedPct } from '../lib/format';
+import type { Tool, UnitChangeKind, UnitComparison } from 'core';
+import { formatOptionalPct, formatOptionalSignedPct, splitUnitKey } from '../lib/format';
 
 const KIND_LABELS: Record<UnitChangeKind, string> = {
   improved: 'Mejora ▲',
@@ -44,11 +44,29 @@ const SORT_LABELS: Record<string, string> = {
   kind: 'Estado',
 };
 
-const COLUMNS: ColumnDef<UnitComparison>[] = [
+const buildColumns = (tool: Tool): ColumnDef<UnitComparison>[] => [
   {
     id: 'key',
     accessorKey: 'key',
     header: 'Clase / fichero',
+    // Solo se recorta el paquete, que se repite fila tras fila; el nombre simple
+    // —lo que distingue una fila de otra— se mantiene entero. Sin tope, un FQCN
+    // largo estira la tabla y obliga a scrollear en horizontal para ver el score.
+    cell: ({ getValue }) => {
+      const key = getValue<string>();
+      const { prefix, name } = splitUnitKey(key, tool);
+      return (
+        <span title={key} className="flex max-w-[22rem]">
+          {prefix !== '' && (
+            // `direction: rtl` recorta por la izquierda: entre dos clases del
+            // mismo proyecto, lo que las distingue es el final del paquete, no
+            // el `es.example.` que comparten todas.
+            <span className="truncate text-left text-muted [direction:rtl]">{prefix}</span>
+          )}
+          <span className="shrink-0">{name}</span>
+        </span>
+      );
+    },
   },
   {
     id: 'score',
@@ -122,13 +140,16 @@ const COLUMNS: ColumnDef<UnitComparison>[] = [
   },
 ];
 
-export function UnitsTable({ units }: { units: UnitComparison[] }) {
+export function UnitsTable({ units, tool }: { units: UnitComparison[]; tool: Tool }) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
+  // El separador de la clave depende de la herramienta, así que las columnas se
+  // rehacen solo cuando esta cambia.
+  const columns = useMemo(() => buildColumns(tool), [tool]);
 
   const table = useReactTable({
     data: units,
-    columns: COLUMNS,
+    columns,
     state: { sorting, globalFilter },
     // First click sorts ascending on every column: for Δ Score that surfaces
     // the most severe drop first, mirroring how core orders `regressions`.

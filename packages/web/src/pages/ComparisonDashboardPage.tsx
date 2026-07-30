@@ -99,7 +99,7 @@ export function ComparisonDashboardPage() {
           units={result.removed}
           emptyMessage="No hay unidades eliminadas."
         />
-        <UnitsTable units={result.units} />
+        <UnitsTable units={result.units} tool={result.tool} />
       </main>
     </div>
   );
