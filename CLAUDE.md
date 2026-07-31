@@ -349,6 +349,14 @@ La app se despliega como **ficheros estáticos**: `packages/web/dist` (un `index
 - **Testear esto en jsdom**: el iframe lo crea la propia función, así que no hay forma de espiar su `print` de antemano — se intercepta `document.body.appendChild`, que es el primer momento en el que `contentWindow` existe y sigue siendo anterior a la llamada. jsdom sí implementa `print` (como función) y `document.write` de forma síncrona; lo verificado fue eso, no supuesto.
 - Lo que ningún test de jsdom cubre y hubo que comprobar en Chromium real: que en el instante de imprimir el iframe **ya tiene contenido y CSS aplicado**. Es el riesgo genuino de `write` + `print()` inmediato, y es un fallo que se manifestaría como un PDF en blanco solo en el navegador.
 
+## Paginación de la tabla completa (fijado en T-081)
+
+- **Solo la tabla completa.** Las cuatro secciones son listas cortas centradas en un motivo; paginarlas sería ruido. Mismo criterio que rige qué métrica muestra cada tabla (T-079b).
+- **«Todas» es un tamaño de página centinela (`ALL_ROWS = Number.MAX_SAFE_INTEGER`), no un modo aparte.** Así la tabla sigue gobernando la paginación ella sola en lugar de tener que replicar su lógica para un caso especial — en particular el `autoResetPageIndex`, que es lo que devuelve a la primera página al filtrar. Sin eso, filtrar desde la página 3 deja la tabla vacía aunque haya coincidencias: siguen estando, pero en una página que ya no existe. **Está verificado con test, no supuesto.**
+- **«Todas» se mantiene a propósito**: paginar rompe el `Ctrl+F` sobre la tabla entera, que es un flujo real. Si alguna vez se plantea quitarlo por simplificar, ese es el coste.
+- Con una sola página la navegación se oculta y **el selector se queda** — es la única forma de volver a «Todas» después. Un test fija las dos mitades de esa regla.
+- El `<select>` lleva `appearance-none` y flecha propia (`▾` decorativa, `aria-hidden`): el cromo nativo de Windows trae bordes redondeados que rompen el radio 0 del sistema Modernist. Esto solo se ve en captura, no en los tests.
+
 ## Convenciones
 
 - Nombres de código, tipos y comentarios de API en inglés; documentación de producto (docs/) en español.

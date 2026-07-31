@@ -208,3 +208,124 @@ describe('UnitsTable', () => {
     ]);
   });
 });
+
+describe('UnitsTable — paginación', () => {
+  // 60 unidades: más de dos páginas con el tamaño por defecto, así que
+  // «siguiente» y «anterior» tienen a dónde ir.
+  const MANY: UnitComparison[] = Array.from({ length: 60 }, (_, i) =>
+    unit({
+      // Índice con relleno para que el orden alfabético coincida con el numérico.
+      key: `com.example.Clase${String(i).padStart(2, '0')}`,
+      kind: 'unchanged',
+      base: metrics(),
+      head: metrics(),
+      scoreDelta: 0,
+      coverageDelta: 0,
+    }),
+  );
+
+  function pageSizeSelect(): HTMLElement {
+    return screen.getByRole('combobox', { name: 'Filas por página' });
+  }
+
+  it('shows the first 25 units by default', () => {
+    render(<UnitsTable units={MANY} tool="pitest" />);
+
+    expect(bodyRows()).toHaveLength(25);
+    expect(screen.getByTitle('com.example.Clase00')).toBeInTheDocument();
+    expect(screen.queryByTitle('com.example.Clase25')).not.toBeInTheDocument();
+  });
+
+  it('reports which page is on screen and how many there are', () => {
+    render(<UnitsTable units={MANY} tool="pitest" />);
+
+    expect(screen.getByText('Página 1 de 3')).toBeInTheDocument();
+  });
+
+  it('moves to the next page and back', async () => {
+    const user = userEvent.setup();
+    render(<UnitsTable units={MANY} tool="pitest" />);
+
+    await user.click(screen.getByRole('button', { name: 'Página siguiente' }));
+
+    expect(screen.getByTitle('com.example.Clase25')).toBeInTheDocument();
+    expect(screen.queryByTitle('com.example.Clase00')).not.toBeInTheDocument();
+    expect(screen.getByText('Página 2 de 3')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Página anterior' }));
+
+    expect(screen.getByTitle('com.example.Clase00')).toBeInTheDocument();
+  });
+
+  it('has nowhere to go back from the first page, nor forward from the last', async () => {
+    const user = userEvent.setup();
+    render(<UnitsTable units={MANY} tool="pitest" />);
+
+    expect(screen.getByRole('button', { name: 'Página anterior' })).toBeDisabled();
+
+    await user.click(screen.getByRole('button', { name: 'Página siguiente' }));
+    await user.click(screen.getByRole('button', { name: 'Página siguiente' }));
+
+    expect(screen.getByRole('button', { name: 'Página siguiente' })).toBeDisabled();
+    expect(bodyRows()).toHaveLength(10);
+  });
+
+  it('lets the user pick how many rows fit on a page', async () => {
+    const user = userEvent.setup();
+    render(<UnitsTable units={MANY} tool="pitest" />);
+
+    await user.selectOptions(pageSizeSelect(), '50');
+
+    expect(bodyRows()).toHaveLength(50);
+    expect(screen.getByText('Página 1 de 2')).toBeInTheDocument();
+  });
+
+  // Paginar rompe el Ctrl+F sobre la tabla entera, que es un flujo real: «Todas»
+  // lo devuelve a quien lo necesite.
+  it('can show every unit at once', async () => {
+    const user = userEvent.setup();
+    render(<UnitsTable units={MANY} tool="pitest" />);
+
+    await user.selectOptions(pageSizeSelect(), 'all');
+
+    expect(bodyRows()).toHaveLength(60);
+    // Una sola página: no hay navegación que ofrecer.
+    expect(screen.queryByRole('button', { name: 'Página siguiente' })).not.toBeInTheDocument();
+  });
+
+  // Sin esto, filtrar desde la página 3 deja la tabla vacía aunque haya
+  // coincidencias: siguen estando, pero en una página que ya no existe.
+  it('returns to the first page when the filter changes', async () => {
+    const user = userEvent.setup();
+    render(<UnitsTable units={MANY} tool="pitest" />);
+
+    await user.click(screen.getByRole('button', { name: 'Página siguiente' }));
+    await user.click(screen.getByRole('button', { name: 'Página siguiente' }));
+    expect(screen.getByText('Página 3 de 3')).toBeInTheDocument();
+
+    await user.type(screen.getByRole('searchbox', { name: /filtrar/i }), 'Clase0');
+
+    expect(bodyRows()).toHaveLength(10);
+    expect(screen.getByTitle('com.example.Clase00')).toBeInTheDocument();
+  });
+
+  // Ordenar reordena el conjunto entero, no solo la página visible.
+  it('sorts across every page, not just the visible one', async () => {
+    const user = userEvent.setup();
+    render(<UnitsTable units={MANY} tool="pitest" />);
+
+    await user.click(screen.getByRole('button', { name: /clase \/ fichero/i }));
+    await user.click(screen.getByRole('button', { name: /clase \/ fichero/i }));
+
+    // Descendente: la última unidad del conjunto encabeza la primera página.
+    expect(bodyRows()[0]?.textContent).toContain('Clase59');
+  });
+
+  it('keeps the controls out of the way when everything already fits', () => {
+    render(<UnitsTable units={UNITS} tool="pitest" />);
+
+    expect(screen.queryByRole('button', { name: 'Página siguiente' })).not.toBeInTheDocument();
+    // El selector sí se queda: es la única forma de volver a «Todas» después.
+    expect(pageSizeSelect()).toBeInTheDocument();
+  });
+});
