@@ -356,6 +356,7 @@ La app se despliega como **ficheros estáticos**: `packages/web/dist` (un `index
 - **«Todas» se mantiene a propósito**: paginar rompe el `Ctrl+F` sobre la tabla entera, que es un flujo real. Si alguna vez se plantea quitarlo por simplificar, ese es el coste.
 - Con una sola página la navegación se oculta y **el selector se queda** — es la única forma de volver a «Todas» después. Un test fija las dos mitades de esa regla.
 - El `<select>` lleva `appearance-none` y flecha propia (`▾` decorativa, `aria-hidden`): el cromo nativo de Windows trae bordes redondeados que rompen el radio 0 del sistema Modernist. Esto solo se ve en captura, no en los tests.
+- **El contador de la cabecera cuenta las filas filtradas, no las unidades recibidas** (T-081b). Es el mismo pill que las cuatro secciones, pero aquí hay filtro: con uno puesto, el total original sería un número que no cuadra con nada de lo que se ve. Sale de `getFilteredRowModel()`, no de `getRowModel()` — este último ya está paginado y daría 25.
 
 ## Convenciones
 

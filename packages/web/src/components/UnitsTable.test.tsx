@@ -157,6 +157,25 @@ describe('UnitsTable', () => {
     expect(improved).toHaveAttribute('data-kind', 'improved');
   });
 
+  // Mismo contador que las cuatro secciones, para que la tabla completa no sea
+  // la única cabecera sin él.
+  it('counts the units next to the title', () => {
+    render(<UnitsTable units={UNITS} tool="pitest" />);
+
+    expect(screen.getByRole('heading', { name: 'Todas las unidades 4' })).toBeInTheDocument();
+  });
+
+  // Cuenta las filas que hay en la tabla, no las que hubo: con un filtro puesto,
+  // el total original sería un número que no cuadra con nada de lo que se ve.
+  it('counts what the filter left, not what there was', async () => {
+    const user = userEvent.setup();
+    render(<UnitsTable units={UNITS} tool="pitest" />);
+
+    await user.type(screen.getByRole('searchbox', { name: /filtrar/i }), 'stringutils');
+
+    expect(screen.getByRole('heading', { name: 'Todas las unidades 1' })).toBeInTheDocument();
+  });
+
   it('filters rows by class or package name, case-insensitively', async () => {
     const user = userEvent.setup();
     render(<UnitsTable units={UNITS} tool="pitest" />);

@@ -188,7 +188,14 @@ export function UnitsTable({ units, tool }: { units: UnitComparison[]; tool: Too
   return (
     <section aria-label="Todas las unidades">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <h2>Todas las unidades</h2>
+        {/* El espacio explícito importa: sin él el nombre accesible sería
+            "Todas las unidades4" y JSX se come el salto de línea. */}
+        <h2 className="flex items-center gap-2">
+          Todas las unidades{' '}
+          <span className="bg-deep px-2 py-0.5 font-mono text-xs font-normal text-inverse tabular-nums">
+            {table.getFilteredRowModel().rows.length}
+          </span>
+        </h2>
         <input
           type="search"
           aria-label="Filtrar por clase o paquete"
