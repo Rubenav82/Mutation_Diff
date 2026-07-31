@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { generateHtmlReport, type ComparisonResult } from 'core';
 import { ComparisonError, getComparison } from '../lib/comparisons';
+import { printReport } from '../lib/printReport';
 import { ComparisonContextRail } from '../components/ComparisonContextRail';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { KpiRow } from '../components/KpiRow';
@@ -66,6 +67,12 @@ export function ComparisonDashboardPage() {
     URL.revokeObjectURL(url);
   };
 
+  // El PDF sale del mismo informe: se imprime, no se dibuja aparte. Ver
+  // `lib/printReport.ts` para por qué no hay una librería de PDF aquí.
+  const handleExportPdf = () => {
+    printReport(generateHtmlReport(result), `mutadiff-report-${id}`);
+  };
+
   return (
     // Dos paneles: el rail conserva el contexto a la vista mientras se recorren
     // las tablas (`sticky`), y se apila encima del contenido en pantallas estrechas.
@@ -81,6 +88,7 @@ export function ComparisonDashboardPage() {
           global={result.global}
           regressionCount={result.regressions.length}
           onExport={handleExport}
+          onExportPdf={handleExportPdf}
         />
         <KpiRow global={result.global} />
         <UnitSection

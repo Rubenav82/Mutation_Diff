@@ -39,6 +39,7 @@ function renderBand(over: Partial<Parameters<typeof SummaryBand>[0]> = {}) {
       )}
       regressionCount={0}
       onExport={() => {}}
+      onExportPdf={() => {}}
       {...over}
     />,
   );
@@ -138,5 +139,18 @@ describe('SummaryBand', () => {
     await userEvent.setup().click(screen.getByRole('button', { name: 'Exportar HTML' }));
 
     expect(onExport).toHaveBeenCalledOnce();
+  });
+
+  // Los dos formatos conviven a propósito: el HTML se explora (buscable, sin
+  // cortes de página) y el PDF se adjunta.
+  it('offers a PDF export alongside the HTML one', async () => {
+    const onExport = vi.fn();
+    const onExportPdf = vi.fn();
+    renderBand({ onExport, onExportPdf });
+
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Exportar PDF' }));
+
+    expect(onExportPdf).toHaveBeenCalledOnce();
+    expect(onExport).not.toHaveBeenCalled();
   });
 });

@@ -431,6 +431,43 @@ describe('generateHtmlReport — covered-mutant columns', () => {
   });
 });
 
+describe('generateHtmlReport — print rules (PDF export)', () => {
+  // El PDF se obtiene imprimiendo este mismo documento, así que las reglas de
+  // paginación son parte del informe y no del navegador que lo imprime.
+  let html: string;
+
+  beforeAll(() => {
+    html = generateHtmlReport(resultFrom());
+  });
+
+  it('sets page margins so the report is not printed edge to edge', () => {
+    expect(html).toContain('@page');
+    expect(html).toContain('margin: 1.5cm');
+  });
+
+  it('repeats table headers on every printed page', () => {
+    expect(html).toContain('thead { display: table-header-group; }');
+  });
+
+  it('keeps rows, cards and section headings from being split across pages', () => {
+    expect(html).toContain('tr { break-inside: avoid; }');
+    expect(html).toContain('.card { break-inside: avoid; }');
+    expect(html).toContain('h2 { break-after: avoid; }');
+  });
+
+  it('forces backgrounds to print, so the card separators survive', () => {
+    // Sin esto Chrome descarta los fondos y las tarjetas del resumen pierden
+    // las líneas que las separan, que son un `background` y no un `border`.
+    expect(html).toContain('print-color-adjust: exact');
+  });
+
+  it('still has no external references once the print rules are in', () => {
+    expect(html).not.toContain('<link');
+    expect(html).not.toContain('<script');
+    expect(html).not.toMatch(/https?:\/\//);
+  });
+});
+
 describe('generateHtmlReport — size budget (CA-HU-07)', () => {
   it('stays under 2 MB for up to 5000 units', () => {
     const units: UnitComparison[] = Array.from({ length: 5000 }, (_, i) => ({

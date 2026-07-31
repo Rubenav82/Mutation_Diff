@@ -66,6 +66,26 @@ const STYLE = `
   tr.kind-regressed td:last-child { color: #ae1800; }
   tr.kind-improved td:last-child { color: #14622f; }
   .empty { color: #605d5d; font-style: italic; }
+
+  /* El PDF se obtiene imprimiendo este mismo documento, así que la paginación
+     es responsabilidad del informe. Con miles de unidades la tabla completa
+     ocupa decenas de páginas, y sin estas reglas cada una llegaría sin
+     cabecera y con filas partidas por la mitad. */
+  @media print {
+    @page { margin: 1.5cm; }
+    /* Chrome descarta los fondos al imprimir: las tarjetas del resumen se
+       separan con un "background" (el hueco de 1px de la retícula), no con un
+       "border", así que sin esto se funden en un bloque. */
+    body {
+      background: #fff; padding: 0;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    thead { display: table-header-group; }
+    tr { break-inside: avoid; }
+    .card { break-inside: avoid; }
+    h2 { break-after: avoid; }
+    section { margin: 1.5rem 0; break-before: auto; }
+  }
 `;
 
 function escapeHtml(value: string): string {

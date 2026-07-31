@@ -80,6 +80,7 @@ La misma información está dentro de la app, detrás del icono ⓘ junto al sel
    Las dos reglas completas, con fórmula y casos límite, están dentro de la app detrás del icono ⓘ que hay junto a «Umbrales (opcional)».
 3. El dashboard muestra las métricas globales con su delta, las secciones de retrocesos / sin cobertura / nuevas / eliminadas, y la tabla completa con filtro y orden por columna.
 4. **Exportar HTML** descarga el informe completo como un único fichero, sin CSS ni JS externos: se abre offline y se puede adjuntar donde sea.
+5. **Exportar PDF** abre el diálogo de impresión del navegador con ese mismo informe ya maquetado para papel; elige «Guardar como PDF» y te propondrá el nombre `mutadiff-report-<id>`. Los dos formatos conviven a propósito: el HTML se explora (buscable, sin cortes de página) y el PDF se adjunta a un correo o a una incidencia. Con miles de unidades el PDF sale largo — la tabla completa lo es de por sí.
 
 ## API REST (opcional, autoalojada)
 

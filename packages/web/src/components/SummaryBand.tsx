@@ -8,6 +8,7 @@ interface SummaryBandProps {
   global: ComparisonResult['global'];
   regressionCount: number;
   onExport: () => void;
+  onExportPdf: () => void;
 }
 
 /** Sobre la banda oscura, no los tokens del tema claro: ahí dan 1.9:1. */
@@ -22,6 +23,9 @@ function trendVariant(delta: number): Variant {
   return delta > 0 ? 'positive' : 'negative';
 }
 
+const EXPORT_BUTTON_CLASS =
+  'border-2 border-inverse px-4 py-2 text-sm font-semibold transition-colors hover:bg-inverse hover:text-ink';
+
 function regressionSummary(count: number): string {
   if (count === 0) return 'Sin retrocesos';
   return count === 1 ? '1 retroceso' : `${count} retrocesos`;
@@ -32,7 +36,13 @@ function regressionSummary(count: number): string {
  * got better or worse", so the tool name lives here rather than being repeated
  * from the context rail, which covers where the result came from.
  */
-export function SummaryBand({ tool, global, regressionCount, onExport }: SummaryBandProps) {
+export function SummaryBand({
+  tool,
+  global,
+  regressionCount,
+  onExport,
+  onExportPdf,
+}: SummaryBandProps) {
   const { base, head, scoreDelta, coverageDelta } = global;
 
   return (
@@ -61,15 +71,18 @@ export function SummaryBand({ tool, global, regressionCount, onExport }: Summary
         </div>
 
         <div className="flex flex-col items-start gap-3">
-          {/* A button, not an anchor: there is no server left to link to, and
-              building the report is an action rather than a navigation. */}
-          <button
-            type="button"
-            onClick={onExport}
-            className="border-2 border-inverse px-4 py-2 text-sm font-semibold transition-colors hover:bg-inverse hover:text-ink"
-          >
-            Exportar HTML
-          </button>
+          {/* Buttons, not anchors: there is no server left to link to, and
+              building the report is an action rather than a navigation. Both
+              formats are offered because they answer different needs — the HTML
+              is for exploring, the PDF for attaching. */}
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={onExport} className={EXPORT_BUTTON_CLASS}>
+              Exportar HTML
+            </button>
+            <button type="button" onClick={onExportPdf} className={EXPORT_BUTTON_CLASS}>
+              Exportar PDF
+            </button>
+          </div>
           <span
             className={`font-mono text-xs ${regressionCount > 0 ? 'text-loss-inverse' : 'text-deep-muted'}`}
           >
