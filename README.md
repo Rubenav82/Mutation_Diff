@@ -1,10 +1,10 @@
-# MutaDiff
+# Mutator Assessment Report
 
-Compara dos ejecuciones de mutation testing —[PiTest](https://pitest.org/) o [Stryker](https://stryker-mutator.io/)— y te dice qué ha empeorado: retrocesos de score por clase, clases nuevas sin tests y cobertura perdida. Exporta el resultado como un informe HTML autocontenido para adjuntarlo a una PR o archivarlo.
+Compara dos ejecuciones de mutation testing —[PiTest](https://pitest.org/) o [Stryker](https://stryker-mutator.io/)— y te dice qué ha empeorado: retrocesos de score (mutantes detectados "Killed") por clase, clases nuevas sin tests, clases eliminadas y cobertura de mutantes perdida. Exporta el resultado como un informe HTML autocontenido para adjuntarlo a una PR o archivarlo.
 
 Mirar dos `mutations.xml` en paralelo para averiguar qué clase ha bajado de score es tedioso y se hace mal. Esto lo automatiza.
 
-**MutaDiff corre entero en el navegador.** No hay backend, ni base de datos, ni nada que instalar para usarlo: se sirve como ficheros estáticos y tus reportes no salen de tu máquina.
+**Mutator Assessment Report corre entero en el navegador.** No hay backend, ni base de datos, ni nada que instalar para usarlo: se sirve como ficheros estáticos y tus reportes no salen de tu máquina.
 
 ## Usarlo
 
@@ -52,6 +52,7 @@ Ese par está construido para que salga de todo: una clase que mejora, una que e
 
 ```xml
 <outputFormats>
+  <outputFormat>HTML</outputFormat>
   <outputFormat>XML</outputFormat>
 </outputFormats>
 ```
@@ -74,7 +75,7 @@ La misma información está dentro de la app, detrás del icono ⓘ junto al sel
 
 1. Elige herramienta (PiTest o Stryker) y arrastra los dos reportes: la ejecución **base** y la **nueva**.
 2. Opcionalmente ajusta los umbrales:
-   - **Umbral de retroceso (%)**: cuánto puede bajar el score de una clase antes de contarla como retroceso. Por defecto `0` — cualquier bajada cuenta. En la API el campo se sigue llamando `regressionThreshold`.
+   - **Umbral de retroceso (%)**: cuánto puede bajar el score "mutators killed" de una clase antes de contarla como retroceso. Por defecto `0` — cualquier bajada cuenta.
    - **Umbral sin cobertura (%)**: qué porcentaje de mutantes en `NO_COVERAGE` marca una clase como «sin cobertura». Por defecto `100` — solo las que no tienen ni un mutante cubierto. Bájalo a `75` para incluir también las casi descubiertas.
    Las dos reglas completas, con fórmula y casos límite, están dentro de la app detrás del icono ⓘ que hay junto a «Umbrales (opcional)».
 3. El dashboard muestra las métricas globales con su delta, las secciones de retrocesos / sin cobertura / nuevas / eliminadas, y la tabla completa con filtro y orden por columna.
@@ -161,12 +162,12 @@ Importa porque un `mutations.xml` lleva dentro los nombres de clases y las rutas
 Funcional para el flujo completo de comparación puntual. Sabidas y pendientes:
 
 - **Un fichero por lado.** Subir la carpeta `pit-reports` completa o un ZIP y fusionar varios `mutations.xml` (HU-12) todavía no está implementado; hace falta trabajo en `core`, no solo en la UI.
-- **Sin histórico.** Una comparación vive en la pestaña que la creó: sobrevive a recargar, pero no a cerrar el navegador, y no se puede compartir por enlace. Para conservar o mandar un resultado, exporta el HTML. La persistencia opt-in, la atribución de autor vía `git log` y el modo CLI son la fase 5.
+- **Sin histórico.** Una comparación vive en la pestaña que la creó: sobrevive a recargar, pero no a cerrar el navegador, y no se puede compartir por enlace. Para conservar o mandar un resultado, exporta el HTML. La persistencia opt-in, la atribución de autor vía `git log` y el modo CLI irán en una fase posterior.
 - **Los reportes se procesan en memoria del navegador.** Con ficheros muy grandes (decenas de MB) el consumo lo paga tu pestaña. A cambio, nadie compite por la memoria de un servidor compartido.
 
 ## Calidad
 
-El proyecto se somete a su propio tipo de análisis: mutation testing con Stryker sobre `packages/core`, con el umbral en 70 y el score actual en **99,44 %**. La suite tiene 230 tests unitarios/integración y 5 e2e sobre el flujo real en navegador. CI ejecuta lint, typecheck, tests y e2e en cada PR; Stryker va en un workflow nocturno aparte, y la release no se publica sin pasar la misma barra.
+El proyecto se somete a su propio tipo de análisis: mutation testing con Stryker sobre `packages/core`, con el umbral en 70 y el score actual en **99,17 %**. La suite tiene, a día de hoy, 267 tests unitarios/integración y 5 e2e sobre el flujo real en navegador. CI ejecuta lint, typecheck, tests y e2e en cada PR; Stryker va en un workflow nocturno aparte, y la release no se publica sin pasar la misma barra.
 
 ## Documentación
 
