@@ -363,17 +363,34 @@ describe('generateHtmlReport — covered-mutant columns', () => {
     expect(full).toContain('<td>-25.0%</td>');
   });
 
-  it('leaves the three section tables with score only', () => {
+  it('gives the uncovered section covered mutants instead of score', () => {
+    // Es la métrica por la que esas unidades están en esa sección; el score
+    // responde a otra pregunta.
+    const uncovered = section(
+      generateHtmlReport(resultFrom({ units: [changed], uncovered: [changed] })),
+      'Sin cobertura',
+    );
+
+    expect(uncovered).toContain('Cubiertos base');
+    expect(uncovered).not.toContain('Score base');
+    expect(uncovered).toContain('<td>75.0%</td>');
+    expect(uncovered).not.toContain('<td>60.0%</td>');
+  });
+
+  it('leaves the other section tables with score only', () => {
     const html = generateHtmlReport(
       resultFrom({ units: [changed], regressions: [changed], uncovered: [changed] }),
     );
 
-    // Solo la tabla completa las lleva: las secciones son listas cortas
-    // centradas en su motivo, y triplicar celdas en las cuatro tablas se come
-    // el presupuesto de 2 MB de CA-HU-07.
-    expect(section(html, 'Retrocesos')).not.toContain('Mutantes cubiertos');
+    // Cada sección muestra una sola métrica, la suya: solo la tabla completa
+    // lleva las dos. No es únicamente diseño — triplicar celdas en las cuatro
+    // tablas se come el presupuesto de 2 MB de CA-HU-07.
+    const regressions = section(html, 'Retrocesos');
+    expect(regressions).toContain('Score base');
+    expect(regressions).not.toContain('Cubiertos base');
+    expect(regressions).not.toContain('<td>75.0%</td>');
+    // La cabecera agrupada es exclusiva de la tabla completa.
     expect(section(html, 'Sin cobertura')).not.toContain('Mutantes cubiertos');
-    expect(section(html, 'Retrocesos')).not.toContain('75.0%');
   });
 
   it('renders an em dash per missing cell for added and removed units', () => {

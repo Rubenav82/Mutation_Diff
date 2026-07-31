@@ -93,17 +93,36 @@ function deltaCardClass(value: number): string {
   return '';
 }
 
-function renderUnitRow(unit: UnitComparison, withCoverage: boolean): string {
-  const baseScore = unit.base ? formatPct(unit.base.score) : '—';
-  const headScore = unit.head ? formatPct(unit.head.score) : '—';
-  const coverage = withCoverage
-    ? `<td>${unit.base ? formatPct(unit.base.coveredPct) : '—'}</td><td>${unit.head ? formatPct(unit.head.coveredPct) : '—'}</td><td>${formatDelta(unit.coverageDelta)}</td>`
-    : '';
-  return `<tr class="kind-${unit.kind}"><td>${escapeHtml(unit.key)}</td><td>${baseScore}</td><td>${headScore}</td><td>${formatDelta(unit.scoreDelta)}</td>${coverage}<td>${escapeHtml(KIND_LABELS[unit.kind])}</td></tr>`;
+/**
+ * Which metric a table puts next to each unit. Each section shows the one that
+ * explains why its units are there: score for the regressions, covered mutants
+ * for the uncovered ones. Only the full table shows both.
+ */
+type TableMetric = 'score' | 'covered' | 'both';
+
+function scoreCells(unit: UnitComparison): string {
+  const base = unit.base ? formatPct(unit.base.score) : '—';
+  const head = unit.head ? formatPct(unit.head.score) : '—';
+  return `<td>${base}</td><td>${head}</td><td>${formatDelta(unit.scoreDelta)}</td>`;
 }
 
-const FLAT_HEAD =
+function coveredCells(unit: UnitComparison): string {
+  const base = unit.base ? formatPct(unit.base.coveredPct) : '—';
+  const head = unit.head ? formatPct(unit.head.coveredPct) : '—';
+  return `<td>${base}</td><td>${head}</td><td>${formatDelta(unit.coverageDelta)}</td>`;
+}
+
+function renderUnitRow(unit: UnitComparison, metric: TableMetric): string {
+  const score = metric === 'covered' ? '' : scoreCells(unit);
+  const covered = metric === 'score' ? '' : coveredCells(unit);
+  return `<tr class="kind-${unit.kind}"><td>${escapeHtml(unit.key)}</td>${score}${covered}<td>${escapeHtml(KIND_LABELS[unit.kind])}</td></tr>`;
+}
+
+const SCORE_HEAD =
   '<thead><tr><th>Clase / fichero</th><th>Score base</th><th>Score nuevo</th><th>&Delta; Score</th><th>Estado</th></tr></thead>';
+
+const COVERED_HEAD =
+  '<thead><tr><th>Clase / fichero</th><th>Cubiertos base</th><th>Cubiertos nuevos</th><th>&Delta; Cubiertos</th><th>Estado</th></tr></thead>';
 
 /**
  * Two header rows so eight columns read as two groups of three instead of a wall
@@ -112,23 +131,29 @@ const FLAT_HEAD =
 const GROUPED_HEAD =
   '<thead><tr><th rowspan="2">Clase / fichero</th><th colspan="3">Score</th><th colspan="3">Mutantes cubiertos</th><th rowspan="2">Estado</th></tr><tr><th>Base</th><th>Nueva</th><th>&Delta;</th><th>Base</th><th>Nueva</th><th>&Delta;</th></tr></thead>';
 
+const HEADS: Record<TableMetric, string> = {
+  score: SCORE_HEAD,
+  covered: COVERED_HEAD,
+  both: GROUPED_HEAD,
+};
+
 /**
- * `withCoverage` is off for the three section tables on purpose: they are short
- * lists focused on one reason each, and three more cells on every row of all four
- * tables would eat most of the 2 MB budget of CA-HU-07 (a report where every unit
- * regressed renders each row twice).
+ * Only the full table shows both metrics: the sections are short lists focused on
+ * one reason each, and three more cells on every row of all four tables would eat
+ * most of the 2 MB budget of CA-HU-07 (a report where every unit regressed renders
+ * each row twice).
  */
 function renderTable(
   title: string,
   units: UnitComparison[],
   emptyMessage: string,
-  withCoverage = false,
+  metric: TableMetric = 'score',
 ): string {
   if (units.length === 0) {
     return `<section><h2>${escapeHtml(title)}</h2><p class="empty">${escapeHtml(emptyMessage)}</p></section>`;
   }
-  const rows = units.map((unit) => renderUnitRow(unit, withCoverage)).join('');
-  return `<section><h2>${escapeHtml(title)} (${units.length})</h2><table>${withCoverage ? GROUPED_HEAD : FLAT_HEAD}<tbody>${rows}</tbody></table></section>`;
+  const rows = units.map((unit) => renderUnitRow(unit, metric)).join('');
+  return `<section><h2>${escapeHtml(title)} (${units.length})</h2><table>${HEADS[metric]}<tbody>${rows}</tbody></table></section>`;
 }
 
 function renderSummary(result: ComparisonResult): string {
@@ -173,8 +198,8 @@ ${renderContext(result)}
 </header>
 ${renderSummary(result)}
 ${renderTable('Retrocesos', result.regressions, 'No hay retrocesos.')}
-${renderTable('Sin cobertura', result.uncovered, 'No hay clases/ficheros sin cobertura.')}
-${renderTable('Todas las unidades', result.units, 'No hay unidades.', true)}
+${renderTable('Sin cobertura', result.uncovered, 'No hay clases/ficheros sin cobertura.', 'covered')}
+${renderTable('Todas las unidades', result.units, 'No hay unidades.', 'both')}
 </body>
 </html>`;
 }

@@ -92,6 +92,7 @@ export function ComparisonDashboardPage() {
           title="Sin cobertura"
           units={result.uncovered}
           emptyMessage="No hay clases/ficheros sin cobertura."
+          metric="covered"
         />
         <UnitSection title="Nuevas" units={result.added} emptyMessage="No hay unidades nuevas." />
         <UnitSection
