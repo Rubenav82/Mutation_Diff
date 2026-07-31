@@ -1,13 +1,32 @@
 import type { UnitComparison } from 'core';
 import { formatOptionalPct, formatOptionalSignedPct } from '../lib/format';
 
+/**
+ * Métrica que la sección pone junto a cada unidad: la que explica por qué esas
+ * unidades están ahí. Score para los retrocesos, cubiertos para las que no
+ * tienen cobertura.
+ */
+type SectionMetric = 'score' | 'covered';
+
+const HEADERS: Record<SectionMetric, [string, string, string]> = {
+  score: ['Score base', 'Score nuevo', 'Δ Score'],
+  covered: ['Cubiertos base', 'Cubiertos nuevos', 'Δ Cubiertos'],
+};
+
 interface UnitSectionProps {
   title: string;
   units: UnitComparison[];
   emptyMessage: string;
+  metric?: SectionMetric;
 }
 
-export function UnitSection({ title, units, emptyMessage }: UnitSectionProps) {
+export function UnitSection({ title, units, emptyMessage, metric = 'score' }: UnitSectionProps) {
+  const [baseHeader, headHeader, deltaHeader] = HEADERS[metric];
+  const valueOf = (unit: UnitComparison, side: 'base' | 'head') =>
+    metric === 'covered' ? unit[side]?.coveredPct : unit[side]?.score;
+  const deltaOf = (unit: UnitComparison) =>
+    metric === 'covered' ? unit.coverageDelta : unit.scoreDelta;
+
   return (
     <section aria-label={title}>
       {/* El espacio explícito importa: sin él el nombre accesible sería
@@ -30,9 +49,15 @@ export function UnitSection({ title, units, emptyMessage }: UnitSectionProps) {
                 <th className="eyebrow border-b-2 border-ink px-3 py-2.5 text-left">
                   Clase / fichero
                 </th>
-                <th className="eyebrow border-b-2 border-ink px-3 py-2.5 text-left">Score base</th>
-                <th className="eyebrow border-b-2 border-ink px-3 py-2.5 text-left">Score nuevo</th>
-                <th className="eyebrow border-b-2 border-ink px-3 py-2.5 text-left">Δ Score</th>
+                <th className="eyebrow border-b-2 border-ink px-3 py-2.5 text-left">
+                  {baseHeader}
+                </th>
+                <th className="eyebrow border-b-2 border-ink px-3 py-2.5 text-left">
+                  {headHeader}
+                </th>
+                <th className="eyebrow border-b-2 border-ink px-3 py-2.5 text-left">
+                  {deltaHeader}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -44,13 +69,13 @@ export function UnitSection({ title, units, emptyMessage }: UnitSectionProps) {
                 >
                   <td className="px-3 py-2 font-mono text-sm break-all">{unit.key}</td>
                   <td className="px-3 py-2 font-mono text-sm tabular-nums">
-                    {formatOptionalPct(unit.base?.score)}
+                    {formatOptionalPct(valueOf(unit, 'base'))}
                   </td>
                   <td className="px-3 py-2 font-mono text-sm tabular-nums">
-                    {formatOptionalPct(unit.head?.score)}
+                    {formatOptionalPct(valueOf(unit, 'head'))}
                   </td>
                   <td className="px-3 py-2 font-mono text-sm tabular-nums">
-                    {formatOptionalSignedPct(unit.scoreDelta)}
+                    {formatOptionalSignedPct(deltaOf(unit))}
                   </td>
                 </tr>
               ))}

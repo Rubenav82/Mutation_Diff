@@ -59,6 +59,8 @@ const STYLE = `
     border-bottom: 2px solid #201e1d;
   }
   th, td { padding: 0.5rem 0.75rem; text-align: left; }
+  /* Cabecera de grupo (Score / Mutantes cubiertos): centrada sobre sus columnas. */
+  th[colspan] { text-align: center; }
   td { border-bottom: 1px solid #d7d3d3; font-family: ui-monospace, Consolas, monospace; font-size: 0.8125rem; font-variant-numeric: tabular-nums; }
   tbody tr:last-child td { border-bottom: 0; }
   tr.kind-regressed td:last-child { color: #ae1800; }
@@ -91,18 +93,67 @@ function deltaCardClass(value: number): string {
   return '';
 }
 
-function renderUnitRow(unit: UnitComparison): string {
-  const baseScore = unit.base ? formatPct(unit.base.score) : '—';
-  const headScore = unit.head ? formatPct(unit.head.score) : '—';
-  return `<tr class="kind-${unit.kind}"><td>${escapeHtml(unit.key)}</td><td>${baseScore}</td><td>${headScore}</td><td>${formatDelta(unit.scoreDelta)}</td><td>${escapeHtml(KIND_LABELS[unit.kind])}</td></tr>`;
+/**
+ * Which metric a table puts next to each unit. Each section shows the one that
+ * explains why its units are there: score for the regressions, covered mutants
+ * for the uncovered ones. Only the full table shows both.
+ */
+type TableMetric = 'score' | 'covered' | 'both';
+
+function scoreCells(unit: UnitComparison): string {
+  const base = unit.base ? formatPct(unit.base.score) : '—';
+  const head = unit.head ? formatPct(unit.head.score) : '—';
+  return `<td>${base}</td><td>${head}</td><td>${formatDelta(unit.scoreDelta)}</td>`;
 }
 
-function renderTable(title: string, units: UnitComparison[], emptyMessage: string): string {
+function coveredCells(unit: UnitComparison): string {
+  const base = unit.base ? formatPct(unit.base.coveredPct) : '—';
+  const head = unit.head ? formatPct(unit.head.coveredPct) : '—';
+  return `<td>${base}</td><td>${head}</td><td>${formatDelta(unit.coverageDelta)}</td>`;
+}
+
+function renderUnitRow(unit: UnitComparison, metric: TableMetric): string {
+  const score = metric === 'covered' ? '' : scoreCells(unit);
+  const covered = metric === 'score' ? '' : coveredCells(unit);
+  return `<tr class="kind-${unit.kind}"><td>${escapeHtml(unit.key)}</td>${score}${covered}<td>${escapeHtml(KIND_LABELS[unit.kind])}</td></tr>`;
+}
+
+const SCORE_HEAD =
+  '<thead><tr><th>Clase / fichero</th><th>Score base</th><th>Score nuevo</th><th>&Delta; Score</th><th>Estado</th></tr></thead>';
+
+const COVERED_HEAD =
+  '<thead><tr><th>Clase / fichero</th><th>Cubiertos base</th><th>Cubiertos nuevos</th><th>&Delta; Cubiertos</th><th>Estado</th></tr></thead>';
+
+/**
+ * Two header rows so eight columns read as two groups of three instead of a wall
+ * of similar labels. Only the full table uses it.
+ */
+const GROUPED_HEAD =
+  '<thead><tr><th rowspan="2">Clase / fichero</th><th colspan="3">Score</th><th colspan="3">Mutantes cubiertos</th><th rowspan="2">Estado</th></tr><tr><th>Base</th><th>Nueva</th><th>&Delta;</th><th>Base</th><th>Nueva</th><th>&Delta;</th></tr></thead>';
+
+const HEADS: Record<TableMetric, string> = {
+  score: SCORE_HEAD,
+  covered: COVERED_HEAD,
+  both: GROUPED_HEAD,
+};
+
+/**
+ * Only the full table shows both metrics: the sections are short lists focused on
+ * one reason each, and three more cells on every row of all four tables would eat
+ * most of the 2 MB budget of CA-HU-07 (a report where every unit regressed renders
+ * each row twice).
+ */
+function renderTable(
+  title: string,
+  units: UnitComparison[],
+  emptyMessage: string,
+  metric: TableMetric = 'score',
+): string {
   if (units.length === 0) {
     return `<section><h2>${escapeHtml(title)}</h2><p class="empty">${escapeHtml(emptyMessage)}</p></section>`;
   }
-  const rows = units.map(renderUnitRow).join('');
-  return `<section><h2>${escapeHtml(title)} (${units.length})</h2><table><thead><tr><th>Clase / fichero</th><th>Score base</th><th>Score nuevo</th><th>&Delta; Score</th><th>Estado</th></tr></thead><tbody>${rows}</tbody></table></section>`;
+  const rows = units.map((unit) => renderUnitRow(unit, metric)).join('');
+  return `<section><h2>${escapeHtml(title)} (${units.length})</h2><table>${HEADS[metric]}<tbody>${rows}</tbody></table></section>`;
 }
 
 function renderSummary(result: ComparisonResult): string {
@@ -111,9 +162,9 @@ function renderSummary(result: ComparisonResult): string {
     <div class="card"><span class="label">Score base</span><span class="value">${formatPct(global.base.score)}</span></div>
     <div class="card"><span class="label">Score nuevo</span><span class="value">${formatPct(global.head.score)}</span></div>
     <div class="card ${deltaCardClass(global.scoreDelta)}"><span class="label">&Delta; Score</span><span class="value">${formatDelta(global.scoreDelta)}</span></div>
-    <div class="card"><span class="label">Cobertura base</span><span class="value">${formatPct(global.base.coveredPct)}</span></div>
-    <div class="card"><span class="label">Cobertura nueva</span><span class="value">${formatPct(global.head.coveredPct)}</span></div>
-    <div class="card ${deltaCardClass(global.coverageDelta)}"><span class="label">&Delta; Cobertura</span><span class="value">${formatDelta(global.coverageDelta)}</span></div>
+    <div class="card"><span class="label">Cubiertos base</span><span class="value">${formatPct(global.base.coveredPct)}</span></div>
+    <div class="card"><span class="label">Cubiertos nuevos</span><span class="value">${formatPct(global.head.coveredPct)}</span></div>
+    <div class="card ${deltaCardClass(global.coverageDelta)}"><span class="label">&Delta; Cubiertos</span><span class="value">${formatDelta(global.coverageDelta)}</span></div>
   </div></section>`;
 }
 
@@ -147,8 +198,8 @@ ${renderContext(result)}
 </header>
 ${renderSummary(result)}
 ${renderTable('Retrocesos', result.regressions, 'No hay retrocesos.')}
-${renderTable('Sin cobertura', result.uncovered, 'No hay clases/ficheros sin cobertura.')}
-${renderTable('Todas las unidades', result.units, 'No hay unidades.')}
+${renderTable('Sin cobertura', result.uncovered, 'No hay clases/ficheros sin cobertura.', 'covered')}
+${renderTable('Todas las unidades', result.units, 'No hay unidades.', 'both')}
 </body>
 </html>`;
 }

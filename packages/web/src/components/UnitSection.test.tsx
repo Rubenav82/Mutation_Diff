@@ -40,6 +40,45 @@ const REGRESSIONS: UnitComparison[] = [
   },
 ];
 
+describe('UnitSection — métrica de la sección', () => {
+  const uncovered: UnitComparison[] = [
+    {
+      key: 'com.example.EmailSender',
+      kind: 'regressed',
+      base: metrics({ score: 60, coveredPct: 90 }),
+      head: metrics({ score: 45, coveredPct: 20 }),
+      scoreDelta: -15,
+      coverageDelta: -70,
+      isUncovered: true,
+    },
+  ];
+
+  it('shows covered mutants instead of score when asked for', () => {
+    render(
+      <UnitSection title="Sin cobertura" units={uncovered} emptyMessage="" metric="covered" />,
+    );
+
+    const row = screen.getByText('com.example.EmailSender').closest('tr') as HTMLElement;
+    expect(within(row).getByText('90.0%')).toBeInTheDocument();
+    expect(within(row).getByText('20.0%')).toBeInTheDocument();
+    expect(within(row).getByText('-70.0%')).toBeInTheDocument();
+    // El score, que en esta sección no es el motivo por el que la unidad está
+    // aquí, no se muestra.
+    expect(within(row).queryByText('60.0%')).not.toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Cubiertos base' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Δ Cubiertos' })).toBeInTheDocument();
+  });
+
+  it('keeps score as the default metric', () => {
+    render(<UnitSection title="Retrocesos" units={uncovered} emptyMessage="" />);
+
+    const row = screen.getByText('com.example.EmailSender').closest('tr') as HTMLElement;
+    expect(within(row).getByText('60.0%')).toBeInTheDocument();
+    expect(within(row).getByText('-15.0%')).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Score base' })).toBeInTheDocument();
+  });
+});
+
 describe('UnitSection', () => {
   it('renders the title with the unit count and one row per unit', () => {
     render(

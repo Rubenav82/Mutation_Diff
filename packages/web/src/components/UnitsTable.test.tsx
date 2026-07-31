@@ -31,32 +31,35 @@ function unit(
   };
 }
 
+// Cifras deliberadamente distintas entre sí en cada fila: con valores repetidos,
+// una consulta por texto exacto no distinguiría la celda de score de la de
+// cubiertos.
 const UNITS: UnitComparison[] = [
   unit({
     key: 'com.example.Calculator',
     kind: 'improved',
-    base: metrics({ score: 70 }),
-    head: metrics({ score: 85 }),
+    base: metrics({ score: 70, coveredPct: 80 }),
+    head: metrics({ score: 85, coveredPct: 90 }),
     scoreDelta: 15,
-    coverageDelta: 0,
+    coverageDelta: 10,
   }),
   unit({
     key: 'com.example.StringUtils',
     kind: 'regressed',
-    base: metrics({ score: 90 }),
-    head: metrics({ score: 60 }),
+    base: metrics({ score: 90, coveredPct: 100 }),
+    head: metrics({ score: 60, coveredPct: 75 }),
     scoreDelta: -30,
-    coverageDelta: -10,
+    coverageDelta: -25,
   }),
   unit({
     key: 'com.example.NewFeature',
     kind: 'added',
-    head: metrics({ score: 50 }),
+    head: metrics({ score: 50, coveredPct: 55 }),
   }),
   unit({
     key: 'com.example.Legacy',
     kind: 'removed',
-    base: metrics({ score: 40 }),
+    base: metrics({ score: 40, coveredPct: 45 }),
   }),
 ];
 
@@ -67,52 +70,107 @@ function bodyRows(): HTMLElement[] {
 
 describe('UnitsTable', () => {
   it('renders one row per unit with scores, delta and estado label', () => {
-    render(<UnitsTable units={UNITS} />);
+    render(<UnitsTable units={UNITS} tool="pitest" />);
 
     expect(bodyRows()).toHaveLength(4);
-    const row = screen.getByText('com.example.StringUtils').closest('tr') as HTMLElement;
+    const row = screen.getByTitle('com.example.StringUtils').closest('tr') as HTMLElement;
     expect(within(row).getByText('90.0%')).toBeInTheDocument();
     expect(within(row).getByText('60.0%')).toBeInTheDocument();
     expect(within(row).getByText('-30.0%')).toBeInTheDocument();
     expect(within(row).getByText('Retroceso ▼')).toBeInTheDocument();
   });
 
-  it('shows an em dash for the missing side of added and removed units', () => {
-    render(<UnitsTable units={UNITS} />);
+  it('shows base, new and delta of covered mutants next to the score', () => {
+    render(<UnitsTable units={UNITS} tool="pitest" />);
 
-    const added = screen.getByText('com.example.NewFeature').closest('tr') as HTMLElement;
-    // added: no base score and no delta → two dashes
-    expect(within(added).getAllByText('—')).toHaveLength(2);
+    const row = screen.getByTitle('com.example.StringUtils').closest('tr') as HTMLElement;
+    expect(within(row).getByText('100.0%')).toBeInTheDocument();
+    expect(within(row).getByText('75.0%')).toBeInTheDocument();
+    expect(within(row).getByText('-25.0%')).toBeInTheDocument();
+
+    // Un caso por sentido: una mejora de cobertura también se pinta.
+    const improved = screen.getByTitle('com.example.Calculator').closest('tr') as HTMLElement;
+    expect(within(improved).getByText('80.0%')).toBeInTheDocument();
+    expect(within(improved).getByText('90.0%')).toBeInTheDocument();
+    expect(within(improved).getByText('+10.0%')).toBeInTheDocument();
+  });
+
+  it('keeps the class name intact and lets only the package prefix be clipped', () => {
+    render(<UnitsTable units={UNITS} tool="pitest" />);
+
+    const cell = screen.getByTitle('com.example.StringUtils');
+    // El nombre simple nunca se recorta: es lo que distingue una fila de otra.
+    // El paquete, que se repite fila tras fila, es lo que cede sitio.
+    expect(within(cell).getByText('.StringUtils')).toBeInTheDocument();
+    expect(within(cell).getByText('com.example')).toBeInTheDocument();
+    expect(cell).toHaveTextContent('com.example.StringUtils');
+  });
+
+  it('groups the score and covered-mutant columns under their own header', () => {
+    render(<UnitsTable units={UNITS} tool="pitest" />);
+
+    expect(screen.getByRole('columnheader', { name: 'Score' })).toBeInTheDocument();
+    // «Mutantes cubiertos», no «Cobertura»: es (válidos − sin cubrir) / válidos,
+    // no el Line Coverage de PiTest.
+    expect(screen.getByRole('columnheader', { name: 'Mutantes cubiertos' })).toBeInTheDocument();
+  });
+
+  it('names each sort button with its full column, not just the group leaf', () => {
+    render(<UnitsTable units={UNITS} tool="pitest" />);
+
+    // Visualmente el encabezado es «Δ», que fuera del grupo no dice nada: el
+    // nombre accesible tiene que llevar la métrica.
+    expect(screen.getByRole('button', { name: /ordenar por δ cubiertos/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /ordenar por δ score/i })).toBeInTheDocument();
+  });
+
+  it('shows an em dash for the missing side of added and removed units', () => {
+    render(<UnitsTable units={UNITS} tool="pitest" />);
+
+    // added: sin base ni deltas → cuatro guiones (score base, Δ score, cubiertos
+    // base, Δ cubiertos)
+    const added = screen.getByTitle('com.example.NewFeature').closest('tr') as HTMLElement;
+    expect(within(added).getAllByText('—')).toHaveLength(4);
     expect(within(added).getByText('Nueva')).toBeInTheDocument();
 
-    const removed = screen.getByText('com.example.Legacy').closest('tr') as HTMLElement;
-    expect(within(removed).getAllByText('—')).toHaveLength(2);
+    const removed = screen.getByTitle('com.example.Legacy').closest('tr') as HTMLElement;
+    expect(within(removed).getAllByText('—')).toHaveLength(4);
     expect(within(removed).getByText('Eliminada')).toBeInTheDocument();
   });
 
-  it('exposes the unit kind on each row for color semantics', () => {
-    render(<UnitsTable units={UNITS} />);
+  it('sorts by coverage delta with the missing sides last', async () => {
+    const user = userEvent.setup();
+    render(<UnitsTable units={UNITS} tool="pitest" />);
 
-    const regressed = screen.getByText('com.example.StringUtils').closest('tr');
+    await user.click(screen.getByRole('button', { name: /ordenar por δ cubiertos/i }));
+
+    const keys = bodyRows().map((row) => within(row).getAllByRole('cell')[0]?.textContent);
+    expect(keys.slice(0, 2)).toEqual(['com.example.StringUtils', 'com.example.Calculator']);
+  });
+
+  it('exposes the unit kind on each row for color semantics', () => {
+    render(<UnitsTable units={UNITS} tool="pitest" />);
+
+    const regressed = screen.getByTitle('com.example.StringUtils').closest('tr');
     expect(regressed).toHaveAttribute('data-kind', 'regressed');
-    const improved = screen.getByText('com.example.Calculator').closest('tr');
+    const improved = screen.getByTitle('com.example.Calculator').closest('tr');
     expect(improved).toHaveAttribute('data-kind', 'improved');
   });
 
   it('filters rows by class or package name, case-insensitively', async () => {
     const user = userEvent.setup();
-    render(<UnitsTable units={UNITS} />);
+    render(<UnitsTable units={UNITS} tool="pitest" />);
 
     await user.type(screen.getByRole('searchbox', { name: /filtrar/i }), 'stringutils');
 
     expect(bodyRows()).toHaveLength(1);
-    expect(screen.getByText('com.example.StringUtils')).toBeInTheDocument();
-    expect(screen.queryByText('com.example.Calculator')).not.toBeInTheDocument();
+    expect(screen.getByTitle('com.example.StringUtils')).toBeInTheDocument();
+    expect(screen.queryByTitle('com.example.Calculator')).not.toBeInTheDocument();
   });
 
   it('shows an empty message when no unit matches the filter', async () => {
     const user = userEvent.setup();
-    render(<UnitsTable units={UNITS} />);
+    render(<UnitsTable units={UNITS} tool="pitest" />);
 
     await user.type(screen.getByRole('searchbox', { name: /filtrar/i }), 'nomatch');
 
@@ -121,7 +179,7 @@ describe('UnitsTable', () => {
 
   it('sorts by score delta when its header is clicked, most severe drop first on descending toggle', async () => {
     const user = userEvent.setup();
-    render(<UnitsTable units={UNITS} />);
+    render(<UnitsTable units={UNITS} tool="pitest" />);
 
     await user.click(screen.getByRole('button', { name: /δ score/i }));
 
@@ -137,7 +195,7 @@ describe('UnitsTable', () => {
 
   it('sorts by unit key when its header is clicked', async () => {
     const user = userEvent.setup();
-    render(<UnitsTable units={UNITS} />);
+    render(<UnitsTable units={UNITS} tool="pitest" />);
 
     await user.click(screen.getByRole('button', { name: /clase \/ fichero/i }));
 

@@ -139,7 +139,9 @@ describe('ComparisonDashboardPage', () => {
     getComparisonMock.mockResolvedValue(makeResult());
     renderDashboard();
 
-    const cell = await screen.findByText('com.example.Calculator');
+    // Por `title`: en la tabla completa la clave va partida en paquete y nombre,
+    // así que no hay un único nodo con el texto entero.
+    const cell = await screen.findByTitle('com.example.Calculator');
     const row = cell.closest('tr');
     expect(row).toHaveAttribute('data-kind', 'improved');
     expect(within(row as HTMLElement).getByText('Mejora ▲')).toBeInTheDocument();
