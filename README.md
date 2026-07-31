@@ -1,6 +1,6 @@
 # Mutator Assessment Report
 
-Compara dos ejecuciones de mutation testing —[PiTest](https://pitest.org/) o [Stryker](https://stryker-mutator.io/)— y te dice qué ha empeorado: retrocesos de score (mutantes detectados "Killed") por clase, clases nuevas sin tests, clases eliminadas y cobertura de mutantes perdida. Exporta el resultado como un informe HTML autocontenido para adjuntarlo a una PR o archivarlo.
+Compara dos ejecuciones de mutation testing —[PiTest](https://pitest.org/) o [Stryker](https://stryker-mutator.io/)— y te dice qué ha empeorado: retrocesos de score (mutantes detectados "Killed") por clase, clases nuevas sin tests, clases eliminadas y cobertura de mutantes perdida. Exporta el resultado como un informe HTML autocontenido —o como PDF— para adjuntarlo a una PR o archivarlo.
 
 Mirar dos `mutations.xml` en paralelo para averiguar qué clase ha bajado de score es tedioso y se hace mal. Esto lo automatiza.
 
@@ -78,8 +78,9 @@ La misma información está dentro de la app, detrás del icono ⓘ junto al sel
    - **Umbral de retroceso (%)**: cuánto puede bajar el score "mutators killed" de una clase antes de contarla como retroceso. Por defecto `0` — cualquier bajada cuenta.
    - **Umbral sin cobertura (%)**: qué porcentaje de mutantes en `NO_COVERAGE` marca una clase como «sin cobertura». Por defecto `100` — solo las que no tienen ni un mutante cubierto. Bájalo a `75` para incluir también las casi descubiertas.
    Las dos reglas completas, con fórmula y casos límite, están dentro de la app detrás del icono ⓘ que hay junto a «Umbrales (opcional)».
-3. El dashboard muestra las métricas globales con su delta, las secciones de retrocesos / sin cobertura / nuevas / eliminadas, y la tabla completa con filtro y orden por columna.
+3. El dashboard muestra las métricas globales con su delta, las secciones de retrocesos / sin cobertura / nuevas / eliminadas, y la tabla completa con filtro, orden por columna y paginación (25 filas por defecto; el selector permite 50, 100 o «Todas», que es lo que necesitas si quieres buscar con Ctrl+F sobre el conjunto entero).
 4. **Exportar HTML** descarga el informe completo como un único fichero, sin CSS ni JS externos: se abre offline y se puede adjuntar donde sea.
+5. **Exportar PDF** abre el diálogo de impresión del navegador con ese mismo informe ya maquetado para papel; elige «Guardar como PDF» y te propondrá el nombre `mutadiff-report-<id>`. Los dos formatos conviven a propósito: el HTML se explora (buscable, sin cortes de página) y el PDF se adjunta a un correo o a una incidencia. Con miles de unidades el PDF sale largo — la tabla completa lo es de por sí.
 
 ## API REST (opcional, autoalojada)
 

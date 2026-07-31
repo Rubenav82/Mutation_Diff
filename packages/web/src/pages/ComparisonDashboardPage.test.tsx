@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ComparisonResult, UnitMetrics } from 'core';
 import { ComparisonError, getComparison } from '../lib/comparisons';
+import { printReport } from '../lib/printReport';
 import { ComparisonDashboardPage } from './ComparisonDashboardPage';
 
 vi.mock('../lib/comparisons', async (importOriginal) => {
@@ -11,7 +12,12 @@ vi.mock('../lib/comparisons', async (importOriginal) => {
   return { ...actual, getComparison: vi.fn() };
 });
 
+// La impresión real abre el diálogo del navegador, que jsdom no tiene: lo que
+// se verifica aquí es qué se le entrega, no cómo imprime (eso es de su test).
+vi.mock('../lib/printReport', () => ({ printReport: vi.fn() }));
+
 const getComparisonMock = vi.mocked(getComparison);
+const printReportMock = vi.mocked(printReport);
 
 /**
  * jsdom no implementa la Object URL API, así que no basta con espiarla: hay que
@@ -120,6 +126,7 @@ function renderDashboard(id = 'abc-123') {
 
 beforeEach(() => {
   getComparisonMock.mockReset();
+  printReportMock.mockReset();
 });
 
 describe('ComparisonDashboardPage', () => {
@@ -185,6 +192,21 @@ describe('ComparisonDashboardPage', () => {
 
     click.mockRestore();
     restoreObjectUrl();
+  });
+
+  // El PDF no se dibuja aparte: se imprime el mismo informe, así que basta con
+  // comprobar que se le entrega a `printReport` con el nombre de fichero.
+  it('prints the very same report when the PDF export is asked for', async () => {
+    getComparisonMock.mockResolvedValue(makeResult());
+    renderDashboard('abc 123');
+
+    await userEvent.setup().click(await screen.findByRole('button', { name: 'Exportar PDF' }));
+
+    expect(printReportMock).toHaveBeenCalledOnce();
+    const [html, fileName] = printReportMock.mock.calls[0] ?? [];
+    expect(html).toContain('<!doctype html>');
+    // Sin extensión: la pone el navegador al guardar el PDF.
+    expect(fileName).toBe('mutadiff-report-abc 123');
   });
 
   // El rail de contexto (T-046): al reabrir una comparación por su id, es lo único
