@@ -60,7 +60,11 @@ export function SummaryBand({
   return (
     <section className="bg-deep text-inverse">
       <div className="flex flex-wrap items-start justify-between gap-6 p-6">
-        <div className="flex flex-col gap-6">
+        {/* `min-w-0 flex-1`: sin esto la columna de cifras se dimensiona por su
+            contenido y, al pasar de dos a cuatro, empuja los botones a la línea
+            siguiente. Encogiendo, las cifras se reparten entre ellas y los botones
+            se quedan a la derecha hasta que la pantalla ya no da para las dos. */}
+        <div className="flex min-w-0 flex-1 flex-col gap-6">
           <h1 className="eyebrow text-deep-muted! text-center">Comparación · {tool}</h1>
           <div className="flex flex-wrap items-baseline gap-10 text-center">
             {/* Primero porque dimensionan todo lo demás, pero en cuerpo menor: son
@@ -109,8 +113,12 @@ export function SummaryBand({
           {/* Buttons, not anchors: there is no server left to link to, and
               building the report is an action rather than a navigation. Both
               formats are offered because they answer different needs — the HTML
-              is for exploring, the PDF for attaching. */}
-          <div className="flex flex-wrap gap-2">
+              is for exploring, the PDF for attaching.
+
+              Stacked rather than side by side: two of them in a row take about a
+              third of the band, which is what pushed the whole block below the
+              figures once there were four of them. */}
+          <div className="flex flex-col gap-2">
             <button type="button" onClick={onExport} className={EXPORT_BUTTON_CLASS}>
               Exportar HTML
             </button>
