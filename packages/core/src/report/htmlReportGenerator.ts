@@ -216,7 +216,7 @@ function renderContext(result: ComparisonResult): string {
   const counts = countUnits(result);
   return `<p class="meta">Herramienta: ${escapeHtml(result.tool)}</p>
 <p class="meta"><span class="file">${base}</span> &rarr; <span class="file">${head}</span></p>
-<p class="meta">Unidades analizadas: ${counts.head} (base ${counts.base}, ${formatSignedCount(counts.delta)}) &middot; Con cobertura: ${counts.covered}</p>
+<p class="meta">Clases analizadas: ${counts.head} (base ${counts.base}, ${formatSignedCount(counts.delta)}) &middot; Con cobertura: ${counts.covered}</p>
 <p class="meta">Umbral de retroceso: ${regressionThreshold}% &middot; Umbral sin cobertura: ${uncoveredThreshold}%</p>`;
 }
 
@@ -231,7 +231,7 @@ export function generateHtmlReport(result: ComparisonResult): string {
 </head>
 <body>
 <header>
-<h1>Informe de comparación MutaDiff</h1>
+<h1>Informe de comparación Mutator Assessment Report</h1>
 ${renderContext(result)}
 </header>
 ${renderSummary(result)}

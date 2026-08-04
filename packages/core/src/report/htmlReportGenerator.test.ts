@@ -451,7 +451,7 @@ describe('generateHtmlReport — unit counts', () => {
   it('states how many units each run carried', () => {
     const html = reportOf([covered, blind, gone], { removed: [gone] });
 
-    expect(html).toContain('Unidades analizadas: 2 (base 3');
+    expect(html).toContain('Clases analizadas: 2 (base 3');
   });
 
   // Medir más unidades no es ni mejor ni peor, solo distinto: el delta lleva signo
@@ -480,7 +480,7 @@ describe('generateHtmlReport — unit counts', () => {
   it('carries the counts in the header, not as summary cards', () => {
     const html = reportOf([covered]);
 
-    const countsAt = html.indexOf('Unidades analizadas');
+    const countsAt = html.indexOf('Clases analizadas');
     expect(countsAt).toBeGreaterThan(-1);
     expect(countsAt).toBeLessThan(html.indexOf('<h2>Resumen'));
     // Por la etiqueta de cada tarjeta y no por `<div class="card`, que casa

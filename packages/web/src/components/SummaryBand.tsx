@@ -61,13 +61,13 @@ export function SummaryBand({
     <section className="bg-deep text-inverse">
       <div className="flex flex-wrap items-start justify-between gap-6 p-6">
         <div className="flex flex-col gap-6">
-          <h1 className="eyebrow text-deep-muted!">Comparación · {tool}</h1>
-          <div className="flex flex-wrap items-baseline gap-10">
+          <h1 className="eyebrow text-deep-muted! text-center">Comparación · {tool}</h1>
+          <div className="flex flex-wrap items-baseline gap-10 text-center">
             {/* Primero porque dimensiona todo lo demás, pero en cuerpo menor: es
                 el tamaño de lo medido, no el veredicto. Sin color: medir más
                 unidades no es ni mejor ni peor, solo distinto. */}
             <Figure
-              label="Unidades analizadas"
+              label="Clases analizadas"
               value={String(counts.head)}
               from={String(counts.base)}
               delta={formatSignedCount(counts.delta)}

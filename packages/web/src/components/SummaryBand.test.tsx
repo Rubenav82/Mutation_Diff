@@ -65,7 +65,7 @@ describe('SummaryBand', () => {
   it('sizes the comparison, with the units of each run and the delta', () => {
     renderBand();
 
-    const units = figure('Unidades analizadas');
+    const units = figure('Clases analizadas');
     expect(within(units).getByText('125')).toBeInTheDocument();
     expect(within(units).getByText('122')).toBeInTheDocument();
     expect(within(units).getByText('+3')).toBeInTheDocument();
@@ -77,7 +77,7 @@ describe('SummaryBand', () => {
   it('signs a standing-still count instead of showing a bare zero', () => {
     renderBand({ counts: { base: 122, head: 122, delta: 0, covered: 118 } });
 
-    const units = figure('Unidades analizadas');
+    const units = figure('Clases analizadas');
     expect(within(units).getByText('±0')).toBeInTheDocument();
     expect(within(units).queryByText('0')).not.toBeInTheDocument();
   });
@@ -87,7 +87,7 @@ describe('SummaryBand', () => {
   it('points the arrow at the unit count without colouring it', () => {
     renderBand();
 
-    const units = figure('Unidades analizadas');
+    const units = figure('Clases analizadas');
     expect(units).toHaveAttribute('data-variant', 'neutral');
     expect(units).toHaveAttribute('data-trend', 'up');
     expect(within(units).getByText('▲')).toBeInTheDocument();
@@ -100,7 +100,7 @@ describe('SummaryBand', () => {
     renderBand();
 
     expect(
-      within(figure('Unidades analizadas')).getByText('118 con cobertura · umbral 100%'),
+      within(figure('Clases analizadas')).getByText('118 con cobertura · umbral 100%'),
     ).toBeInTheDocument();
   });
 
@@ -118,7 +118,7 @@ describe('SummaryBand', () => {
     const labels = Array.from(container.querySelectorAll('[data-variant]')).map(
       (node) => node.firstElementChild?.textContent,
     );
-    expect(labels).toEqual(['Unidades analizadas', 'Mutation score', 'Mutantes cubiertos']);
+    expect(labels).toEqual(['Clases analizadas', 'Mutation score', 'Mutantes cubiertos']);
   });
 
   it('leads with the new score and coverage, keeping base → head and the delta', () => {

@@ -147,7 +147,7 @@ describe('ComparisonDashboardPage', () => {
     getComparisonMock.mockResolvedValue(makeResult());
     renderDashboard();
 
-    const units = (await screen.findByText('Unidades analizadas')).closest('[data-variant]');
+    const units = (await screen.findByText('Clases analizadas')).closest('[data-variant]');
     // 4 en la nueva, 3 en la base (RefundService es nueva), 1 sin cobertura.
     expect(within(units as HTMLElement).getByText('4')).toBeInTheDocument();
     expect(within(units as HTMLElement).getByText('+1')).toBeInTheDocument();
