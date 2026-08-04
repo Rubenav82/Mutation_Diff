@@ -119,7 +119,7 @@ Notas de mapeo:
 
 ### 2.3.1 Ingesta de ficheros PiTest
 
-Estrategia de subida en cascada: (a) un solo `mutations.xml` (recomendado); (b) un `.zip` que el servidor descomprime y del que extrae todos los `mutations.xml`, fusionando sus mutaciones (útil si hay subcarpetas con timestamp); (c) selección de carpeta desde el navegador (`webkitdirectory`), donde el frontend filtra ya en cliente los ficheros `*.xml` antes de enviarlos, para no subir HTML/CSS innecesarios. La UI mostrará un aviso didáctico: "¿Sabías que con `outputFormats=XML` PiTest genera un único fichero?".
+Estrategia de subida en cascada: (a) un solo `mutations.xml` (recomendado); (b) un `.zip` que el servidor descomprime y del que extrae todos los `mutations.xml`, fusionando sus mutaciones (útil si hay subcarpetas con timestamp); (c) selección de carpeta desde el navegador (`webkitdirectory`), donde el frontend filtra ya en cliente los ficheros `*.xml` antes de enviarlos, para no subir HTML/CSS innecesarios. La UI mostrará un aviso didáctico: "¿Sabías que con `-DoutputFormats=HTML,XML` PiTest genera un único fichero XML con toda la información?".
 
 ### 2.3.2 Modelo de persistencia (fase 2, opt-in)
 
@@ -164,13 +164,9 @@ POST /api/projects/:id/compare   (fase 2) comparar dos runs guardados { baseRunI
 ### 2.5 UI (pantallas)
 
 1. **Nueva comparación**: selector PiTest/Stryker → dos zonas drag&drop (Base / Nueva) → opciones (umbrales) → botón Comparar. Junto al selector, un **icono de información (ⓘ)** con panel contextual según la herramienta elegida:
-   - *PiTest*: "Debes activar el reporte XML en el configuration de tu build. Maven/Gradle: `outputFormats = XML` (puedes mantener también HTML). El fichero a subir es `target/pit-reports/**/mutations.xml`." Snippet copiable, con la indentación real del POM:
+   - *PiTest*: "Debes activar el reporte XML en tu comando de ejecución (puedes mantener también HTML). El fichero a subir es target/pit-reports/**/mutations.xml." Snippet copiable, con la indentación real del POM:
 
-     ```xml
-     <outputFormats>
-       <param>XML</param>
-     </outputFormats>
-     ```
+     `-DoutputFormats=HTML,XML`
 
    - *Stryker*: "Debes activar el reporter JSON en `stryker.config.json` (puedes mantener también html). El fichero a subir es `reports/mutation/mutation.json`." Snippet copiable: `"reporters": ["json", ...]`.
 

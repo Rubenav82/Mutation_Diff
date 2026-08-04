@@ -9,7 +9,7 @@ import { ToolHelpPanel } from './ToolHelpPanel';
  * `toHaveTextContent` normalizan los espacios: con ellos, la versión de una sola
  * línea pasaría igual y el formato no quedaría fijado por ningún test.
  */
-const PITEST_SNIPPET = '<outputFormats>\n  <param>XML</param>\n</outputFormats>';
+const PITEST_SNIPPET = '-DoutputFormats=HTML,XML';
 
 describe('ToolHelpPanel', () => {
   it('shows PiTest configuration instructions and the copyable snippet', () => {
