@@ -1,4 +1,5 @@
 import type { ComparisonResult, UnitChangeKind, UnitComparison } from '../domain/types.js';
+import { countUnits } from '../compare/unitCounts.js';
 
 const KIND_LABELS: Record<UnitChangeKind, string> = {
   improved: 'Mejora ▲',
@@ -107,6 +108,19 @@ function formatDelta(value: number | null): string {
   return `${sign}${value.toFixed(1)}%`;
 }
 
+/**
+ * Never coloured, unlike the percent deltas: measuring more units is neither better
+ * nor worse, only different. Zero is signed too — a bare `0` right after another
+ * figure reads as the new value rather than as the change.
+ */
+function formatSignedCount(value: number): string {
+  // Un solo sitio decide el signo, en vez de un `return` temprano para el cero: con
+  // el atajo, el `> 0` de después ya nunca ve un cero y las dos comparaciones se
+  // vuelven indistinguibles (un mutante equivalente que ningún test puede matar).
+  const sign = value > 0 ? '+' : value < 0 ? '' : '&plusmn;';
+  return `${sign}${value}`;
+}
+
 function deltaCardClass(value: number): string {
   if (value > 0) return 'positive';
   if (value < 0) return 'negative';
@@ -197,8 +211,12 @@ function renderContext(result: ComparisonResult): string {
   const { baseLabel, headLabel, regressionThreshold, uncoveredThreshold } = result.context;
   const base = escapeHtml(baseLabel ?? 'Sin nombre');
   const head = escapeHtml(headLabel ?? 'Sin nombre');
+  // El recuento va aquí y no entre las tarjetas del resumen: dice de qué tamaño es
+  // la comparación, igual que los ficheros y los umbrales que ya lo acompañan.
+  const counts = countUnits(result);
   return `<p class="meta">Herramienta: ${escapeHtml(result.tool)}</p>
 <p class="meta"><span class="file">${base}</span> &rarr; <span class="file">${head}</span></p>
+<p class="meta">Unidades analizadas: ${counts.head} (base ${counts.base}, ${formatSignedCount(counts.delta)}) &middot; Con cobertura: ${counts.covered}</p>
 <p class="meta">Umbral de retroceso: ${regressionThreshold}% &middot; Umbral sin cobertura: ${uncoveredThreshold}%</p>`;
 }
 

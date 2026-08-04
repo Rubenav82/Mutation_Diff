@@ -358,6 +358,14 @@ La app se despliega como **ficheros estáticos**: `packages/web/dist` (un `index
 - El `<select>` lleva `appearance-none` y flecha propia (`▾` decorativa, `aria-hidden`): el cromo nativo de Windows trae bordes redondeados que rompen el radio 0 del sistema Modernist. Esto solo se ve en captura, no en los tests.
 - **El contador de la cabecera cuenta las filas filtradas, no las unidades recibidas** (T-081b). Es el mismo pill que las cuatro secciones, pero aquí hay filtro: con uno puesto, el total original sería un número que no cuadra con nada de lo que se ve. Sale de `getFilteredRowModel()`, no de `getRowModel()` — este último ya está paginado y daría 25.
 
+## Recuento de unidades en la cabecera (fijado en T-082)
+
+- **`countUnits` vive en `core`** (`compare/unitCounts.ts`), no en `web`: lo consumen la SPA y el informe, y define qué cuenta como analizado. `units` es la **unión** de las dos ejecuciones, así que cada lado es la unión menos lo que trajo el otro por su cuenta. Las eliminadas se restan del recuento con cobertura: nunca se marcan `isUncovered` (no hay ejecución nueva que evaluar), así que restar `uncovered` de la unión las colaría como cubiertas. Hay test de justo ese caso.
+- **El umbral se muestra pegado al número** («5 con cobertura · umbral 100%»). Con el 100 por defecto, «sin cobertura» exige que *todos* los mutantes de la unidad estén sin cubrir, así que el número queda casi siempre plano y solo dice algo al bajarlo. Sin el umbral al lado se lee como una cobertura real, que no es.
+- **`±0`, no `0`.** Un delta de conteo no trae unidad que lo distinga del valor que tiene al lado: «6 → 0» se lee como una caída a cero. Los porcentajes no corren ese riesgo porque el `%` marca cuál es cuál. Se vio en captura, no en los tests.
+- En el informe el recuento va en la **cabecera**, no como tarjetas del resumen: dice de qué tamaño es la comparación, igual que los ficheros y los umbrales que ya viven ahí. Además, cuatro tarjetas más dejaban la retícula de `.cards` con una fila incompleta —y sus separaciones son el **fondo del contenedor**, así que los huecos salen grises, no blancos— y partían la etiqueta más larga en dos líneas. Si alguna vez hay que añadir tarjetas, ese es el límite a comprobar: 6 tesela en 6/3/2 columnas, 10 no.
+- La banda es la cabecera de la SPA, así que ambos ponen el recuento en el mismo sitio conceptual. La divergencia deliberada es solo de forma: el informe no repite el umbral en la misma línea porque lo tiene dos renglones más abajo, a la vista.
+
 ## Convenciones
 
 - Nombres de código, tipos y comentarios de API en inglés; documentación de producto (docs/) en español.

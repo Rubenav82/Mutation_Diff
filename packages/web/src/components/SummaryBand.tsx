@@ -1,11 +1,21 @@
-import type { ComparisonResult, Tool } from 'core';
-import { formatPct, formatSignedPct, trendOf, TREND_ARROW, type Trend } from '../lib/format';
+import type { ComparisonResult, Tool, UnitCounts } from 'core';
+import {
+  formatPct,
+  formatSignedCount,
+  formatSignedPct,
+  trendOf,
+  TREND_ARROW,
+  type Trend,
+} from '../lib/format';
 
 type Variant = 'positive' | 'negative' | 'neutral';
 
 interface SummaryBandProps {
   tool: Tool;
   global: ComparisonResult['global'];
+  counts: UnitCounts;
+  /** Effective threshold behind `counts.covered`, spelled out next to it. */
+  uncoveredThreshold: number;
   regressionCount: number;
   onExport: () => void;
   onExportPdf: () => void;
@@ -39,6 +49,8 @@ function regressionSummary(count: number): string {
 export function SummaryBand({
   tool,
   global,
+  counts,
+  uncoveredThreshold,
   regressionCount,
   onExport,
   onExportPdf,
@@ -50,7 +62,20 @@ export function SummaryBand({
       <div className="flex flex-wrap items-start justify-between gap-6 p-6">
         <div className="flex flex-col gap-6">
           <h1 className="eyebrow text-deep-muted!">Comparación · {tool}</h1>
-          <div className="flex flex-wrap gap-10">
+          <div className="flex flex-wrap items-baseline gap-10">
+            {/* Primero porque dimensiona todo lo demás, pero en cuerpo menor: es
+                el tamaño de lo medido, no el veredicto. Sin color: medir más
+                unidades no es ni mejor ni peor, solo distinto. */}
+            <Figure
+              label="Unidades analizadas"
+              value={String(counts.head)}
+              from={String(counts.base)}
+              delta={formatSignedCount(counts.delta)}
+              variant="neutral"
+              trend={trendOf(counts.delta)}
+              note={`${counts.covered} con cobertura · umbral ${uncoveredThreshold}%`}
+              compact
+            />
             <Figure
               label="Mutation score"
               value={formatPct(head.score)}
@@ -101,6 +126,8 @@ function Figure({
   delta,
   variant,
   trend,
+  note,
+  compact = false,
 }: {
   label: string;
   value: string;
@@ -108,11 +135,19 @@ function Figure({
   delta: string;
   variant: Variant;
   trend: Trend;
+  /** Extra line under the delta, for a figure that carries a second number. */
+  note?: string;
+  /** Renders the value one step down, for context rather than a verdict. */
+  compact?: boolean;
 }) {
   return (
     <div data-variant={variant} data-trend={trend}>
       <p className="eyebrow text-deep-muted!">{label}</p>
-      <p className="mt-1 font-mono text-4xl font-semibold tabular-nums">{value}</p>
+      <p
+        className={`mt-1 font-mono font-semibold tabular-nums ${compact ? 'text-3xl' : 'text-4xl'}`}
+      >
+        {value}
+      </p>
       <p className="mt-1 font-mono text-xs tabular-nums">
         <span className="text-deep-muted">{from}</span>
         <span aria-hidden="true" className="text-deep-muted">
@@ -127,6 +162,9 @@ function Figure({
         )}
         <span className={VARIANT_CLASS[variant]}>{delta}</span>
       </p>
+      {note !== undefined && (
+        <p className="mt-1 font-mono text-xs text-deep-muted tabular-nums">{note}</p>
+      )}
     </div>
   );
 }

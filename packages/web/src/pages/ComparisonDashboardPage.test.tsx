@@ -2,7 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { ComparisonResult, UnitMetrics } from 'core';
+import type { ComparisonResult, UnitComparison, UnitMetrics } from 'core';
 import { ComparisonError, getComparison } from '../lib/comparisons';
 import { printReport } from '../lib/printReport';
 import { ComparisonDashboardPage } from './ComparisonDashboardPage';
@@ -58,6 +58,44 @@ function metrics(over: Partial<UnitMetrics> = {}): UnitMetrics {
 function makeResult(): ComparisonResult {
   const base = metrics({ score: 80, coveredPct: 90 });
   const head = metrics({ score: 85, coveredPct: 88 });
+  // `units` es la unión y las demás listas son filtros suyos, como las construye
+  // `compareRuns`: el recuento de la banda sale de restarlas entre sí, así que un
+  // fixture con `units` suelta daría números que no se dan en la realidad.
+  const improved: UnitComparison = {
+    key: 'com.example.Calculator',
+    kind: 'improved',
+    base: metrics({ score: 80 }),
+    head: metrics({ score: 85 }),
+    scoreDelta: 5,
+    coverageDelta: 0,
+    isUncovered: false,
+  };
+  const regressed: UnitComparison = {
+    key: 'com.example.TaxCalculator',
+    kind: 'regressed',
+    base: metrics({ score: 90 }),
+    head: metrics({ score: 55 }),
+    scoreDelta: -35,
+    coverageDelta: -5,
+    isUncovered: false,
+  };
+  const uncovered: UnitComparison = {
+    key: 'com.example.EmailSender',
+    kind: 'unchanged',
+    base: metrics({ score: 0, noCoverage: 10 }),
+    head: metrics({ score: 0, noCoverage: 10 }),
+    scoreDelta: 0,
+    coverageDelta: 0,
+    isUncovered: true,
+  };
+  const added: UnitComparison = {
+    key: 'com.example.RefundService',
+    kind: 'added',
+    head: metrics({ score: 50 }),
+    scoreDelta: null,
+    coverageDelta: null,
+    isUncovered: false,
+  };
   return {
     tool: 'pitest',
     context: {
@@ -67,49 +105,10 @@ function makeResult(): ComparisonResult {
       uncoveredThreshold: 100,
     },
     global: { base, head, scoreDelta: 5, coverageDelta: -2 },
-    units: [
-      {
-        key: 'com.example.Calculator',
-        kind: 'improved',
-        base: metrics({ score: 80 }),
-        head: metrics({ score: 85 }),
-        scoreDelta: 5,
-        coverageDelta: 0,
-        isUncovered: false,
-      },
-    ],
-    regressions: [
-      {
-        key: 'com.example.TaxCalculator',
-        kind: 'regressed',
-        base: metrics({ score: 90 }),
-        head: metrics({ score: 55 }),
-        scoreDelta: -35,
-        coverageDelta: -5,
-        isUncovered: false,
-      },
-    ],
-    uncovered: [
-      {
-        key: 'com.example.EmailSender',
-        kind: 'unchanged',
-        base: metrics({ score: 0, noCoverage: 10 }),
-        head: metrics({ score: 0, noCoverage: 10 }),
-        scoreDelta: 0,
-        coverageDelta: 0,
-        isUncovered: true,
-      },
-    ],
-    added: [
-      {
-        key: 'com.example.RefundService',
-        kind: 'added',
-        head: metrics({ score: 50 }),
-        scoreDelta: null,
-        coverageDelta: null,
-        isUncovered: false,
-      },
-    ],
+    units: [improved, regressed, uncovered, added],
+    regressions: [regressed],
+    uncovered: [uncovered],
+    added: [added],
     removed: [],
   };
 }
@@ -140,6 +139,21 @@ describe('ComparisonDashboardPage', () => {
     expect(within(score as HTMLElement).getByText('+5.0%')).toBeInTheDocument();
     // Los conteos secundarios siguen presentes junto a la banda.
     expect(screen.getByText('Survivors')).toBeInTheDocument();
+  });
+
+  // El recuento lo deriva `countUnits` de `core`, así que aquí solo se comprueba
+  // que la banda lo recibe de la comparación cargada y no de otro sitio.
+  it('sizes the comparison with the unit counts of the loaded result', async () => {
+    getComparisonMock.mockResolvedValue(makeResult());
+    renderDashboard();
+
+    const units = (await screen.findByText('Unidades analizadas')).closest('[data-variant]');
+    // 4 en la nueva, 3 en la base (RefundService es nueva), 1 sin cobertura.
+    expect(within(units as HTMLElement).getByText('4')).toBeInTheDocument();
+    expect(within(units as HTMLElement).getByText('+1')).toBeInTheDocument();
+    expect(
+      within(units as HTMLElement).getByText('3 con cobertura · umbral 100%'),
+    ).toBeInTheDocument();
   });
 
   it('renders the units table with one row per unit', async () => {

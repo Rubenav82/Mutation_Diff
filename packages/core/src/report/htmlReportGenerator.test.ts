@@ -431,6 +431,64 @@ describe('generateHtmlReport — covered-mutant columns', () => {
   });
 });
 
+describe('generateHtmlReport — unit counts', () => {
+  const covered: UnitComparison = {
+    key: 'com.example.Covered',
+    kind: 'unchanged',
+    base: metrics(),
+    head: metrics(),
+    scoreDelta: 0,
+    coverageDelta: 0,
+    isUncovered: false,
+  };
+  const blind: UnitComparison = { ...covered, key: 'com.example.Blind', isUncovered: true };
+  const gone: UnitComparison = { ...covered, key: 'com.example.Gone', kind: 'removed' };
+
+  function reportOf(units: UnitComparison[], over: Partial<ComparisonResult> = {}): string {
+    return generateHtmlReport(resultFrom({ units, ...over }));
+  }
+
+  it('states how many units each run carried', () => {
+    const html = reportOf([covered, blind, gone], { removed: [gone] });
+
+    expect(html).toContain('Unidades analizadas: 2 (base 3');
+  });
+
+  // Medir más unidades no es ni mejor ni peor, solo distinto: el delta lleva signo
+  // pero no color, a diferencia de los de score y cubiertos.
+  it('signs the unit delta whichever way it went, including standing still', () => {
+    expect(reportOf([covered, blind], { added: [blind] })).toContain('(base 1, +1)');
+    expect(reportOf([covered, gone], { removed: [gone] })).toContain('(base 2, -1)');
+    // Un «0» pelado detrás de otra cifra se lee como el valor nuevo, no como el
+    // cambio; el signo explícito lo desambigua.
+    expect(reportOf([covered])).toContain('(base 1, &plusmn;0)');
+  });
+
+  it('counts the units of the new run that have coverage', () => {
+    const html = reportOf([covered, blind, gone], { uncovered: [blind], removed: [gone] });
+
+    expect(html).toContain('Con cobertura: 1');
+  });
+
+  /**
+   * En la cabecera y no como tarjetas del resumen: el recuento dice de qué tamaño
+   * es la comparación, que es lo mismo que dicen los ficheros y los umbrales que
+   * ya viven ahí. Cuatro tarjetas más dejaban además la retícula de `.cards` con
+   * una fila incompleta —huecos grises, porque las separaciones son el fondo del
+   * contenedor— y partían la etiqueta más larga en dos líneas.
+   */
+  it('carries the counts in the header, not as summary cards', () => {
+    const html = reportOf([covered]);
+
+    const countsAt = html.indexOf('Unidades analizadas');
+    expect(countsAt).toBeGreaterThan(-1);
+    expect(countsAt).toBeLessThan(html.indexOf('<h2>Resumen'));
+    // Por la etiqueta de cada tarjeta y no por `<div class="card`, que casa
+    // también con el `<div class="cards">` que las contiene.
+    expect(section(html, 'Resumen').split('<span class="label">').length - 1).toBe(6);
+  });
+});
+
 describe('generateHtmlReport — print rules (PDF export)', () => {
   // El PDF se obtiene imprimiendo este mismo documento, así que las reglas de
   // paginación son parte del informe y no del navegador que lo imprime.
