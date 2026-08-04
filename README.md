@@ -57,13 +57,15 @@ Ese par está construido para que salga de todo: una clase que mejora, una que e
 </outputFormats>
 ```
 
+O inclúyelo como opción en el comando de ejecución `-DoutputFormats=HTML,XML`.
+
 El fichero a subir es `target/pit-reports/**/mutations.xml`.
 
 **Stryker** — activa el reporter JSON en `stryker.config.json`:
 
 ```json
 {
-  "reporters": ["json", "html", "clear-text"]
+  "reporters": ["json", "html", "clear-text", "progress"]
 }
 ```
 
@@ -162,13 +164,13 @@ Importa porque un `mutations.xml` lleva dentro los nombres de clases y las rutas
 
 Funcional para el flujo completo de comparación puntual. Sabidas y pendientes:
 
-- **Un fichero por lado.** Subir la carpeta `pit-reports` completa o un ZIP y fusionar varios `mutations.xml` (HU-12) todavía no está implementado; hace falta trabajo en `core`, no solo en la UI.
+- **Un fichero por lado.** 
 - **Sin histórico.** Una comparación vive en la pestaña que la creó: sobrevive a recargar, pero no a cerrar el navegador, y no se puede compartir por enlace. Para conservar o mandar un resultado, exporta el HTML. La persistencia opt-in, la atribución de autor vía `git log` y el modo CLI irán en una fase posterior.
 - **Los reportes se procesan en memoria del navegador.** Con ficheros muy grandes (decenas de MB) el consumo lo paga tu pestaña. A cambio, nadie compite por la memoria de un servidor compartido.
 
 ## Calidad
 
-El proyecto se somete a su propio tipo de análisis: mutation testing con Stryker sobre `packages/core`, con el umbral en 70 y el score actual en **99,17 %**. La suite tiene, a día de hoy, 267 tests unitarios/integración y 5 e2e sobre el flujo real en navegador. CI ejecuta lint, typecheck, tests y e2e en cada PR; Stryker va en un workflow nocturno aparte, y la release no se publica sin pasar la misma barra.
+El proyecto se somete a su propio tipo de análisis: mutation testing con Stryker sobre `packages/core`, con el umbral en 70 y el score actual en **99,51 %**. La suite tiene, a día de hoy, 311 tests unitarios/integración y 5 e2e sobre el flujo real en navegador. CI ejecuta lint, typecheck, tests y e2e en cada PR; Stryker va en un workflow nocturno aparte, y la release no se publica sin pasar la misma barra.
 
 ## Documentación
 
