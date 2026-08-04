@@ -164,8 +164,16 @@ POST /api/projects/:id/compare   (fase 2) comparar dos runs guardados { baseRunI
 ### 2.5 UI (pantallas)
 
 1. **Nueva comparación**: selector PiTest/Stryker → dos zonas drag&drop (Base / Nueva) → opciones (umbrales) → botón Comparar. Junto al selector, un **icono de información (ⓘ)** con panel contextual según la herramienta elegida:
-   - *PiTest*: "Debes activar el reporte XML en tu build. Maven/Gradle: `outputFormats = XML` (puedes mantener también HTML). El fichero a subir es `target/pit-reports/**/mutations.xml`."
-   - *Stryker*: "Debes activar el reporter JSON en `stryker.config.json`: `\"reporters\": [\"json\", ...]`. El fichero a subir es `reports/mutation/mutation.json`."
+   - *PiTest*: "Debes activar el reporte XML en el configuration de tu build. Maven/Gradle: `outputFormats = XML` (puedes mantener también HTML). El fichero a subir es `target/pit-reports/**/mutations.xml`." Snippet copiable, con la indentación real del POM:
+
+     ```xml
+     <outputFormats>
+       <param>XML</param>
+     </outputFormats>
+     ```
+
+   - *Stryker*: "Debes activar el reporter JSON en `stryker.config.json` (puedes mantener también html). El fichero a subir es `reports/mutation/mutation.json`." Snippet copiable: `"reporters": ["json", ...]`.
+
    Cada panel incluye el snippet de configuración copiable. Si el usuario sube un fichero con extensión incorrecta para la herramienta elegida, el mensaje de error enlaza a esta misma ayuda.
    Junto a **«Umbrales (opcional)»**, un segundo **ⓘ** con su propio panel explica las dos reglas de CA-HU-05: fórmula, valor por defecto y los casos límite (el umbral de retroceso son puntos de score y no un porcentaje relativo; la frontera es inclusiva, así que una caída igual al umbral se tolera; el umbral sin cobertura a 0 marca todas las clases). Son dos paneles independientes a propósito: responden a dudas de momentos distintos.
 2. **Dashboard de resultados**: layout de dos paneles — rail lateral de contexto (herramienta, ficheros comparados, umbrales aplicados, todo en solo lectura) + panel principal con banda de resumen, KPIs, secciones "Regresiones", "Sin cobertura", "Nuevas", "Eliminadas", tabla completa filtrable/ordenable y botón "Exportar HTML". La tabla completa muestra por unidad **score** (base, nueva, Δ) y **mutantes cubiertos** (base, nueva, Δ) en cabeceras agrupadas; cada sección muestra solo la métrica que la motiva (score en «Regresiones», «Nuevas» y «Eliminadas»; mutantes cubiertos en «Sin cobertura»). Nunca se etiqueta «Cobertura»: `coveredPct` son mutantes cubiertos, no el *Line Coverage* de PiTest.

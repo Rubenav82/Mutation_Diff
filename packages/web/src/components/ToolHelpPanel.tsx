@@ -10,12 +10,14 @@ interface ToolHelp {
 const TOOL_HELP: Record<Tool, ToolHelp> = {
   pitest: {
     description:
-      'Debes activar el reporte XML en tu build. Maven/Gradle: outputFormats = XML (puedes mantener también HTML). El fichero a subir es target/pit-reports/**/mutations.xml.',
-    snippet: 'outputFormats = XML',
+      'Debes activar el reporte XML en el configuration de tu build. Maven/Gradle: outputFormats = XML (puedes mantener también HTML). El fichero a subir es target/pit-reports/**/mutations.xml.',
+    // Con saltos de línea e indentado, como se ve en el POM: el snippet se pega
+    // tal cual, y el `<pre>` que lo muestra ya conserva los espacios.
+    snippet: '<outputFormats>\n  <param>XML</param>\n</outputFormats>',
   },
   stryker: {
     description:
-      'Debes activar el reporter JSON en stryker.config.json. El fichero a subir es reports/mutation/mutation.json.',
+      'Debes activar el reporter JSON en stryker.config.json (puedes mantener también html). El fichero a subir es reports/mutation/mutation.json.',
     snippet: '"reporters": ["json", ...]',
   },
 };
