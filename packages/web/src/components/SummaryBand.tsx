@@ -1,11 +1,21 @@
-import type { ComparisonResult, Tool } from 'core';
-import { formatPct, formatSignedPct, trendOf, TREND_ARROW, type Trend } from '../lib/format';
+import type { ComparisonResult, Tool, UnitCounts } from 'core';
+import {
+  formatPct,
+  formatSignedCount,
+  formatSignedPct,
+  trendOf,
+  TREND_ARROW,
+  type Trend,
+} from '../lib/format';
 
 type Variant = 'positive' | 'negative' | 'neutral';
 
 interface SummaryBandProps {
   tool: Tool;
   global: ComparisonResult['global'];
+  counts: UnitCounts;
+  /** Effective threshold behind `counts.covered`, spelled out next to it. */
+  uncoveredThreshold: number;
   regressionCount: number;
   onExport: () => void;
   onExportPdf: () => void;
@@ -39,6 +49,8 @@ function regressionSummary(count: number): string {
 export function SummaryBand({
   tool,
   global,
+  counts,
+  uncoveredThreshold,
   regressionCount,
   onExport,
   onExportPdf,
@@ -48,9 +60,36 @@ export function SummaryBand({
   return (
     <section className="bg-deep text-inverse">
       <div className="flex flex-wrap items-start justify-between gap-6 p-6">
-        <div className="flex flex-col gap-6">
-          <h1 className="eyebrow text-deep-muted!">Comparación · {tool}</h1>
-          <div className="flex flex-wrap gap-10">
+        {/* `min-w-0 flex-1`: sin esto la columna de cifras se dimensiona por su
+            contenido y, al pasar de dos a cuatro, empuja los botones a la línea
+            siguiente. Encogiendo, las cifras se reparten entre ellas y los botones
+            se quedan a la derecha hasta que la pantalla ya no da para las dos. */}
+        <div className="flex min-w-0 flex-1 flex-col gap-6">
+          <h1 className="eyebrow text-deep-muted! text-center">Comparación · {tool}</h1>
+          <div className="flex flex-wrap items-baseline gap-10 text-center">
+            {/* Primero porque dimensionan todo lo demás, pero en cuerpo menor: son
+                el tamaño de lo medido, no el veredicto. El recuento total va sin
+                color —medir más clases no es ni mejor ni peor, solo distinto—,
+                mientras que las que tienen cobertura sí: más es mejor. */}
+            <Figure
+              label="Clases analizadas"
+              value={String(counts.head.total)}
+              from={String(counts.base.total)}
+              delta={formatSignedCount(counts.totalDelta)}
+              variant="neutral"
+              trend={trendOf(counts.totalDelta)}
+              compact
+            />
+            <Figure
+              label="Clases con cobertura"
+              value={String(counts.head.covered)}
+              from={String(counts.base.covered)}
+              delta={formatSignedCount(counts.coveredDelta)}
+              variant={trendVariant(counts.coveredDelta)}
+              trend={trendOf(counts.coveredDelta)}
+              note={`umbral ${uncoveredThreshold}%`}
+              compact
+            />
             <Figure
               label="Mutation score"
               value={formatPct(head.score)}
@@ -74,8 +113,12 @@ export function SummaryBand({
           {/* Buttons, not anchors: there is no server left to link to, and
               building the report is an action rather than a navigation. Both
               formats are offered because they answer different needs — the HTML
-              is for exploring, the PDF for attaching. */}
-          <div className="flex flex-wrap gap-2">
+              is for exploring, the PDF for attaching.
+
+              Stacked rather than side by side: two of them in a row take about a
+              third of the band, which is what pushed the whole block below the
+              figures once there were four of them. */}
+          <div className="flex flex-col gap-2">
             <button type="button" onClick={onExport} className={EXPORT_BUTTON_CLASS}>
               Exportar HTML
             </button>
@@ -101,6 +144,8 @@ function Figure({
   delta,
   variant,
   trend,
+  note,
+  compact = false,
 }: {
   label: string;
   value: string;
@@ -108,11 +153,19 @@ function Figure({
   delta: string;
   variant: Variant;
   trend: Trend;
+  /** Extra line under the delta, for a figure that carries a second number. */
+  note?: string;
+  /** Renders the value one step down, for context rather than a verdict. */
+  compact?: boolean;
 }) {
   return (
     <div data-variant={variant} data-trend={trend}>
       <p className="eyebrow text-deep-muted!">{label}</p>
-      <p className="mt-1 font-mono text-4xl font-semibold tabular-nums">{value}</p>
+      <p
+        className={`mt-1 font-mono font-semibold tabular-nums ${compact ? 'text-3xl' : 'text-4xl'}`}
+      >
+        {value}
+      </p>
       <p className="mt-1 font-mono text-xs tabular-nums">
         <span className="text-deep-muted">{from}</span>
         <span aria-hidden="true" className="text-deep-muted">
@@ -127,6 +180,9 @@ function Figure({
         )}
         <span className={VARIANT_CLASS[variant]}>{delta}</span>
       </p>
+      {note !== undefined && (
+        <p className="mt-1 font-mono text-xs text-deep-muted tabular-nums">{note}</p>
+      )}
     </div>
   );
 }

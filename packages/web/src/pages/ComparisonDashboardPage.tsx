@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { generateHtmlReport, type ComparisonResult } from 'core';
+import { countUnits, generateHtmlReport, type ComparisonResult } from 'core';
 import { ComparisonError, getComparison } from '../lib/comparisons';
 import { printReport } from '../lib/printReport';
 import { ComparisonContextRail } from '../components/ComparisonContextRail';
@@ -86,6 +86,8 @@ export function ComparisonDashboardPage() {
         <SummaryBand
           tool={result.tool}
           global={result.global}
+          counts={countUnits(result)}
+          uncoveredThreshold={result.context.uncoveredThreshold}
           regressionCount={result.regressions.length}
           onExport={handleExport}
           onExportPdf={handleExportPdf}

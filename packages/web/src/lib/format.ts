@@ -30,6 +30,16 @@ export function formatSignedPct(value: number): string {
   return `${value > 0 ? '+' : ''}${value.toFixed(1)}%`;
 }
 
+/**
+ * Counts, unlike scores, carry no percent sign — and no colour either. Zero is
+ * signed as well: a bare `0` next to the figure it came from reads as a drop to
+ * zero rather than as no change, which a percent delta never risks.
+ */
+export function formatSignedCount(value: number): string {
+  const sign = value > 0 ? '+' : value < 0 ? '' : '±';
+  return `${sign}${value}`;
+}
+
 /** Missing side of an added/removed unit renders as an em dash. */
 export function formatOptionalPct(value: number | undefined): string {
   return value === undefined ? '—' : formatPct(value);

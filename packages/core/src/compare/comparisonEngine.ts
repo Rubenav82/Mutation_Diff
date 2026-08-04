@@ -3,9 +3,9 @@ import type {
   NormalizedRun,
   UnitChangeKind,
   UnitComparison,
-  UnitMetrics,
   UnitResult,
 } from '../domain/types.js';
+import { isUncovered } from '../domain/metrics.js';
 
 export interface CompareOptions {
   regressionThreshold?: number;
@@ -14,12 +14,6 @@ export interface CompareOptions {
 
 const DEFAULT_REGRESSION_THRESHOLD = 0;
 const DEFAULT_UNCOVERED_THRESHOLD = 100;
-
-function isUncovered(metrics: UnitMetrics, threshold: number): boolean {
-  // 0/0 is NaN, and NaN >= threshold is always false, so a zero-mutant unit
-  // is naturally never flagged without needing an explicit total === 0 guard.
-  return (metrics.noCoverage / metrics.total) * 100 >= threshold;
-}
 
 // `key` is passed in rather than derived from baseUnit/headUnit: the caller (compareRuns)
 // always builds it from the union of both runs' unit keys, so at least one of baseUnit/headUnit

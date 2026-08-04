@@ -37,6 +37,13 @@ function renderBand(over: Partial<Parameters<typeof SummaryBand>[0]> = {}) {
         metrics({ score: 80, coveredPct: 90 }),
         metrics({ score: 85, coveredPct: 88 }),
       )}
+      counts={{
+        base: { total: 122, covered: 115 },
+        head: { total: 125, covered: 118 },
+        totalDelta: 3,
+        coveredDelta: 3,
+      }}
+      uncoveredThreshold={100}
       regressionCount={0}
       onExport={() => {}}
       onExportPdf={() => {}}
@@ -56,6 +63,109 @@ describe('SummaryBand', () => {
     renderBand();
 
     expect(screen.getByRole('heading', { name: 'Comparación · pitest' })).toBeInTheDocument();
+  });
+
+  // Los porcentajes dicen si la cosa ha mejorado; el recuento, sobre cuánto. Un
+  // 86 % sobre doce clases y sobre novecientas no son la misma afirmación.
+  it('sizes the comparison, with the units of each run and the delta', () => {
+    renderBand();
+
+    const units = figure('Clases analizadas');
+    expect(within(units).getByText('125')).toBeInTheDocument();
+    expect(within(units).getByText('122')).toBeInTheDocument();
+    expect(within(units).getByText('+3')).toBeInTheDocument();
+  });
+
+  // «122 → 0» se lee como una caída a cero, no como «no ha cambiado»: a diferencia
+  // de los porcentajes, un delta de conteo no trae unidad que lo distinga del valor
+  // que tiene al lado, así que el cero se firma.
+  it('signs a standing-still count instead of showing a bare zero', () => {
+    renderBand({
+      counts: {
+        base: { total: 122, covered: 118 },
+        head: { total: 122, covered: 118 },
+        totalDelta: 0,
+        coveredDelta: 0,
+      },
+    });
+
+    const units = figure('Clases analizadas');
+    expect(within(units).getByText('±0')).toBeInTheDocument();
+    expect(within(units).queryByText('0')).not.toBeInTheDocument();
+  });
+
+  // Medir más unidades no es ni mejor ni peor: dirección y polaridad son dos ejes,
+  // así que la flecha sale del signo y el color se queda fuera.
+  it('points the arrow at the unit count without colouring it', () => {
+    renderBand();
+
+    const units = figure('Clases analizadas');
+    expect(units).toHaveAttribute('data-variant', 'neutral');
+    expect(units).toHaveAttribute('data-trend', 'up');
+    expect(within(units).getByText('▲')).toBeInTheDocument();
+  });
+
+  // Con base y delta, como las otras tres cifras: solo el lado nuevo no dice si
+  // las clases con cobertura han subido o bajado, que es la pregunta.
+  it('gives the covered count its own base and delta', () => {
+    renderBand();
+
+    const covered = figure('Clases con cobertura');
+    expect(within(covered).getByText('118')).toBeInTheDocument();
+    expect(within(covered).getByText('115')).toBeInTheDocument();
+    expect(within(covered).getByText('+3')).toBeInTheDocument();
+  });
+
+  // Aquí el color sí dice algo, a diferencia del recuento total: más clases con
+  // cobertura es mejor.
+  it('colors a rise in covered classes as a gain', () => {
+    renderBand();
+
+    expect(figure('Clases con cobertura')).toHaveAttribute('data-variant', 'positive');
+  });
+
+  it('colors a drop in covered classes as a loss', () => {
+    renderBand({
+      counts: {
+        base: { total: 122, covered: 118 },
+        head: { total: 125, covered: 115 },
+        totalDelta: 3,
+        coveredDelta: -3,
+      },
+    });
+
+    expect(figure('Clases con cobertura')).toHaveAttribute('data-variant', 'negative');
+  });
+
+  // El umbral acompaña al número porque lo define: con el 100 por defecto, «sin
+  // cobertura» exige que *todos* los mutantes de la clase estén sin cubrir, y el
+  // dato se lee de otra manera al bajarlo.
+  it('spells out the threshold the covered count answers to', () => {
+    renderBand();
+
+    expect(within(figure('Clases con cobertura')).getByText('umbral 100%')).toBeInTheDocument();
+  });
+
+  it('reads the threshold from the comparison, not from a default of its own', () => {
+    renderBand({ uncoveredThreshold: 75 });
+
+    expect(screen.getByText('umbral 75%')).toBeInTheDocument();
+  });
+
+  // Va primero porque dimensiona lo que viene detrás, pero el veredicto sigue
+  // siendo el score: por eso su cifra es menor, no igual.
+  it('opens with the count and keeps the score as the headline', () => {
+    const { container } = renderBand();
+
+    const labels = Array.from(container.querySelectorAll('[data-variant]')).map(
+      (node) => node.firstElementChild?.textContent,
+    );
+    expect(labels).toEqual([
+      'Clases analizadas',
+      'Clases con cobertura',
+      'Mutation score',
+      'Mutantes cubiertos',
+    ]);
   });
 
   it('leads with the new score and coverage, keeping base → head and the delta', () => {
