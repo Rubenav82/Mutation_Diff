@@ -37,7 +37,12 @@ function renderBand(over: Partial<Parameters<typeof SummaryBand>[0]> = {}) {
         metrics({ score: 80, coveredPct: 90 }),
         metrics({ score: 85, coveredPct: 88 }),
       )}
-      counts={{ base: 122, head: 125, delta: 3, covered: 118 }}
+      counts={{
+        base: { total: 122, covered: 115 },
+        head: { total: 125, covered: 118 },
+        totalDelta: 3,
+        coveredDelta: 3,
+      }}
       uncoveredThreshold={100}
       regressionCount={0}
       onExport={() => {}}
@@ -75,7 +80,14 @@ describe('SummaryBand', () => {
   // de los porcentajes, un delta de conteo no trae unidad que lo distinga del valor
   // que tiene al lado, así que el cero se firma.
   it('signs a standing-still count instead of showing a bare zero', () => {
-    renderBand({ counts: { base: 122, head: 122, delta: 0, covered: 118 } });
+    renderBand({
+      counts: {
+        base: { total: 122, covered: 118 },
+        head: { total: 122, covered: 118 },
+        totalDelta: 0,
+        coveredDelta: 0,
+      },
+    });
 
     const units = figure('Clases analizadas');
     expect(within(units).getByText('±0')).toBeInTheDocument();
@@ -93,21 +105,51 @@ describe('SummaryBand', () => {
     expect(within(units).getByText('▲')).toBeInTheDocument();
   });
 
-  // El umbral acompaña al número porque lo define: con el 100 por defecto, «sin
-  // cobertura» exige que *todos* los mutantes de la unidad estén sin cubrir, y
-  // el dato se lee de otra manera al bajarlo.
-  it('says how many of those units have coverage, and under which threshold', () => {
+  // Con base y delta, como las otras tres cifras: solo el lado nuevo no dice si
+  // las clases con cobertura han subido o bajado, que es la pregunta.
+  it('gives the covered count its own base and delta', () => {
     renderBand();
 
-    expect(
-      within(figure('Clases analizadas')).getByText('118 con cobertura · umbral 100%'),
-    ).toBeInTheDocument();
+    const covered = figure('Clases con cobertura');
+    expect(within(covered).getByText('118')).toBeInTheDocument();
+    expect(within(covered).getByText('115')).toBeInTheDocument();
+    expect(within(covered).getByText('+3')).toBeInTheDocument();
+  });
+
+  // Aquí el color sí dice algo, a diferencia del recuento total: más clases con
+  // cobertura es mejor.
+  it('colors a rise in covered classes as a gain', () => {
+    renderBand();
+
+    expect(figure('Clases con cobertura')).toHaveAttribute('data-variant', 'positive');
+  });
+
+  it('colors a drop in covered classes as a loss', () => {
+    renderBand({
+      counts: {
+        base: { total: 122, covered: 118 },
+        head: { total: 125, covered: 115 },
+        totalDelta: 3,
+        coveredDelta: -3,
+      },
+    });
+
+    expect(figure('Clases con cobertura')).toHaveAttribute('data-variant', 'negative');
+  });
+
+  // El umbral acompaña al número porque lo define: con el 100 por defecto, «sin
+  // cobertura» exige que *todos* los mutantes de la clase estén sin cubrir, y el
+  // dato se lee de otra manera al bajarlo.
+  it('spells out the threshold the covered count answers to', () => {
+    renderBand();
+
+    expect(within(figure('Clases con cobertura')).getByText('umbral 100%')).toBeInTheDocument();
   });
 
   it('reads the threshold from the comparison, not from a default of its own', () => {
     renderBand({ uncoveredThreshold: 75 });
 
-    expect(screen.getByText('118 con cobertura · umbral 75%')).toBeInTheDocument();
+    expect(screen.getByText('umbral 75%')).toBeInTheDocument();
   });
 
   // Va primero porque dimensiona lo que viene detrás, pero el veredicto sigue
@@ -118,7 +160,12 @@ describe('SummaryBand', () => {
     const labels = Array.from(container.querySelectorAll('[data-variant]')).map(
       (node) => node.firstElementChild?.textContent,
     );
-    expect(labels).toEqual(['Clases analizadas', 'Mutation score', 'Mutantes cubiertos']);
+    expect(labels).toEqual([
+      'Clases analizadas',
+      'Clases con cobertura',
+      'Mutation score',
+      'Mutantes cubiertos',
+    ]);
   });
 
   it('leads with the new score and coverage, keeping base → head and the delta', () => {

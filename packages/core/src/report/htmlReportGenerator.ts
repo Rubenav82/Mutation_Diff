@@ -216,7 +216,7 @@ function renderContext(result: ComparisonResult): string {
   const counts = countUnits(result);
   return `<p class="meta">Herramienta: ${escapeHtml(result.tool)}</p>
 <p class="meta"><span class="file">${base}</span> &rarr; <span class="file">${head}</span></p>
-<p class="meta">Clases analizadas: ${counts.head} (base ${counts.base}, ${formatSignedCount(counts.delta)}) &middot; Con cobertura: ${counts.covered}</p>
+<p class="meta">Clases analizadas: ${counts.head.total} (base ${counts.base.total}, ${formatSignedCount(counts.totalDelta)}) &middot; Con cobertura: ${counts.head.covered} (base ${counts.base.covered}, ${formatSignedCount(counts.coveredDelta)})</p>
 <p class="meta">Umbral de retroceso: ${regressionThreshold}% &middot; Umbral sin cobertura: ${uncoveredThreshold}%</p>`;
 }
 

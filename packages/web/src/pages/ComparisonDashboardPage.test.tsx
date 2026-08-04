@@ -147,13 +147,18 @@ describe('ComparisonDashboardPage', () => {
     getComparisonMock.mockResolvedValue(makeResult());
     renderDashboard();
 
-    const units = (await screen.findByText('Clases analizadas')).closest('[data-variant]');
-    // 4 en la nueva, 3 en la base (RefundService es nueva), 1 sin cobertura.
-    expect(within(units as HTMLElement).getByText('4')).toBeInTheDocument();
-    expect(within(units as HTMLElement).getByText('+1')).toBeInTheDocument();
-    expect(
-      within(units as HTMLElement).getByText('3 con cobertura · umbral 100%'),
-    ).toBeInTheDocument();
+    const analysed = (await screen.findByText('Clases analizadas')).closest('[data-variant]');
+    // 4 en la nueva, 3 en la base: RefundService no existía todavía.
+    expect(within(analysed as HTMLElement).getByText('4')).toBeInTheDocument();
+    expect(within(analysed as HTMLElement).getByText('+1')).toBeInTheDocument();
+
+    // EmailSender está sin cobertura en las dos ejecuciones, así que el recuento
+    // con cobertura sube solo por la clase nueva.
+    const covered = screen.getByText('Clases con cobertura').closest('[data-variant]');
+    expect(within(covered as HTMLElement).getByText('3')).toBeInTheDocument();
+    expect(within(covered as HTMLElement).getByText('2')).toBeInTheDocument();
+    expect(within(covered as HTMLElement).getByText('+1')).toBeInTheDocument();
+    expect(within(covered as HTMLElement).getByText('umbral 100%')).toBeInTheDocument();
   });
 
   it('renders the units table with one row per unit', async () => {

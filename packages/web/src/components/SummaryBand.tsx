@@ -63,17 +63,27 @@ export function SummaryBand({
         <div className="flex flex-col gap-6">
           <h1 className="eyebrow text-deep-muted! text-center">Comparación · {tool}</h1>
           <div className="flex flex-wrap items-baseline gap-10 text-center">
-            {/* Primero porque dimensiona todo lo demás, pero en cuerpo menor: es
-                el tamaño de lo medido, no el veredicto. Sin color: medir más
-                unidades no es ni mejor ni peor, solo distinto. */}
+            {/* Primero porque dimensionan todo lo demás, pero en cuerpo menor: son
+                el tamaño de lo medido, no el veredicto. El recuento total va sin
+                color —medir más clases no es ni mejor ni peor, solo distinto—,
+                mientras que las que tienen cobertura sí: más es mejor. */}
             <Figure
               label="Clases analizadas"
-              value={String(counts.head)}
-              from={String(counts.base)}
-              delta={formatSignedCount(counts.delta)}
+              value={String(counts.head.total)}
+              from={String(counts.base.total)}
+              delta={formatSignedCount(counts.totalDelta)}
               variant="neutral"
-              trend={trendOf(counts.delta)}
-              note={`${counts.covered} con cobertura · umbral ${uncoveredThreshold}%`}
+              trend={trendOf(counts.totalDelta)}
+              compact
+            />
+            <Figure
+              label="Clases con cobertura"
+              value={String(counts.head.covered)}
+              from={String(counts.base.covered)}
+              delta={formatSignedCount(counts.coveredDelta)}
+              variant={trendVariant(counts.coveredDelta)}
+              trend={trendOf(counts.coveredDelta)}
+              note={`umbral ${uncoveredThreshold}%`}
               compact
             />
             <Figure

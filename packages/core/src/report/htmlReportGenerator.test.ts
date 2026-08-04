@@ -442,7 +442,24 @@ describe('generateHtmlReport — unit counts', () => {
     isUncovered: false,
   };
   const blind: UnitComparison = { ...covered, key: 'com.example.Blind', isUncovered: true };
-  const gone: UnitComparison = { ...covered, key: 'com.example.Gone', kind: 'removed' };
+  // Sin `head`/`base` respectivamente: el recuento cuenta cada clase en el lado en
+  // el que existe, así que una eliminada con lado nuevo sería un caso imposible.
+  const gone: UnitComparison = {
+    key: 'com.example.Gone',
+    kind: 'removed',
+    base: metrics(),
+    scoreDelta: null,
+    coverageDelta: null,
+    isUncovered: false,
+  };
+  const fresh: UnitComparison = {
+    key: 'com.example.Fresh',
+    kind: 'added',
+    head: metrics(),
+    scoreDelta: null,
+    coverageDelta: null,
+    isUncovered: false,
+  };
 
   function reportOf(units: UnitComparison[], over: Partial<ComparisonResult> = {}): string {
     return generateHtmlReport(resultFrom({ units, ...over }));
@@ -451,23 +468,31 @@ describe('generateHtmlReport — unit counts', () => {
   it('states how many units each run carried', () => {
     const html = reportOf([covered, blind, gone], { removed: [gone] });
 
-    expect(html).toContain('Clases analizadas: 2 (base 3');
+    expect(html).toContain('Clases analizadas: 2 (base 3, -1)');
   });
 
   // Medir más unidades no es ni mejor ni peor, solo distinto: el delta lleva signo
   // pero no color, a diferencia de los de score y cubiertos.
   it('signs the unit delta whichever way it went, including standing still', () => {
-    expect(reportOf([covered, blind], { added: [blind] })).toContain('(base 1, +1)');
-    expect(reportOf([covered, gone], { removed: [gone] })).toContain('(base 2, -1)');
+    expect(reportOf([covered, fresh], { added: [fresh] })).toContain(
+      'Clases analizadas: 2 (base 1, +1)',
+    );
+    expect(reportOf([covered, gone], { removed: [gone] })).toContain(
+      'Clases analizadas: 1 (base 2, -1)',
+    );
     // Un «0» pelado detrás de otra cifra se lee como el valor nuevo, no como el
     // cambio; el signo explícito lo desambigua.
-    expect(reportOf([covered])).toContain('(base 1, &plusmn;0)');
+    expect(reportOf([covered])).toContain('Clases analizadas: 1 (base 1, &plusmn;0)');
   });
 
-  it('counts the units of the new run that have coverage', () => {
+  // El lado nuevo por sí solo no dice si la cobertura sube o baja, que es la
+  // pregunta; las otras tres cifras de la comparación llevan siempre base y Δ.
+  it('gives the covered count its base and its delta too', () => {
     const html = reportOf([covered, blind, gone], { uncovered: [blind], removed: [gone] });
 
-    expect(html).toContain('Con cobertura: 1');
+    // Nueva: 2 clases, una de ellas sin cobertura. Base: 3, todas con cobertura,
+    // porque `isUncovered` se evalúa por lado y no se hereda del otro.
+    expect(html).toContain('Con cobertura: 1 (base 3, -2)');
   });
 
   /**

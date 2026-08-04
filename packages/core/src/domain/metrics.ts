@@ -9,6 +9,19 @@ function computeDerived(
   return { ...counts, validTotal, score, coveredPct };
 }
 
+/**
+ * Whether a unit counts as having no coverage, per CA-HU-05. Over `total` and not
+ * `validTotal`, which is the formula the spec states.
+ *
+ * Lives here, next to the metrics it reads, because both the comparison engine and
+ * the unit counts apply it — the engine to the new run only, the counts to each side.
+ */
+export function isUncovered(metrics: UnitMetrics, threshold: number): boolean {
+  // 0/0 is NaN, and NaN >= threshold is always false, so a zero-mutant unit
+  // is naturally never flagged without needing an explicit total === 0 guard.
+  return (metrics.noCoverage / metrics.total) * 100 >= threshold;
+}
+
 export function calculateUnitMetrics(mutants: Mutant[]): UnitMetrics {
   const counts = {
     total: mutants.length,

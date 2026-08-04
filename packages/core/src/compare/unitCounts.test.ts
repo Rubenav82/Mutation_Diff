@@ -53,28 +53,48 @@ describe('countUnits', () => {
   it('counts the units each run actually contains', () => {
     // Ni 7 (la unión que recorre `units`) ni el mismo número en ambos lados: la
     // base no vio E ni F, y la nueva no vio D.
-    expect(countUnits(result)).toMatchObject({ base: 5, head: 6 });
+    expect(countUnits(result).base.total).toBe(5);
+    expect(countUnits(result).head.total).toBe(6);
   });
 
   it('reports how many units the new run gained or lost', () => {
-    expect(countUnits(result).delta).toBe(1);
+    expect(countUnits(result).totalDelta).toBe(1);
   });
 
-  it('counts the units of the new run that are not flagged as uncovered', () => {
-    // 6 de la nueva menos C y F, sin ni un mutante cubierto.
-    expect(countUnits(result).covered).toBe(4);
+  // Los dos lados, no solo el nuevo: sin el de la base no hay forma de saber si
+  // las que tienen cobertura han subido o bajado, que es la pregunta real.
+  it('counts the covered units on each side', () => {
+    // Base: 5 menos ninguna sin cubrir del todo. Nueva: 6 menos C y F.
+    expect(countUnits(result).base.covered).toBe(5);
+    expect(countUnits(result).head.covered).toBe(4);
   });
 
-  it('follows the configured uncovered threshold', () => {
-    // G tiene la mitad de sus mutantes sin cubrir: entra al bajar el umbral a 50.
-    const lenient = compareRuns(BASE, HEAD, { uncoveredThreshold: 50 });
-
-    expect(countUnits(lenient).covered).toBe(3);
+  it('reports the change in covered units', () => {
+    expect(countUnits(result).coveredDelta).toBe(-1);
   });
 
-  // Las unidades eliminadas nunca se marcan como sin cobertura (no hay ejecución
-  // nueva que evaluar), así que restarlas de la unión las contaría como cubiertas.
-  it('leaves removed units out of the covered count', () => {
-    expect(countUnits(result).covered).not.toBe(result.units.length - result.uncovered.length);
+  it('follows the configured uncovered threshold on both sides', () => {
+    // G tiene la mitad de sus mutantes sin cubrir en las dos ejecuciones: entra
+    // en ambos lados al bajar el umbral a 50.
+    const lenient = countUnits(compareRuns(BASE, HEAD, { uncoveredThreshold: 50 }));
+
+    expect(lenient.base.covered).toBe(4);
+    expect(lenient.head.covered).toBe(3);
+  });
+
+  // Una unidad eliminada no tiene ejecución nueva que evaluar, y una nueva no tiene
+  // base: cada lado cuenta solo las unidades que existen en él.
+  it('counts each unit on the side it exists in, and only there', () => {
+    const counts = countUnits(result);
+
+    expect(counts.base.total).toBe(result.units.length - result.added.length);
+    expect(counts.head.total).toBe(result.units.length - result.removed.length);
+  });
+
+  // Una unidad eliminada no se marca nunca como sin cobertura, así que contarla
+  // por presencia y no restando `uncovered` de la unión es lo que evita colarla
+  // en el lado nuevo como si tuviera cobertura.
+  it('keeps removed units out of the new run entirely', () => {
+    expect(countUnits(result).head.covered).not.toBe(result.units.length - result.uncovered.length);
   });
 });
