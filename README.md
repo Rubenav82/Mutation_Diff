@@ -80,7 +80,7 @@ La misma información está dentro de la app, detrás del icono ⓘ junto al sel
    - **Umbral de retroceso (%)**: cuánto puede bajar el score "mutators killed" de una clase antes de contarla como retroceso. Por defecto `0` — cualquier bajada cuenta.
    - **Umbral sin cobertura (%)**: qué porcentaje de mutantes en `NO_COVERAGE` marca una clase como «sin cobertura». Por defecto `100` — solo las que no tienen ni un mutante cubierto. Bájalo a `75` para incluir también las casi descubiertas.
    Las dos reglas completas, con fórmula y casos límite, están dentro de la app detrás del icono ⓘ que hay junto a «Umbrales (opcional)».
-3. El dashboard muestra las métricas globales con su delta, las secciones de retrocesos / sin cobertura / nuevas / eliminadas, y la tabla completa con filtro, orden por columna y paginación (25 filas por defecto; el selector permite 50, 100 o «Todas», que es lo que necesitas si quieres buscar con Ctrl+F sobre el conjunto entero).
+3. El dashboard muestra las métricas globales con su delta, las secciones de retrocesos / sin cobertura / nuevas / eliminadas, y la tabla completa con filtro y orden por columna. Todas las tablas se paginan de 5 en 5 para que la comparación entera se recorra sin scroll; cada una lleva su propio selector con 25, 50, 100 o «Todas», que es lo que necesitas si quieres buscar con Ctrl+F sobre el conjunto entero. Una tabla con 5 filas o menos no muestra controles: ya está toda a la vista.
 4. **Exportar HTML** descarga el informe completo como un único fichero, sin CSS ni JS externos: se abre offline y se puede adjuntar donde sea.
 5. **Exportar PDF** abre el diálogo de impresión del navegador con ese mismo informe ya maquetado para papel; elige «Guardar como PDF» y te propondrá el nombre `mutadiff-report-<id>`. Los dos formatos conviven a propósito: el HTML se explora (buscable, sin cortes de página) y el PDF se adjunta a un correo o a una incidencia. Con miles de unidades el PDF sale largo — la tabla completa lo es de por sí.
 
@@ -170,7 +170,7 @@ Funcional para el flujo completo de comparación puntual. Sabidas y pendientes:
 
 ## Calidad
 
-El proyecto se somete a su propio tipo de análisis: mutation testing con Stryker sobre `packages/core`, con el umbral en 70 y el score actual en **99,51 %**. La suite tiene, a día de hoy, 311 tests unitarios/integración y 5 e2e sobre el flujo real en navegador. CI ejecuta lint, typecheck, tests y e2e en cada PR; Stryker va en un workflow nocturno aparte, y la release no se publica sin pasar la misma barra.
+El proyecto se somete a su propio tipo de análisis: mutation testing con Stryker sobre `packages/core`, con el umbral en 70 y el score actual en **99,51 %**. La suite tiene, a día de hoy, 328 tests unitarios/integración y 5 e2e sobre el flujo real en navegador. CI ejecuta lint, typecheck, tests y e2e en cada PR; Stryker va en un workflow nocturno aparte, y la release no se publica sin pasar la misma barra.
 
 ## Documentación
 
