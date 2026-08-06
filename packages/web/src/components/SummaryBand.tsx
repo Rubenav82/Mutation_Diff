@@ -68,15 +68,16 @@ export function SummaryBand({
           <h1 className="eyebrow text-deep-muted! text-center">Comparación · {tool}</h1>
           <div className="flex flex-wrap items-baseline gap-10 text-center">
             {/* Primero porque dimensionan todo lo demás, pero en cuerpo menor: son
-                el tamaño de lo medido, no el veredicto. El recuento total va sin
-                color —medir más clases no es ni mejor ni peor, solo distinto—,
-                mientras que las que tienen cobertura sí: más es mejor. */}
+                el tamaño de lo medido, no el veredicto. Los dos recuentos van con
+                color: analizar más clases es mejor —la ejecución nueva llega a más
+                sitio, y una caída suele delatar una ejecución incompleta—, y otro
+                tanto para las que tienen cobertura. */}
             <Figure
               label="Clases analizadas"
               value={String(counts.head.total)}
               from={String(counts.base.total)}
               delta={formatSignedCount(counts.totalDelta)}
-              variant="neutral"
+              variant={trendVariant(counts.totalDelta)}
               trend={trendOf(counts.totalDelta)}
               compact
             />

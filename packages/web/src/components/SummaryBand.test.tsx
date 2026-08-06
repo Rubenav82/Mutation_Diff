@@ -94,15 +94,44 @@ describe('SummaryBand', () => {
     expect(within(units).queryByText('0')).not.toBeInTheDocument();
   });
 
-  // Medir más unidades no es ni mejor ni peor: dirección y polaridad son dos ejes,
-  // así que la flecha sale del signo y el color se queda fuera.
-  it('points the arrow at the unit count without colouring it', () => {
+  // Analizar más clases es mejor: significa que la ejecución nueva llega a más
+  // sitio. Que baje suele ser la señal de una ejecución incompleta, y ahí el color
+  // es justo lo que hace que se vea sin buscarlo.
+  it('colors a rise in analysed classes as a gain, arrow included', () => {
     renderBand();
 
     const units = figure('Clases analizadas');
-    expect(units).toHaveAttribute('data-variant', 'neutral');
+    expect(units).toHaveAttribute('data-variant', 'positive');
     expect(units).toHaveAttribute('data-trend', 'up');
     expect(within(units).getByText('▲')).toBeInTheDocument();
+  });
+
+  it('colors a drop in analysed classes as a loss', () => {
+    renderBand({
+      counts: {
+        base: { total: 125, covered: 118 },
+        head: { total: 122, covered: 118 },
+        totalDelta: -3,
+        coveredDelta: 0,
+      },
+    });
+
+    const units = figure('Clases analizadas');
+    expect(units).toHaveAttribute('data-variant', 'negative');
+    expect(within(units).getByText('▼')).toBeInTheDocument();
+  });
+
+  it('leaves an unchanged count uncoloured', () => {
+    renderBand({
+      counts: {
+        base: { total: 122, covered: 118 },
+        head: { total: 122, covered: 118 },
+        totalDelta: 0,
+        coveredDelta: 0,
+      },
+    });
+
+    expect(figure('Clases analizadas')).toHaveAttribute('data-variant', 'neutral');
   });
 
   // Con base y delta, como las otras tres cifras: solo el lado nuevo no dice si

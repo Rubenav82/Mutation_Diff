@@ -109,9 +109,12 @@ function formatDelta(value: number | null): string {
 }
 
 /**
- * Never coloured, unlike the percent deltas: measuring more units is neither better
- * nor worse, only different. Zero is signed too — a bare `0` right after another
- * figure reads as the new value rather than as the change.
+ * Zero is signed — a bare `0` right after another figure reads as the new value
+ * rather than as the change, which a percent delta never risks.
+ *
+ * No colour here, unlike the same counts in the SPA's band: in the report they are
+ * a line of the header, plain text next to the files and thresholds, and the cards
+ * below are what carry the coloured deltas.
  */
 function formatSignedCount(value: number): string {
   // Un solo sitio decide el signo, en vez de un `return` temprano para el cero: con
