@@ -373,6 +373,13 @@ La app se despliega como **ficheros estáticos**: `packages/web/dist` (un `index
 - En el informe el recuento va en la **cabecera**, no como tarjetas del resumen: dice de qué tamaño es la comparación, igual que los ficheros y los umbrales que ya viven ahí. Además, cuatro tarjetas más dejaban la retícula de `.cards` con una fila incompleta —y sus separaciones son el **fondo del contenedor**, así que los huecos salen grises, no blancos— y partían la etiqueta más larga en dos líneas. Si alguna vez hay que añadir tarjetas, ese es el límite a comprobar: 6 tesela en 6/3/2 columnas, 10 no.
 - La banda es la cabecera de la SPA, así que ambos ponen el recuento en el mismo sitio conceptual. La divergencia deliberada es solo de forma: el informe no repite el umbral en la misma línea porque lo tiene dos renglones más abajo, a la vista.
 
+## Versión de la aplicación (fijado en T-085)
+
+- **Cada tarea con cambio visible para el usuario sube la versión**, en el mismo commit: `minor` si añade o cambia algo que se ve o se usa, `patch` si solo corrige. Es un paso de la definición de hecho, no algo que se haga «al publicar»: el panel «Acerca de» la muestra, así que una versión estancada es una afirmación falsa en pantalla.
+- **Los cuatro `package.json` se mueven en bloque** (raíz, `core`, `server`, `web`) con `npm version <x.y.z> --workspaces --include-workspace-root --no-git-tag-version`, que actualiza además el `package-lock.json` de una pasada. No son cuatro productos con ciclos propios, es uno: si divergen, la del panel (`packages/web/package.json`, la que importa `lib/appInfo.ts`) deja de decir en qué versión está el resto.
+- **No hay literal que tocar en el código.** `lib/appInfo.ts` importa `version` de `package.json` y `AboutMenu.test.tsx` compara contra esa misma importación, así que el test no se rompe al subirla —y tampoco la fija—: lo que verifica es que el panel muestre la que el paquete declara.
+- **Esto convive con la etiqueta de release de T-073b, no la sustituye.** La etiqueta sigue siendo `vAAAA.MM.DD.N` automática y es la que identifica el zip publicado; la versión semver dice cuánto ha cambiado la app. T-073b decidió no tener versión manual porque «se queda desactualizada sin que nadie se entere», objeción que sigue siendo válida: por eso está en la definición de hecho y no en un documento de proceso aparte.
+
 ## Convenciones
 
 - Nombres de código, tipos y comentarios de API en inglés; documentación de producto (docs/) en español.
@@ -388,4 +395,5 @@ La app se despliega como **ficheros estáticos**: `packages/web/dist` (un `index
 2. Typecheck y lint sin errores.
 3. Criterios de aceptación de la HU asociada cumplidos (docs/spec.md §1.4).
 4. Casilla marcada en docs/tasks.md y, si aplica, docs actualizados.
-5. Sin `any` sin justificar, sin código muerto, sin console.log de depuración.
+5. Versión subida si el cambio se ve o se usa (minor) o corrige algo (patch), en los cuatro `package.json` a la vez — ver «Versión de la aplicación».
+6. Sin `any` sin justificar, sin código muerto, sin console.log de depuración.
