@@ -244,34 +244,44 @@ describe('UnitsTable — paginación', () => {
   );
 
   function pageSizeSelect(): HTMLElement {
-    return screen.getByRole('combobox', { name: 'Filas por página' });
+    return screen.getByRole('combobox', { name: 'Filas por página · Todas las unidades' });
   }
 
-  it('shows the first 25 units by default', () => {
+  function nextPage(): HTMLElement {
+    return screen.getByRole('button', { name: 'Página siguiente · Todas las unidades' });
+  }
+
+  function previousPage(): HTMLElement {
+    return screen.getByRole('button', { name: 'Página anterior · Todas las unidades' });
+  }
+
+  // Cinco y no veinticinco: en un proyecto grande, la tabla completa por sí sola
+  // llenaba varias pantallas y obligaba a scrollear para llegar a cualquier otra cosa.
+  it('shows the first 5 units by default', () => {
     render(<UnitsTable units={MANY} tool="pitest" />);
 
-    expect(bodyRows()).toHaveLength(25);
+    expect(bodyRows()).toHaveLength(5);
     expect(screen.getByTitle('com.example.Clase00')).toBeInTheDocument();
-    expect(screen.queryByTitle('com.example.Clase25')).not.toBeInTheDocument();
+    expect(screen.queryByTitle('com.example.Clase05')).not.toBeInTheDocument();
   });
 
   it('reports which page is on screen and how many there are', () => {
     render(<UnitsTable units={MANY} tool="pitest" />);
 
-    expect(screen.getByText('Página 1 de 3')).toBeInTheDocument();
+    expect(screen.getByText('Página 1 de 12')).toBeInTheDocument();
   });
 
   it('moves to the next page and back', async () => {
     const user = userEvent.setup();
     render(<UnitsTable units={MANY} tool="pitest" />);
 
-    await user.click(screen.getByRole('button', { name: 'Página siguiente' }));
+    await user.click(nextPage());
 
-    expect(screen.getByTitle('com.example.Clase25')).toBeInTheDocument();
+    expect(screen.getByTitle('com.example.Clase05')).toBeInTheDocument();
     expect(screen.queryByTitle('com.example.Clase00')).not.toBeInTheDocument();
-    expect(screen.getByText('Página 2 de 3')).toBeInTheDocument();
+    expect(screen.getByText('Página 2 de 12')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Página anterior' }));
+    await user.click(previousPage());
 
     expect(screen.getByTitle('com.example.Clase00')).toBeInTheDocument();
   });
@@ -280,12 +290,15 @@ describe('UnitsTable — paginación', () => {
     const user = userEvent.setup();
     render(<UnitsTable units={MANY} tool="pitest" />);
 
-    expect(screen.getByRole('button', { name: 'Página anterior' })).toBeDisabled();
+    expect(previousPage()).toBeDisabled();
 
-    await user.click(screen.getByRole('button', { name: 'Página siguiente' }));
-    await user.click(screen.getByRole('button', { name: 'Página siguiente' }));
+    // Con 25 por página el final está a dos clics; el tamaño por defecto exigiría
+    // once y no probaría nada distinto.
+    await user.selectOptions(pageSizeSelect(), '25');
+    await user.click(nextPage());
+    await user.click(nextPage());
 
-    expect(screen.getByRole('button', { name: 'Página siguiente' })).toBeDisabled();
+    expect(nextPage()).toBeDisabled();
     expect(bodyRows()).toHaveLength(10);
   });
 
@@ -309,7 +322,9 @@ describe('UnitsTable — paginación', () => {
 
     expect(bodyRows()).toHaveLength(60);
     // Una sola página: no hay navegación que ofrecer.
-    expect(screen.queryByRole('button', { name: 'Página siguiente' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Página siguiente · Todas las unidades' }),
+    ).not.toBeInTheDocument();
   });
 
   // Sin esto, filtrar desde la página 3 deja la tabla vacía aunque haya
@@ -318,13 +333,15 @@ describe('UnitsTable — paginación', () => {
     const user = userEvent.setup();
     render(<UnitsTable units={MANY} tool="pitest" />);
 
-    await user.click(screen.getByRole('button', { name: 'Página siguiente' }));
-    await user.click(screen.getByRole('button', { name: 'Página siguiente' }));
-    expect(screen.getByText('Página 3 de 3')).toBeInTheDocument();
+    await user.click(nextPage());
+    await user.click(nextPage());
+    expect(screen.getByText('Página 3 de 12')).toBeInTheDocument();
 
     await user.type(screen.getByRole('searchbox', { name: /filtrar/i }), 'Clase0');
 
-    expect(bodyRows()).toHaveLength(10);
+    // Diez coincidencias (Clase00–Clase09) reparte en dos páginas, y la primera es
+    // la que se muestra.
+    expect(screen.getByText('Página 1 de 2')).toBeInTheDocument();
     expect(screen.getByTitle('com.example.Clase00')).toBeInTheDocument();
   });
 
@@ -340,11 +357,14 @@ describe('UnitsTable — paginación', () => {
     expect(bodyRows()[0]?.textContent).toContain('Clase59');
   });
 
+  // Con cuatro unidades no hay nada que paginar ni motivo para cambiar el tamaño:
+  // ya están todas a la vista, así que los controles no aportan nada.
   it('keeps the controls out of the way when everything already fits', () => {
     render(<UnitsTable units={UNITS} tool="pitest" />);
 
-    expect(screen.queryByRole('button', { name: 'Página siguiente' })).not.toBeInTheDocument();
-    // El selector sí se queda: es la única forma de volver a «Todas» después.
-    expect(pageSizeSelect()).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Página siguiente · Todas las unidades' }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
   });
 });

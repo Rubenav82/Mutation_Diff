@@ -11,6 +11,7 @@ import {
 } from '@tanstack/react-table';
 import type { Tool, UnitChangeKind, UnitComparison } from 'core';
 import { formatOptionalPct, formatOptionalSignedPct, splitUnitKey } from '../lib/format';
+import { DEFAULT_PAGE_SIZE, TablePagination } from './TablePagination';
 
 const KIND_LABELS: Record<UnitChangeKind, string> = {
   improved: 'Mejora ▲',
@@ -45,17 +46,7 @@ const SORT_LABELS: Record<string, string> = {
   kind: 'Estado',
 };
 
-const PAGE_SIZES = [25, 50, 100] as const;
-
-/**
- * «Todas» como tamaño de página en vez de un modo aparte: así la tabla sigue
- * gobernando la paginación ella sola —incluido el volver a la primera página al
- * filtrar— en lugar de tener que replicar esa lógica para un caso especial.
- */
-const ALL_ROWS = Number.MAX_SAFE_INTEGER;
-
-const PAGE_BUTTON_CLASS =
-  'border border-line px-3 py-1 text-ink transition-colors hover:border-line-strong disabled:cursor-not-allowed disabled:border-line disabled:text-muted disabled:opacity-50';
+const TITLE = 'Todas las unidades';
 
 const buildColumns = (tool: Tool): ColumnDef<UnitComparison>[] => [
   {
@@ -174,7 +165,7 @@ export function UnitsTable({ units, tool }: { units: UnitComparison[]; tool: Too
     // Con miles de unidades, montarlas todas de golpe cuesta caro y no hay
     // quien las recorra. La tabla se queda con el estado de paginación, así que
     // filtrar u ordenar vuelve a la primera página sin código propio.
-    initialState: { pagination: { pageIndex: 0, pageSize: PAGE_SIZES[0] } },
+    initialState: { pagination: { pageIndex: 0, pageSize: DEFAULT_PAGE_SIZE } },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -183,15 +174,14 @@ export function UnitsTable({ units, tool }: { units: UnitComparison[]; tool: Too
 
   const rows = table.getRowModel().rows;
   const { pageIndex, pageSize } = table.getState().pagination;
-  const pageCount = table.getPageCount();
 
   return (
-    <section aria-label="Todas las unidades">
+    <section aria-label={TITLE}>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         {/* El espacio explícito importa: sin él el nombre accesible sería
             "Todas las unidades4" y JSX se come el salto de línea. */}
         <h2 className="flex items-center gap-2">
-          Todas las unidades{' '}
+          {TITLE}{' '}
           <span className="bg-deep px-2 py-0.5 font-mono text-xs font-normal text-inverse tabular-nums">
             {table.getFilteredRowModel().rows.length}
           </span>
@@ -278,63 +268,16 @@ export function UnitsTable({ units, tool }: { units: UnitComparison[]; tool: Too
         )}
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm text-muted">
-        <label className="flex items-center gap-2">
-          Filas por página
-          {/* `appearance-none` para que el select no traiga el cromo nativo del
-              sistema —bordes redondeados incluidos— dentro de un diseño de radio
-              0; la flecha se repone al lado, decorativa. */}
-          <span className="relative inline-flex items-center">
-            <select
-              aria-label="Filas por página"
-              value={pageSize === ALL_ROWS ? 'all' : String(pageSize)}
-              onChange={(event) => {
-                const { value } = event.target;
-                table.setPageSize(value === 'all' ? ALL_ROWS : Number(value));
-              }}
-              className="appearance-none border border-line bg-raised py-1 pr-7 pl-2 font-mono text-sm text-ink transition-colors hover:border-line-strong"
-            >
-              {PAGE_SIZES.map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-              <option value="all">Todas</option>
-            </select>
-            <span aria-hidden="true" className="pointer-events-none absolute right-2 text-xs">
-              ▾
-            </span>
-          </span>
-        </label>
-
-        {/* Con una sola página no hay navegación que ofrecer, pero el selector se
-            queda: es la única forma de volver a «Todas» después. */}
-        {pageCount > 1 && (
-          <div className="flex items-center gap-3">
-            <span className="font-mono tabular-nums">
-              Página {pageIndex + 1} de {pageCount}
-            </span>
-            <button
-              type="button"
-              aria-label="Página anterior"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-              className={PAGE_BUTTON_CLASS}
-            >
-              Anterior
-            </button>
-            <button
-              type="button"
-              aria-label="Página siguiente"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-              className={PAGE_BUTTON_CLASS}
-            >
-              Siguiente
-            </button>
-          </div>
-        )}
-      </div>
+      <TablePagination
+        label={TITLE}
+        pageIndex={pageIndex}
+        pageSize={pageSize}
+        pageCount={table.getPageCount()}
+        totalRows={units.length}
+        onPageSizeChange={(size) => table.setPageSize(size)}
+        onPreviousPage={() => table.previousPage()}
+        onNextPage={() => table.nextPage()}
+      />
     </section>
   );
 }

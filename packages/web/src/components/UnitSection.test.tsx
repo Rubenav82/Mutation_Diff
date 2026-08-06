@@ -1,4 +1,5 @@
 import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import type { UnitComparison, UnitMetrics } from 'core';
 import { UnitSection } from './UnitSection';
@@ -134,5 +135,108 @@ describe('UnitSection', () => {
     expect(screen.getByRole('heading', { name: 'Retrocesos 0' })).toBeInTheDocument();
     expect(screen.getByText('No hay retrocesos.')).toBeInTheDocument();
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
+  });
+});
+
+describe('UnitSection — paginación', () => {
+  // 12 unidades: más de dos páginas con el tamaño por defecto, así que «siguiente»
+  // y «anterior» tienen a dónde ir.
+  const MANY: UnitComparison[] = Array.from({ length: 12 }, (_, i) => ({
+    // Índice con relleno para que el orden alfabético coincida con el numérico.
+    key: `com.example.Clase${String(i).padStart(2, '0')}`,
+    kind: 'regressed',
+    base: metrics({ score: 90 }),
+    head: metrics({ score: 70 }),
+    scoreDelta: -20,
+    coverageDelta: 0,
+    isUncovered: false,
+  }));
+
+  function renderMany() {
+    return render(
+      <UnitSection title="Retrocesos" units={MANY} emptyMessage="No hay retrocesos." />,
+    );
+  }
+
+  function visibleKeys(): (string | undefined)[] {
+    const [, body] = screen.getAllByRole('rowgroup');
+    return within(body as HTMLElement)
+      .getAllByRole('row')
+      .map((row) => within(row).getAllByRole('cell')[0]?.textContent);
+  }
+
+  it('shows the first five units by default', () => {
+    renderMany();
+
+    expect(visibleKeys()).toEqual([
+      'com.example.Clase00',
+      'com.example.Clase01',
+      'com.example.Clase02',
+      'com.example.Clase03',
+      'com.example.Clase04',
+    ]);
+    expect(screen.getByText('Página 1 de 3')).toBeInTheDocument();
+  });
+
+  it('moves to the next page and back, keeping the order it received', async () => {
+    const user = userEvent.setup();
+    renderMany();
+
+    await user.click(screen.getByRole('button', { name: 'Página siguiente · Retrocesos' }));
+
+    expect(visibleKeys()[0]).toBe('com.example.Clase05');
+    expect(screen.getByText('Página 2 de 3')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Página anterior · Retrocesos' }));
+
+    expect(visibleKeys()[0]).toBe('com.example.Clase00');
+  });
+
+  it('lets the user pick how many rows fit on a page', async () => {
+    const user = userEvent.setup();
+    renderMany();
+
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: 'Filas por página · Retrocesos' }),
+      'all',
+    );
+
+    expect(visibleKeys()).toHaveLength(12);
+    expect(screen.queryByText(/página \d+ de/i)).not.toBeInTheDocument();
+  });
+
+  // El contador de la cabecera dice de qué tamaño es la sección, no cuánto cabe en
+  // una página: aquí no hay filtro que pueda dejarlo sin cuadrar con nada.
+  it('counts every unit in the section, not just the visible page', () => {
+    renderMany();
+
+    expect(screen.getByRole('heading', { name: 'Retrocesos 12' })).toBeInTheDocument();
+  });
+
+  it('leaves short sections without pagination controls', () => {
+    render(
+      <UnitSection title="Retrocesos" units={REGRESSIONS} emptyMessage="No hay retrocesos." />,
+    );
+
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /página/i })).not.toBeInTheDocument();
+  });
+
+  // Sin el recorte, volver a comparar con menos unidades dejaría la sección en una
+  // página que ya no existe: tabla vacía con datos que sí están.
+  it('falls back to the last page when the section it shows gets smaller', async () => {
+    const user = userEvent.setup();
+    const { rerender } = renderMany();
+
+    await user.click(screen.getByRole('button', { name: 'Página siguiente · Retrocesos' }));
+    await user.click(screen.getByRole('button', { name: 'Página siguiente · Retrocesos' }));
+    expect(screen.getByText('Página 3 de 3')).toBeInTheDocument();
+
+    rerender(
+      <UnitSection title="Retrocesos" units={MANY.slice(0, 6)} emptyMessage="No hay retrocesos." />,
+    );
+
+    expect(screen.getByText('Página 2 de 2')).toBeInTheDocument();
+    expect(visibleKeys()).toEqual(['com.example.Clase05']);
   });
 });

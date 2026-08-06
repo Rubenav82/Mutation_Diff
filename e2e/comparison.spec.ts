@@ -79,14 +79,18 @@ test.describe('flujo completo de comparación', () => {
 
     const table = page.getByRole('region', { name: 'Todas las unidades' });
     // Dos filas de cabecera: la de los grupos (Score / Mutantes cubiertos) y la
-    // de sus columnas.
-    await expect(table.getByRole('row')).toHaveCount(9); // 2 de cabecera + 7 unidades
+    // de sus columnas. De las 7 unidades de la fixture solo entran 5 en la primera
+    // página, que es el tamaño por defecto.
+    await expect(table.getByRole('row')).toHaveCount(7);
+    await expect(table.getByText('Página 1 de 2')).toBeVisible();
 
     await table
       .getByRole('searchbox', { name: 'Filtrar por clase o paquete' })
       .fill('notifications');
 
+    // Dos coincidencias: caben en una página y la navegación desaparece.
     await expect(table.getByRole('row')).toHaveCount(4);
+    await expect(table.getByText(/Página \d+ de/)).toHaveCount(0);
     await expect(table.getByText('com.acme.notifications.EmailSender')).toBeVisible();
     await expect(table.getByText('com.acme.billing.TaxCalculator')).toHaveCount(0);
   });
