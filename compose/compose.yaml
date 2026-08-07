@@ -1,0 +1,39 @@
+name: mutadiff
+
+services:
+  # Descarga la última release en el volumen compartido. Se ejecuta solo en el
+  # primer arranque; para actualizar, reiniciar este contenedor.
+  #
+  # Necesita salida a internet: api.github.com (consultar la release) y el
+  # mirror de Alpine (instalar unzip). En una máquina aislada este servicio
+  # falla y, por el `depends_on` de abajo, `web` no llega a arrancar: ahí hay
+  # que copiar el zip a mano. Ver README.md.
+  updater:
+    image: alpine:latest
+    container_name: MutaDiff_Updater
+    volumes:
+      - app_content:/app
+      - ./updater.sh:/updater.sh:ro
+    command: sh /updater.sh
+    restart: 'no'
+
+  # Servidor web. No necesita reiniciarse al actualizar: nginx sirve los
+  # ficheros del volumen directamente desde disco.
+  #
+  # Un servidor de ficheros pelado es suficiente porque la app lleva las rutas
+  # en el hash y los assets en relativo: no hace falta ninguna regla de
+  # reescritura hacia index.html.
+  web:
+    image: nginx:alpine
+    container_name: MutaDiff_Web
+    depends_on:
+      updater:
+        condition: service_completed_successfully
+    ports:
+      - '8080:80'
+    volumes:
+      - app_content:/usr/share/nginx/html:ro
+    restart: unless-stopped
+
+volumes:
+  app_content:
