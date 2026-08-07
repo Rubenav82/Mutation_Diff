@@ -1,0 +1,90 @@
+name: Compose smoke
+
+# Solo a mano. Verifica el stack de despliegue, no el código: no tiene nada que
+# decir sobre una PR concreta, y correrlo en cada una sería un peaje sin retorno
+# (mismo criterio que el workflow de mutation testing).
+#
+# Existe porque `compose/updater.sh` se ejercitó fuera de un contenedor, contra
+# un directorio cualquiera: eso valida la lógica, pero no que las opciones de
+# `find` y `apk` se comporten igual en el busybox de Alpine. Esto sí lo hace, y
+# además contra la release realmente publicada.
+on:
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # `depends_on: service_completed_successfully` hace que esto ya espere a
+      # que el updater termine bien: si falla la descarga, falla aquí.
+      - name: Levantar el stack
+        working-directory: compose
+        run: docker compose up -d
+
+      - name: Esperar a que nginx responda
+        run: |
+          for _ in $(seq 30); do
+            if curl -sf -o /dev/null http://localhost:8080/; then
+              echo "Respondiendo."
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::no respondió en 60 s"
+          exit 1
+
+      - name: Comprobar que sirve la aplicación
+        run: |
+          curl -sf http://localhost:8080/ -o index.html
+          grep -q '<title>Mutator Assessment Report</title>' index.html
+
+          # Los assets van en relativo, así que se comprueban justo los que
+          # declara el index servido, no unos nombres fijados a mano (llevan
+          # hash y cambian en cada build).
+          for asset in $(grep -o '\./assets/[^"]*' index.html); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:8080/${asset#./}")
+            echo "${asset} -> ${code}"
+            test "${code}" = "200"
+          done
+
+          # Una ruta de la aplicación debe dar 404: van en el hash y no llegan
+          # al servidor. Es lo que hace innecesaria una regla de reescritura, así
+          # que un 200 aquí significaría que algo la está inventando.
+          code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/comparisons/algo)
+          test "${code}" = "404"
+
+      # El flujo documentado para actualizar: reiniciar solo el updater, sin
+      # tocar el servidor web.
+      - name: Actualizar reiniciando el updater
+        working-directory: compose
+        run: |
+          docker compose start updater
+          code=$(docker wait MutaDiff_Updater)
+          docker logs MutaDiff_Updater
+          test "${code}" = "0"
+
+      - name: Comprobar que sigue sirviendo tras actualizar
+        run: |
+          curl -sf http://localhost:8080/ -o after.html
+          grep -q '<title>Mutator Assessment Report</title>' after.html
+
+          # Sin residuos del staging en el webroot. Se comprueba justo eso y no
+          # la lista completa de ficheros, que cambiaría con cualquier añadido
+          # legítimo al bundle (un favicon, por ejemplo).
+          docker exec MutaDiff_Web ls -A /usr/share/nginx/html
+          if docker exec MutaDiff_Web test -e /usr/share/nginx/html/.new; then
+            echo "::error::el staging .new sigue en el webroot"
+            exit 1
+          fi
+
+      - name: Logs
+        if: ${{ !cancelled() }}
+        working-directory: compose
+        run: docker compose logs
+
+      - name: Parar el stack
+        if: ${{ always() }}
+        working-directory: compose
+        run: docker compose down -v
