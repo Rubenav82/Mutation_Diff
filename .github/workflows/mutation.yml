@@ -4,8 +4,8 @@ name: Mutation
 # ejecutarlo en cada push/PR como lint, typecheck y tests. `workflow_dispatch`
 # permite lanzarlo a mano antes de cerrar una fase.
 on:
-  schedule:
-    - cron: '0 3 * * *'
+  # schedule:
+  #   - cron: '0 3 * * *'
   workflow_dispatch:
 
 jobs:
