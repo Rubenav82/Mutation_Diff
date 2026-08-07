@@ -18,6 +18,8 @@ npx serve mutadiff        # o nginx, IIS, Apache, GitHub Pages, un recurso compa
 
 Esa URL es **estable**: siempre sirve la última versión publicada, así que un servidor que la descargue periódicamente se mantiene al día sin tocar su configuración.
 
+Si prefieres no repetir esos pasos en cada release, [`compose/`](compose/) trae un stack de Docker Compose que descarga el zip y lo sirve con nginx: `docker compose up -d` y la aplicación queda en `http://localhost:8080`. Actualizar es reiniciar un contenedor. Requiere salida a internet desde la máquina que la sirve.
+
 No necesita configuración: las rutas van en el hash y los assets son relativos, así que funciona igual en la raíz de un dominio (`https://tuservidor/`) que colgando de un subpath (`https://tuservidor/mutadiff/`).
 
 > Tiene que servirse por HTTP, no vale abrir `index.html` con doble clic: los navegadores bloquean los módulos ES sobre `file://`.

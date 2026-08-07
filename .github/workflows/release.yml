@@ -3,11 +3,13 @@ name: Release
 on:
   push:
     branches: [master]
-    # Un cambio solo de documentación produce exactamente el mismo `dist`, así
-    # que no merece una release nueva ni que la máquina interna se redescargue.
+    # Un cambio solo de documentación —o de los ficheros de despliegue, que no
+    # entran en el bundle— produce exactamente el mismo `dist`, así que no
+    # merece una release nueva ni que la máquina interna se redescargue.
     paths-ignore:
       - '**/*.md'
       - 'docs/**'
+      - 'compose/**'
   # Para republicar sin tener que tocar código.
   workflow_dispatch:
 
