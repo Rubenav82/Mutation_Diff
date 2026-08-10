@@ -44,6 +44,8 @@ npm run mutation         # Stryker sobre packages/core (ejecutar antes de cerrar
 
 (Si algún script aún no existe, créalo en la tarea de bootstrap correspondiente.)
 
+**Nunca canalices estos comandos por `tail`/`head` para acortar la salida.** En una tubería el código de salida es el del último proceso, así que `npm test | tail -8` **siempre termina en 0** y una suite roja se lee como verde. Pasó en T-087: la pasada tenía `Errors 7 errors` y 232 tests en vez de 328, y lo único que lo delató fue el recuento, no el estado. Si hay que acortar, redirige a un fichero (`npm test > log 2>&1; echo $?`) y filtra el fichero después. Corolario: **el recuento de tests es parte del resultado**; un número menor del esperado con todo «passed» significa que hay ficheros que no llegaron a ejecutarse, y esos no cuentan como fallidos (la misma trampa que documenta la lección de Stryker más abajo).
+
 ## Mutation testing (Stryker)
 
 - Config en `stryker.config.json` **en la raíz del repo**, no dentro de `packages/core`: el vitest runner de Stryker sandboxea el directorio desde el que se ejecuta, y `packages/core/vitest.config.ts` importa `../../vitest.shared.ts`, fuera de ese sandbox si se corre desde dentro del paquete. `npm run mutation` ejecuta `stryker run` desde la raíz por eso. `mutate` está acotado a `packages/core/src` (único paquete con código por ahora); si se generaliza a más paquetes, ampliar el patrón ahí, no crear un config por paquete.

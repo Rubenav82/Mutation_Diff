@@ -191,7 +191,10 @@ export function NewComparisonPage() {
             button's own label is not reliably announced by screen readers. */}
         {isSubmitting && <LoadingIndicator label="Comparando…" />}
 
-        <div className="rule flex flex-wrap items-center justify-center gap-4 pt-6">
+        {/* En columna y no en fila: con `justify-center` lo que quedaba centrado
+            era el par botón + aviso, así que el botón se veía desplazado a la
+            izquierda del eje. */}
+        <div className="rule flex flex-col items-center gap-3 pt-6">
           <button
             type="submit"
             disabled={!canSubmit}
