@@ -1,5 +1,6 @@
 import type { ComparisonResult, UnitChangeKind, UnitComparison } from '../domain/types.js';
 import { countUnits } from '../compare/unitCounts.js';
+import { KPI_GLOSSARY, type KpiGlossaryEntry } from '../domain/kpiGlossary.js';
 
 const KIND_LABELS: Record<UnitChangeKind, string> = {
   improved: 'Mejora ▲',
@@ -68,6 +69,23 @@ const STYLE = `
   tr.kind-improved td:last-child { color: #14622f; }
   .empty { color: #605d5d; font-style: italic; }
 
+  /* Tooltips de los KPI: CSS puro, sin JS (el informe sigue sin script, T-016).
+     Visibles con hover y con foco de teclado; el termino es focusable. */
+  .term-wrap { position: relative; display: inline-block; }
+  .term { cursor: help; text-decoration: underline dotted; text-underline-offset: 3px; }
+  .tip {
+    display: none; position: absolute; left: 0; top: calc(100% + 0.4rem); z-index: 10;
+    width: 18rem; box-sizing: border-box; padding: 0.6rem 0.75rem;
+    background: #fff; color: #201e1d; border: 1px solid #605d5d;
+    box-shadow: 0 2px 10px rgba(32, 30, 29, 0.18);
+    font-family: 'Segoe UI Variable Text', 'Segoe UI', -apple-system, system-ui, sans-serif;
+    font-size: 0.8125rem; font-weight: 400; line-height: 1.45;
+    letter-spacing: normal; text-transform: none; text-align: left; white-space: normal;
+  }
+  .term:hover + .tip, .term:focus + .tip { display: block; }
+  /* Solo en impresion: en pantalla los tooltips ya cubren las definiciones. */
+  .glossary { display: none; }
+
   /* El PDF se obtiene imprimiendo este mismo documento, así que la paginación
      es responsabilidad del informe. Con miles de unidades la tabla completa
      ocupa decenas de páginas, y sin estas reglas cada una llegaría sin
@@ -86,6 +104,18 @@ const STYLE = `
     .card { break-inside: avoid; }
     h2 { break-after: avoid; }
     section { margin: 1.5rem 0; break-before: auto; }
+    /* En papel no hay hover ni foco: los terminos dejan de parecer interactivos
+       y el glosario del pie toma el relevo de los tooltips. */
+    .term { text-decoration: none; cursor: auto; }
+    /* Con !important: las reglas de hover/foco son mas especificas que este
+       selector pelado, y un termino enfocado al pulsar Ctrl+P imprimiria su
+       burbuja encima del documento. */
+    .tip { display: none !important; }
+    .glossary { display: block; border-top: 2px solid #201e1d; margin-top: 2rem; padding-top: 1.25rem; }
+    .glossary-title { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.015em; margin: 0 0 0.75rem; }
+    .glossary dl { margin: 0; }
+    .glossary dt { font-weight: 600; break-after: avoid; }
+    .glossary dd { margin: 0.1rem 0 0.6rem; break-inside: avoid; }
   }
 `;
 
@@ -122,6 +152,19 @@ function formatSignedCount(value: number): string {
   // vuelven indistinguibles (un mutante equivalente que ningún test puede matar).
   const sign = value > 0 ? '+' : value < 0 ? '' : '&plusmn;';
   return `${sign}${value}`;
+}
+
+/**
+ * A focusable KPI term wired to its CSS-only tooltip. The tip is a sibling of the
+ * term, not a child: nested, its text would leak into the term's accessible name
+ * and a screen reader would read the definition twice.
+ */
+function termMarkup(label: string, entry: KpiGlossaryEntry, id: string): string {
+  return `<span class="term" tabindex="0" aria-describedby="${id}">${label}</span><span class="tip" role="tooltip" id="${id}">${escapeHtml(entry.definition)}</span>`;
+}
+
+function cardLabel(label: string, entry: KpiGlossaryEntry, id: string): string {
+  return `<span class="label term-wrap">${termMarkup(label, entry, id)}</span>`;
 }
 
 function deltaCardClass(value: number): string {
@@ -196,12 +239,12 @@ function renderTable(
 function renderSummary(result: ComparisonResult): string {
   const { global } = result;
   return `<section><h2>Resumen</h2><div class="cards">
-    <div class="card"><span class="label">Score base</span><span class="value">${formatPct(global.base.score)}</span></div>
-    <div class="card"><span class="label">Score nuevo</span><span class="value">${formatPct(global.head.score)}</span></div>
-    <div class="card ${deltaCardClass(global.scoreDelta)}"><span class="label">&Delta; Score</span><span class="value">${formatDelta(global.scoreDelta)}</span></div>
-    <div class="card"><span class="label">Cubiertos base</span><span class="value">${formatPct(global.base.coveredPct)}</span></div>
-    <div class="card"><span class="label">Cubiertos nuevos</span><span class="value">${formatPct(global.head.coveredPct)}</span></div>
-    <div class="card ${deltaCardClass(global.coverageDelta)}"><span class="label">&Delta; Cubiertos</span><span class="value">${formatDelta(global.coverageDelta)}</span></div>
+    <div class="card">${cardLabel('Score base', KPI_GLOSSARY.score, 'tip-score-base')}<span class="value">${formatPct(global.base.score)}</span></div>
+    <div class="card">${cardLabel('Score nuevo', KPI_GLOSSARY.score, 'tip-score-head')}<span class="value">${formatPct(global.head.score)}</span></div>
+    <div class="card ${deltaCardClass(global.scoreDelta)}">${cardLabel('&Delta; Score', KPI_GLOSSARY.score, 'tip-score-delta')}<span class="value">${formatDelta(global.scoreDelta)}</span></div>
+    <div class="card">${cardLabel('Cubiertos base', KPI_GLOSSARY.coveredMutants, 'tip-covered-base')}<span class="value">${formatPct(global.base.coveredPct)}</span></div>
+    <div class="card">${cardLabel('Cubiertos nuevos', KPI_GLOSSARY.coveredMutants, 'tip-covered-head')}<span class="value">${formatPct(global.head.coveredPct)}</span></div>
+    <div class="card ${deltaCardClass(global.coverageDelta)}">${cardLabel('&Delta; Cubiertos', KPI_GLOSSARY.coveredMutants, 'tip-covered-delta')}<span class="value">${formatDelta(global.coverageDelta)}</span></div>
   </div></section>`;
 }
 
@@ -219,8 +262,21 @@ function renderContext(result: ComparisonResult): string {
   const counts = countUnits(result);
   return `<p class="meta">Herramienta: ${escapeHtml(result.tool)}</p>
 <p class="meta"><span class="file">${base}</span> &rarr; <span class="file">${head}</span></p>
-<p class="meta">Clases analizadas: ${counts.head.total} (base ${counts.base.total}, ${formatSignedCount(counts.totalDelta)}) &middot; Con cobertura: ${counts.head.covered} (base ${counts.base.covered}, ${formatSignedCount(counts.coveredDelta)})</p>
+<p class="meta"><span class="term-wrap">${termMarkup('Clases analizadas', KPI_GLOSSARY.analyzedClasses, 'tip-analyzed')}</span>: ${counts.head.total} (base ${counts.base.total}, ${formatSignedCount(counts.totalDelta)}) &middot; <span class="term-wrap">${termMarkup('Con cobertura', KPI_GLOSSARY.coveredClasses, 'tip-covered-classes')}</span>: ${counts.head.covered} (base ${counts.base.covered}, ${formatSignedCount(counts.coveredDelta)})</p>
 <p class="meta">Umbral de retroceso: ${regressionThreshold}% &middot; Umbral sin cobertura: ${uncoveredThreshold}%</p>`;
+}
+
+/**
+ * Print-only glossary of the eight KPIs. A `<footer>` without an `<h2>` on
+ * purpose: CA-HU-07 fixes the report at exactly four sections, and on screen the
+ * tooltips already carry these definitions — this block exists because a printed
+ * PDF has no hover to fall back on.
+ */
+function renderGlossary(): string {
+  const entries = Object.values(KPI_GLOSSARY)
+    .map((entry) => `<dt>${escapeHtml(entry.term)}</dt><dd>${escapeHtml(entry.definition)}</dd>`)
+    .join('');
+  return `<footer class="glossary"><p class="glossary-title">Glosario</p><dl>${entries}</dl></footer>`;
 }
 
 export function generateHtmlReport(result: ComparisonResult): string {
@@ -241,6 +297,7 @@ ${renderSummary(result)}
 ${renderTable('Retrocesos', result.regressions, 'No hay retrocesos.')}
 ${renderTable('Sin cobertura', result.uncovered, 'No hay clases/ficheros sin cobertura.', 'covered')}
 ${renderTable('Todas las unidades', result.units, 'No hay unidades.', 'both')}
+${renderGlossary()}
 </body>
 </html>`;
 }

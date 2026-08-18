@@ -397,6 +397,15 @@ La app se despliega como **ficheros estáticos**: `packages/web/dist` (un `index
 - `find` con `-exec … \;` y no `… +`: el `find` de Alpine es el de busybox, y `\;` funciona en cualquier implementación.
 - `.gitattributes` (`* text=auto eol=lf`) es lo que evita que `updater.sh` llegue con CRLF a un clon en Windows y falle con los `\r` metidos dentro de las variables. Vale para cualquier script de shell que se añada al repo.
 
+## Tooltips de los KPI y glosario imprimible (fijado en T-088)
+
+- **`domain/kpiGlossary.ts` en `core` es la fuente única de las ocho definiciones** (término + definición por KPI), consumida por la SPA (`KpiTerm`), los tooltips del informe y el glosario de impresión. Aquí sí puede haber fuente única porque `web → core` está permitido; no confundir con la paleta (T-048b), que sigue duplicada a mano por la regla inversa. **Las definiciones están redactadas contra las fórmulas de `metrics.ts`** (score cuenta timeouts como detectados; cubiertos mide mutantes, no líneas; «sin cobertura» de una clase usa `total`, no `validTotal`): si cambia una fórmula, su definición cambia en el mismo commit, y el test las fija con igualdad de string completo a propósito.
+- **La burbuja es hermana del término, nunca hija**: anidada, su texto entra en el nombre accesible del término (name-from-contents) y el lector lo anuncia dos veces. En la SPA el término es focusable y la burbuja se muestra con `peer-hover`/`peer-focus-visible` + `aria-describedby`; en el informe es CSS puro (`.term:hover + .tip, .term:focus + .tip`) para no reabrir la decisión sin-`<script>` de T-016.
+- **En el bloque `@media print` del informe, `.tip` lleva `display: none !important`** y no es opcional: `.term:hover/:focus + .tip` es más específico que `.tip` a secas, y un término que conserve el foco al pulsar Ctrl+P imprimiría su burbuja encima del documento. Se vio con emulación de print en Chromium real, no en jsdom ni en los tests de string.
+- El glosario es un `<footer class="glossary">` sin `<h2>` (CA-HU-07 fija cuatro secciones; el helper `section()` de los tests ahora corta también en `<footer`), **visible solo en impresión** — en pantalla los tooltips ya cubren las definiciones y duplicarlas sería ruido.
+- **`:focus-visible` no se dispara con `element.focus()` programático** (tampoco en Playwright); para verificar o testear el tooltip por teclado hay que llegar con Tab real. El hover en jsdom directamente no existe: la parte visual de esto se verifica en navegador, los tests unitarios fijan el cableado (`aria-describedby`, texto, `tabindex`).
+- Las etiquetas visibles de los ocho KPI son exactamente los `term` del glosario; `SummaryBand`/`KpiRow` ya no llevan strings de etiqueta propios. Si se renombra un KPI, se toca el glosario (y sus tests exactos), no los componentes.
+
 ## Convenciones
 
 - Nombres de código, tipos y comentarios de API en inglés; documentación de producto (docs/) en español.

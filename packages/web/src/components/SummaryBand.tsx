@@ -1,4 +1,6 @@
-import type { ComparisonResult, Tool, UnitCounts } from 'core';
+import { KPI_GLOSSARY } from 'core';
+import type { ComparisonResult, KpiGlossaryEntry, Tool, UnitCounts } from 'core';
+import { KpiTerm } from './KpiTerm';
 import {
   formatPct,
   formatSignedCount,
@@ -73,7 +75,7 @@ export function SummaryBand({
                 sitio, y una caída suele delatar una ejecución incompleta—, y otro
                 tanto para las que tienen cobertura. */}
             <Figure
-              label="Clases analizadas"
+              entry={KPI_GLOSSARY.analyzedClasses}
               value={String(counts.head.total)}
               from={String(counts.base.total)}
               delta={formatSignedCount(counts.totalDelta)}
@@ -82,7 +84,7 @@ export function SummaryBand({
               compact
             />
             <Figure
-              label="Clases con cobertura"
+              entry={KPI_GLOSSARY.coveredClasses}
               value={String(counts.head.covered)}
               from={String(counts.base.covered)}
               delta={formatSignedCount(counts.coveredDelta)}
@@ -92,7 +94,7 @@ export function SummaryBand({
               compact
             />
             <Figure
-              label="Mutation score"
+              entry={KPI_GLOSSARY.score}
               value={formatPct(head.score)}
               from={formatPct(base.score)}
               delta={formatSignedPct(scoreDelta)}
@@ -100,7 +102,7 @@ export function SummaryBand({
               trend={trendOf(scoreDelta)}
             />
             <Figure
-              label="Mutantes cubiertos"
+              entry={KPI_GLOSSARY.coveredMutants}
               value={formatPct(head.coveredPct)}
               from={formatPct(base.coveredPct)}
               delta={formatSignedPct(coverageDelta)}
@@ -139,7 +141,7 @@ export function SummaryBand({
 }
 
 function Figure({
-  label,
+  entry,
   value,
   from,
   delta,
@@ -148,7 +150,8 @@ function Figure({
   note,
   compact = false,
 }: {
-  label: string;
+  /** Label plus glossary definition: every figure explains itself (T-088). */
+  entry: KpiGlossaryEntry;
   value: string;
   from: string;
   delta: string;
@@ -161,7 +164,9 @@ function Figure({
 }) {
   return (
     <div data-variant={variant} data-trend={trend}>
-      <p className="eyebrow text-deep-muted!">{label}</p>
+      <p className="eyebrow text-deep-muted!">
+        <KpiTerm entry={entry} />
+      </p>
       <p
         className={`mt-1 font-mono font-semibold tabular-nums ${compact ? 'text-3xl' : 'text-4xl'}`}
       >

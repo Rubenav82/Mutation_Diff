@@ -172,7 +172,7 @@ Funcional para el flujo completo de comparación puntual. Sabidas y pendientes:
 
 ## Calidad
 
-El proyecto se somete a su propio tipo de análisis: mutation testing con Stryker sobre `packages/core`, con el umbral en 70 y el score actual en **99,51 %**. La suite tiene, a día de hoy, 328 tests unitarios/integración y 5 e2e sobre el flujo real en navegador. CI ejecuta lint, typecheck, tests y e2e en cada PR; Stryker va en un workflow nocturno aparte, y la release no se publica sin pasar la misma barra.
+El proyecto se somete a su propio tipo de análisis: mutation testing con Stryker sobre `packages/core`, con el umbral en 70 y el score actual en **99,51 %**. La suite tiene, a día de hoy, 340 tests unitarios/integración y 5 e2e sobre el flujo real en navegador. CI ejecuta lint, typecheck, tests y e2e en cada PR; Stryker va en un workflow aparte, y la release no se publica sin pasar la misma barra.
 
 ## Documentación
 

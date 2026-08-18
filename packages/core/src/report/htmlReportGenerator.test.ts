@@ -4,6 +4,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { generateHtmlReport } from './htmlReportGenerator.js';
 import { compareRuns } from '../compare/comparisonEngine.js';
 import { parsePitestReport } from '../parsers/pitestParser.js';
+import { KPI_GLOSSARY } from '../domain/kpiGlossary.js';
 import type { ComparisonResult, UnitComparison, UnitMetrics } from '../domain/types.js';
 
 const fixturesDir = fileURLToPath(new URL('../../test/fixtures/pitest/', import.meta.url));
@@ -50,8 +51,12 @@ function resultFrom(overrides: Partial<ComparisonResult> = {}): ComparisonResult
 function section(html: string, heading: string): string {
   const start = html.indexOf(`<h2>${heading}`);
   if (start === -1) throw new Error(`section not found: ${heading}`);
-  const nextSectionStart = html.indexOf('<section>', start);
-  const end = nextSectionStart === -1 ? html.indexOf('</body>', start) : nextSectionStart;
+  // La última sección no termina en `</body>` sino donde empiece lo que venga
+  // después (el pie de glosario de T-088); si no, su slice arrastraría ese contenido.
+  const ends = [html.indexOf('<section>', start), html.indexOf('<footer', start)].filter(
+    (index) => index !== -1,
+  );
+  const end = ends.length > 0 ? Math.min(...ends) : html.indexOf('</body>', start);
   return html.slice(start, end);
 }
 
@@ -303,22 +308,25 @@ describe('generateHtmlReport — global delta card styling', () => {
     });
   }
 
+  // La etiqueta de la tarjeta lleva desde T-088 el término con su tooltip.
+  const deltaScoreLabel = `<span class="label term-wrap"><span class="term" tabindex="0" aria-describedby="tip-score-delta">&Delta; Score</span><span class="tip" role="tooltip" id="tip-score-delta">${KPI_GLOSSARY.score.definition}</span></span>`;
+
   it('marks a positive delta card as positive and a negative one as negative', () => {
     const positive = generateHtmlReport(reportWithGlobalDelta(5, 5));
     expect(positive).toContain(
-      '<div class="card positive"><span class="label">&Delta; Score</span><span class="value">+5.0%</span></div>',
+      `<div class="card positive">${deltaScoreLabel}<span class="value">+5.0%</span></div>`,
     );
 
     const negative = generateHtmlReport(reportWithGlobalDelta(-5, -5));
     expect(negative).toContain(
-      '<div class="card negative"><span class="label">&Delta; Score</span><span class="value">-5.0%</span></div>',
+      `<div class="card negative">${deltaScoreLabel}<span class="value">-5.0%</span></div>`,
     );
   });
 
   it('leaves a zero delta card unstyled', () => {
     const zero = generateHtmlReport(reportWithGlobalDelta(0, 0));
     expect(zero).toContain(
-      '<div class="card "><span class="label">&Delta; Score</span><span class="value">0.0%</span></div>',
+      `<div class="card ">${deltaScoreLabel}<span class="value">0.0%</span></div>`,
     );
   });
 });
@@ -465,24 +473,31 @@ describe('generateHtmlReport — unit counts', () => {
     return generateHtmlReport(resultFrom({ units, ...over }));
   }
 
+  // El texto visible de la línea de recuentos: desde T-088 las etiquetas llevan el
+  // término con su tooltip, así que para leer «Clases analizadas: 2 …» del tirón hay
+  // que retirar primero la burbuja de definición y después las etiquetas HTML.
+  function countsText(html: string): string {
+    return html.replace(/<span class="tip"[^>]*>.*?<\/span>/g, '').replace(/<[^>]+>/g, '');
+  }
+
   it('states how many units each run carried', () => {
     const html = reportOf([covered, blind, gone], { removed: [gone] });
 
-    expect(html).toContain('Clases analizadas: 2 (base 3, -1)');
+    expect(countsText(html)).toContain('Clases analizadas: 2 (base 3, -1)');
   });
 
   // Medir más unidades no es ni mejor ni peor, solo distinto: el delta lleva signo
   // pero no color, a diferencia de los de score y cubiertos.
   it('signs the unit delta whichever way it went, including standing still', () => {
-    expect(reportOf([covered, fresh], { added: [fresh] })).toContain(
+    expect(countsText(reportOf([covered, fresh], { added: [fresh] }))).toContain(
       'Clases analizadas: 2 (base 1, +1)',
     );
-    expect(reportOf([covered, gone], { removed: [gone] })).toContain(
+    expect(countsText(reportOf([covered, gone], { removed: [gone] }))).toContain(
       'Clases analizadas: 1 (base 2, -1)',
     );
     // Un «0» pelado detrás de otra cifra se lee como el valor nuevo, no como el
     // cambio; el signo explícito lo desambigua.
-    expect(reportOf([covered])).toContain('Clases analizadas: 1 (base 1, &plusmn;0)');
+    expect(countsText(reportOf([covered]))).toContain('Clases analizadas: 1 (base 1, &plusmn;0)');
   });
 
   // El lado nuevo por sí solo no dice si la cobertura sube o baja, que es la
@@ -492,7 +507,7 @@ describe('generateHtmlReport — unit counts', () => {
 
     // Nueva: 2 clases, una de ellas sin cobertura. Base: 3, todas con cobertura,
     // porque `isUncovered` se evalúa por lado y no se hereda del otro.
-    expect(html).toContain('Con cobertura: 1 (base 3, -2)');
+    expect(countsText(html)).toContain('Con cobertura: 1 (base 3, -2)');
   });
 
   /**
@@ -509,8 +524,9 @@ describe('generateHtmlReport — unit counts', () => {
     expect(countsAt).toBeGreaterThan(-1);
     expect(countsAt).toBeLessThan(html.indexOf('<h2>Resumen'));
     // Por la etiqueta de cada tarjeta y no por `<div class="card`, que casa
-    // también con el `<div class="cards">` que las contiene.
-    expect(section(html, 'Resumen').split('<span class="label">').length - 1).toBe(6);
+    // también con el `<div class="cards">` que las contiene. Sin el `>` final:
+    // desde T-088 la etiqueta es `<span class="label term-wrap">`.
+    expect(section(html, 'Resumen').split('<span class="label').length - 1).toBe(6);
   });
 });
 
@@ -548,6 +564,70 @@ describe('generateHtmlReport — print rules (PDF export)', () => {
     expect(html).not.toContain('<link');
     expect(html).not.toContain('<script');
     expect(html).not.toMatch(/https?:\/\//);
+  });
+});
+
+describe('generateHtmlReport — KPI tooltips y glosario imprimible (T-088)', () => {
+  let html: string;
+
+  beforeAll(() => {
+    html = generateHtmlReport(resultFrom());
+  });
+
+  it('wires a focusable term to its tooltip on every summary card', () => {
+    const cardTips = [
+      ['tip-score-base', 'Score base', KPI_GLOSSARY.score],
+      ['tip-score-head', 'Score nuevo', KPI_GLOSSARY.score],
+      ['tip-score-delta', '&Delta; Score', KPI_GLOSSARY.score],
+      ['tip-covered-base', 'Cubiertos base', KPI_GLOSSARY.coveredMutants],
+      ['tip-covered-head', 'Cubiertos nuevos', KPI_GLOSSARY.coveredMutants],
+      ['tip-covered-delta', '&Delta; Cubiertos', KPI_GLOSSARY.coveredMutants],
+    ] as const;
+
+    for (const [id, label, entry] of cardTips) {
+      expect(html).toContain(
+        `<span class="term" tabindex="0" aria-describedby="${id}">${label}</span><span class="tip" role="tooltip" id="${id}">${entry.definition}</span>`,
+      );
+    }
+  });
+
+  it('wires the two header counts to their tooltips', () => {
+    expect(html).toContain(
+      `<span class="term" tabindex="0" aria-describedby="tip-analyzed">Clases analizadas</span><span class="tip" role="tooltip" id="tip-analyzed">${KPI_GLOSSARY.analyzedClasses.definition}</span>`,
+    );
+    expect(html).toContain(
+      `<span class="term" tabindex="0" aria-describedby="tip-covered-classes">Con cobertura</span><span class="tip" role="tooltip" id="tip-covered-classes">${KPI_GLOSSARY.coveredClasses.definition}</span>`,
+    );
+  });
+
+  it('shows the tooltip on hover and on keyboard focus only', () => {
+    // CSS-only a propósito: el informe sigue sin `<script>` (decisión de T-016).
+    expect(html).toContain('.term:hover + .tip, .term:focus + .tip { display: block; }');
+    expect(html).not.toContain('<script');
+  });
+
+  it('keeps tooltips out of print and prints the glossary instead', () => {
+    const printBlock = html.slice(html.indexOf('@media print'), html.indexOf('</style>'));
+    // Con !important: `.term:hover/:focus + .tip` es más específico que `.tip` y
+    // sin él un término enfocado al imprimir dejaría su burbuja en el PDF.
+    expect(printBlock).toContain('.tip { display: none !important; }');
+    expect(printBlock).toContain('.term { text-decoration: none; cursor: auto; }');
+    expect(printBlock).toContain('.glossary { display: block;');
+  });
+
+  it('renders a glossary footer with the eight definitions, hidden on screen', () => {
+    expect(html).toContain('<footer class="glossary">');
+    for (const entry of Object.values(KPI_GLOSSARY)) {
+      expect(html).toContain(`<dt>${entry.term}</dt><dd>${entry.definition}</dd>`);
+    }
+    // En pantalla ya están los tooltips; el glosario duplicado sería ruido.
+    const screenCss = html.slice(html.indexOf('<style>'), html.indexOf('@media print'));
+    expect(screenCss).toContain('.glossary { display: none; }');
+  });
+
+  it('adds no fifth section: CA-HU-07 still counts exactly four h2', () => {
+    expect(html.match(/<h2>/g)).toHaveLength(4);
+    expect(html).not.toContain('<h2>Glosario');
   });
 });
 
