@@ -1,5 +1,6 @@
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+import { KPI_GLOSSARY } from 'core';
 import type { ComparisonResult, UnitMetrics } from 'core';
 import { KpiRow } from './KpiRow';
 
@@ -136,6 +137,22 @@ describe('KpiRow', () => {
     render(<KpiRow global={makeGlobal(metrics({ killed: 8 }), metrics({ killed: 8 }))} />);
 
     expect(cardByLabel('Killed')).toHaveAttribute('data-variant', 'neutral');
+  });
+
+  // Un tooltip por conteo (T-088), con la misma definición del glosario de `core`
+  // que usan la banda y el informe exportado.
+  it('describes each count with its glossary definition', () => {
+    render(<KpiRow global={makeGlobal(metrics(), metrics())} />);
+
+    const entries = [
+      KPI_GLOSSARY.killed,
+      KPI_GLOSSARY.survivors,
+      KPI_GLOSSARY.noCoverage,
+      KPI_GLOSSARY.timeouts,
+    ];
+    for (const entry of entries) {
+      expect(screen.getByText(entry.term)).toHaveAccessibleDescription(entry.definition);
+    }
   });
 
   // Sin polaridad buena/mala clara: subir o bajar no dice por sí solo si va mejor.

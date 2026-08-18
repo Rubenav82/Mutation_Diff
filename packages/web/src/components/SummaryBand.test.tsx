@@ -1,6 +1,7 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
+import { KPI_GLOSSARY } from 'core';
 import type { ComparisonResult, UnitMetrics } from 'core';
 import { SummaryBand } from './SummaryBand';
 
@@ -186,8 +187,10 @@ describe('SummaryBand', () => {
   it('opens with the count and keeps the score as the headline', () => {
     const { container } = renderBand();
 
+    // Por el término y no por `firstElementChild.textContent`: desde T-088 la
+    // etiqueta lleva al lado su burbuja de definición, que no es parte del rótulo.
     const labels = Array.from(container.querySelectorAll('[data-variant]')).map(
-      (node) => node.firstElementChild?.textContent,
+      (node) => node.querySelector('[data-kpi="term"]')?.textContent,
     );
     expect(labels).toEqual([
       'Clases analizadas',
@@ -253,6 +256,22 @@ describe('SummaryBand', () => {
     renderBand();
 
     expect(within(figure('Mutation score')).getByText('▲')).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  // Un tooltip por cifra (T-088): la etiqueta sola ya provocó dos confusiones
+  // reales con las métricas homónimas de PiTest (T-032, T-079).
+  it('describes each figure with its glossary definition', () => {
+    renderBand();
+
+    const entries = [
+      KPI_GLOSSARY.analyzedClasses,
+      KPI_GLOSSARY.coveredClasses,
+      KPI_GLOSSARY.score,
+      KPI_GLOSSARY.coveredMutants,
+    ];
+    for (const entry of entries) {
+      expect(screen.getByText(entry.term)).toHaveAccessibleDescription(entry.definition);
+    }
   });
 
   it('counts the regressions, in singular and plural', () => {
