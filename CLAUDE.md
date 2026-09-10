@@ -406,6 +406,13 @@ La app se despliega como **ficheros estáticos**: `packages/web/dist` (un `index
 - **`:focus-visible` no se dispara con `element.focus()` programático** (tampoco en Playwright); para verificar o testear el tooltip por teclado hay que llegar con Tab real. El hover en jsdom directamente no existe: la parte visual de esto se verifica en navegador, los tests unitarios fijan el cableado (`aria-describedby`, texto, `tabindex`).
 - Las etiquetas visibles de los ocho KPI son exactamente los `term` del glosario; `SummaryBand`/`KpiRow` ya no llevan strings de etiqueta propios. Si se renombra un KPI, se toca el glosario (y sus tests exactos), no los componentes.
 
+## Notas de versión (fijado en T-089)
+
+- **`packages/web/src/lib/releaseNotes.ts` es la fuente única del historial de cambios** que muestra el diálogo «Notas de versión» del panel «?». Vive en `web`, no en `core`: es contenido del cromo de la app y solo lo consume la SPA — no confundir con el glosario de T-088, que sí comparten SPA e informe y por eso vive en `core`.
+- **La constitución #8 se hace exigible con un test, no con memoria**: `releaseNotes.test.ts` fija `RELEASE_NOTES[0].version === version` (la importada de `package.json`). Subir la versión sin añadir su entrada — o al revés — pone la suite en rojo. Mismo mecanismo que ya usaba `AboutMenu.test.tsx`: el test no fija el número, fija la coherencia. El test también fija orden descendente semver (con clave de ancho fijo: la comparación de strings pelada ordenaría `1.10.0` antes que `1.2.0`) y que cada entrada tenga fecha ISO y al menos un cambio.
+- **Las entradas se redactan para el usuario** (qué cambió y qué le aporta, en español), no como lista de commits — para eso están git y `docs/tasks.md`. Las fechas del retroactivo (1.0.0 → 1.2.0) son las de los commits reales de subida de versión, verificadas en git, no estimadas.
+- `ReleaseNotesDialog` sigue el patrón modal a mano de T-076/T-077 (overlay + `role="dialog"` + Escape + foco al cerrar al montar); el contenido sale entero de `RELEASE_NOTES` y el componente solo presenta. La fecha va en su propio nodo fuera del `<h3>` para que el nombre accesible de cada entrada sea solo `v<versión>`.
+
 ## Convenciones
 
 - Nombres de código, tipos y comentarios de API en inglés; documentación de producto (docs/) en español.
@@ -421,5 +428,5 @@ La app se despliega como **ficheros estáticos**: `packages/web/dist` (un `index
 2. Typecheck y lint sin errores.
 3. Criterios de aceptación de la HU asociada cumplidos (docs/spec.md §1.4).
 4. Casilla marcada en docs/tasks.md y, si aplica, docs actualizados.
-5. Versión subida si el cambio se ve o se usa (minor) o corrige algo (patch), en los cuatro `package.json` a la vez — ver «Versión de la aplicación».
+5. Versión subida si el cambio se ve o se usa (minor) o corrige algo (patch), en los cuatro `package.json` a la vez, y su entrada añadida a `releaseNotes.ts` en el mismo commit — ver «Versión de la aplicación» y «Notas de versión».
 6. Sin `any` sin justificar, sin código muerto, sin console.log de depuración.
