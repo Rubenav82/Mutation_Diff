@@ -156,6 +156,10 @@ test-results/
 playwright-report/
 blob-report/
 playwright/.cache/
+# Residuo local del navegador de verificación (snapshots/logs de sesión):
+# nunca es fuente del proyecto, y un `git add .` que lo arrastre rompe
+# `prettier --check` en CI con sus YAML generados.
+.playwright-mcp/
 
 # Artefacto de release: lo construye el workflow en la raíz y se adjunta a la
 # release. Nunca se versiona.
