@@ -66,6 +66,26 @@ describe('AboutMenu', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
+  it('opens the release notes and closes the panel behind it', async () => {
+    const user = await openPanel();
+
+    await user.click(screen.getByRole('button', { name: /notas de versión/i }));
+
+    expect(screen.getByRole('dialog', { name: /notas de versión/i })).toBeInTheDocument();
+    // Mismo criterio que la política de privacidad: el panel no se queda
+    // abierto detrás del overlay.
+    expect(screen.queryByRole('region', { name: /acerca de/i })).not.toBeInTheDocument();
+  });
+
+  it('closes the release notes again', async () => {
+    const user = await openPanel();
+    await user.click(screen.getByRole('button', { name: /notas de versión/i }));
+
+    await user.click(screen.getByRole('button', { name: /cerrar/i }));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
   it('closes the panel on Escape', async () => {
     const user = await openPanel();
 

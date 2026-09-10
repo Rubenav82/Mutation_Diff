@@ -9,3 +9,4 @@
 5. **TypeScript en todo el stack** (backend y frontend), ESM, Node ≥ 20.
 6. **El reporte HTML exportable es autocontenido**: un solo fichero .html sin dependencias externas, abrible offline.
 7. **Los datos nunca salen del servidor del usuario**: no hay llamadas a terceros con el contenido de los reportes.
+8. **Versionado visible**: todo cambio visible para el usuario sube la versión semver (los cuatro `package.json` en bloque) y añade su entrada a las notas de versión de la aplicación, en el mismo commit. El panel de ayuda muestra ambas cosas —la versión actual y el historial de cambios—, así que una versión o unas notas desactualizadas son una afirmación falsa en pantalla.

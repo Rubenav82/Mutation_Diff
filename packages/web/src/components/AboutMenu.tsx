@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { APP_NAME, APP_VERSION, CONTACT_EMAIL, COPYRIGHT, LICENSE } from '../lib/appInfo';
 import { PrivacyPolicyDialog } from './PrivacyPolicyDialog';
+import { ReleaseNotesDialog } from './ReleaseNotesDialog';
 
 const PANEL_ID = 'about-panel';
 
@@ -18,6 +19,7 @@ const ITEM_CLASS =
 export function AboutMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
+  const [isNotesOpen, setIsNotesOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -87,10 +89,25 @@ export function AboutMenu() {
             </span>
             Política de privacidad
           </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setIsNotesOpen(true);
+              setIsOpen(false);
+            }}
+            className={`${ITEM_CLASS} border-t border-line`}
+          >
+            <span aria-hidden="true" className="text-muted">
+              ≡
+            </span>
+            Notas de versión
+          </button>
         </div>
       )}
 
       {isPrivacyOpen && <PrivacyPolicyDialog onClose={() => setIsPrivacyOpen(false)} />}
+      {isNotesOpen && <ReleaseNotesDialog onClose={() => setIsNotesOpen(false)} />}
     </div>
   );
 }
