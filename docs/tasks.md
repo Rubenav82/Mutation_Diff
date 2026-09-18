@@ -105,9 +105,52 @@
 
 - [x] T-089 Notas de versión en el panel de ayuda, a petición del usuario, junto con el principio #8 de `docs/constitution.md` (todo cambio visible sube la versión **y** anota sus cambios en el mismo commit). **Fuente única en `web`** (`lib/releaseNotes.ts`): es cromo de la app y solo lo consume la SPA — a diferencia del glosario de T-088, que comparten SPA e informe y vive en `core`. La regla se hace exigible con un test, no con memoria: `releaseNotes.test.ts` fija que la primera entrada coincida con la versión de `package.json` (subir una sin la otra rompe la suite), además del orden descendente semver y que cada entrada tenga fecha ISO y al menos un cambio. `ReleaseNotesDialog` reutiliza el patrón modal a mano de T-076/T-077, con la fecha fuera del `<h3>` para que el nombre accesible de cada entrada sea solo la versión; nuevo ítem «Notas de versión» en `AboutMenu`, que cierra el panel al abrir el diálogo como ya hacía la política de privacidad. Retroactivo con las cuatro versiones publicadas (1.0.0 → 1.2.0), con las fechas de los commits reales de subida de versión verificadas en git. La «Definición de hecho» #5 de `CLAUDE.md` incorpora la entrada en las notas. Versión a **1.3.0**, cuya entrada estrena la lista.
 
+### Fase 4.7 — Análisis por mutante, integración en pipelines y deuda
+
+> Propuesta de evolución del 2026-09-18, a partir de las limitaciones que reconoce el README (un fichero por lado, sin persistencia) y de lo que el modelo de dominio ya contiene pero la interfaz no enseña (`Mutant` lleva línea, mutador y estado en ambas ejecuciones). Orden por valor frente a coste. **La Fase 5 queda bloqueada por T-096**: tal como está escrita contradice la distribución estática (Fase 4.6) y la política de privacidad (T-077).
+
+**Detalle a nivel de mutante**
+
+- [ ] T-090 `core`: comparación de mutantes dentro de cada unidad. Emparejar los mutantes de base y head por `line` + `mutator` (desambiguando por orden de aparición cuando coinciden varios en la misma línea, que pasa con mutadores que generan más de un mutante por sentencia) y clasificar el cambio: `newly-survived` (matado antes, superviviente ahora — el caso accionable), `newly-killed`, `newly-uncovered`, `unchanged`, `added`, `removed`. Tipo `MutantComparison` y campo `mutants` en `UnitComparison`. Los ids secuenciales de T-011 no sirven para emparejar (no tienen significado fuera de su `NormalizedRun`), de ahí la clave compuesta. **Vigilar el tamaño**: `ComparisonResult` se guarda en `sessionStorage` (cuota ~5 MB, T-071) y mil clases con decenas de mutantes cada una pueden pasarse; medir con las fixtures realistas y, si hace falta, guardar solo los mutantes con cambio, no los `unchanged`.
+- [ ] T-091 `web`: fila expandible en la tabla completa y en la sección «Retrocesos» con los mutantes de la unidad ordenados por línea (línea, mutador, estado base → estado nuevo), y un filtro «solo nuevos supervivientes». Es la respuesta a la pregunta real ante un retroceso: *qué* dejó de matarse y *dónde*. Sin ello el informe diagnostica pero no dice qué tocar. Botón de expandir con `aria-expanded` y nombre accesible que lleve la clave de la unidad (mismo criterio que los controles de paginación de T-083).
+- [ ] T-092 Informe exportado: nuevos supervivientes bajo cada fila del bloque «Retrocesos» **solo** (CA-HU-07 fija cuatro secciones, así que va anidado, no como sección nueva; y solo el estado accionable, no los seis). Condicionado al presupuesto de 2 MB: el test de T-016 mide 5.000 unidades todas en retroceso, y T-079 lo dejó en 1,62 MB. Si con mutantes no cabe, limitar a N por unidad con «y M más» y documentarlo; si ni así, dejarlo fuera del informe y anotar por qué.
+- [ ] T-093 Desglose por mutador: agregación en `core` (`mutatorBreakdown(run)`: por mutador, total/matados/supervivientes/sin cubrir) y tabla en el dashboard con base, nueva y Δ de supervivientes. Sirve para decidir qué mutadores excluir de la configuración de PiTest/Stryker, que es la pregunta que se hace quien ve un score estancado. Solo dashboard; el informe no lo lleva salvo que se pida.
+
+**Integración en pipelines**
+
+- [ ] T-094 `packages/cli` (workspace nuevo, sustituye a T-060): `mutadiff compare --tool pitest|stryker <base> <head> [--regression-threshold N] [--uncovered-threshold N] [--format json|markdown|html] [--out fichero] [--fail-on-regression]`. Depende **solo** de `core`; argumentos con `parseArgs` de `node:util`, sin librería nueva. Código de salida distinto de cero con `--fail-on-regression` si `regressions` no está vacío: es lo que convierte la herramienta en puerta de calidad. La salida `html` reutiliza `generateHtmlReport`; la `markdown` es un resumen pensado para pegar en una PR (KPI globales + tabla de retrocesos). `createdAt` lo pone el CLI (mismo reparto que server/web: `core` sigue puro). Registrar la `reference` en el `tsconfig.json` raíz (regla de T-021).
+- [ ] T-095 GitHub Action (`action.yml` compuesta en el propio repo) que ejecuta el CLI y publica el Markdown en `$GITHUB_STEP_SUMMARY` y, si hay token, como comentario de la PR. Verificarla con dogfooding: el nightly de mutación (T-040) ya genera `reports/mutation/mutation.json` en el formato que MutaDiff consume; comparar contra el artifact de la pasada anterior es una prueba real del CLI y de paso avisa si el score de `core` retrocede entre noches, cosa que hoy solo detecta el umbral fijo del 70 %.
+
+**Decisión pendiente**
+
+- [ ] T-096 Resolver la contradicción de la Fase 5. T-050 a T-058 asumen Express + SQLite, pero desde la Fase 4.6 el despliegue es estático y T-077 promete cero peticiones de red al comparar. Opciones: **(a)** histórico local en el navegador —IndexedDB (sin la cuota de `sessionStorage`, sin dependencia nueva), guardado opt-in de `NormalizedRun` con etiqueta y fecha, proyectos como agrupación, gráfico de evolución del score con Recharts (HU-11) sobre esos datos, y exportar/importar el histórico como JSON porque un histórico atado a un perfil de navegador no se comparte ni se mueve de máquina; **(b)** mantener el servidor y reescribir la política de privacidad y el stack de `compose/`. Entregable: decisión escrita en `docs/plan.md` §2.3.2 y reescritura de T-050…T-058 aquí. Recomendación: (a), cumple HU-10 y HU-11 sin romper la promesa de privacidad.
+
+**Deuda técnica y robustez**
+
+- [ ] T-097 `npm audit` reporta 17 vulnerabilidades (7 moderadas, 10 altas) al arrancar la sesión del 2026-09-18. Resolverlas (distinguir las de dependencias de desarrollo de las que llegan al bundle, que son las que importan al usuario) y añadir Dependabot con agrupación semanal para que no vuelvan a acumularse. `.github/**` está en el `paths-ignore` de `release.yml` (T-086), así que la config no dispara release.
+- [ ] T-098 Ampliar el mutation testing a `packages/web/src/lib/**/*.ts`: es lógica pura (store, formato, clipboard, id, comparaciones) hoy fuera del umbral del 70 %. Solo `lib/`, no componentes: los tests de RTL verifican roles y `data-*`, no ramas, y mutarlos daría supervivientes sin señal. Comprobar el recuento de la línea `Initial test run succeeded` (nota de T-040): si el runner deja de acotar a un paquete, se sabrá por ahí, no por un fallo.
+- [ ] T-099 e2e sobre el `dist` construido: recuperar de la rama `fix/app_compiled` **solo** `e2e/artifact.spec.ts` (no el plugin de fichero único, que sigue revertido por decisión de T-075) y servir `packages/web/dist` con un servidor estático sin fallback bajo un subpath. Cierra el hueco de T-073: hoy ni CI ni la release ejercitan lo que se publica.
+- [ ] T-100 Accesibilidad automatizada con axe-core en los e2e (wizard vacío, con error de validación y con el panel de ayuda abierto; dashboard con datos). Se ha invertido en roles y live regions a mano desde T-036 y no hay nada que avise si se degradan. `@axe-core/playwright` no está en `docs/plan.md` §2.1: preguntar antes de instalarlo.
+
+**Ingesta multi-módulo (HU-12 b/c)**
+
+- [ ] T-101 `core`: `mergeRuns(runs: NormalizedRun[]): NormalizedRun`. Misma herramienta obligatoria (error explícito si no), unidades concatenadas, métricas globales recalculadas con `aggregateMetrics` (no sumadas de los parciales), `createdAt` el más reciente, `label` compuesto. Colisión de `key` entre módulos → error explícito, no fusión silenciosa: dos módulos con el mismo FQCN es un problema real del proyecto de origen y hay que verlo. Es la parte con lógica de verdad; la ingesta es cableado.
+- [ ] T-102 `web`: `FileDropZone` acepta varios ficheros y carpetas (`webkitdirectory`, arrastrar una carpeta), filtra por extensión en cliente y muestra cuántos ficheros entran; `lib/comparisons.ts` parsea cada uno y llama a `mergeRuns`. Un proyecto Maven multi-módulo genera un `mutations.xml` por módulo y hoy obliga a elegir uno: es la limitación número uno del README, actualizarlo en el mismo commit.
+- [ ] T-102b ZIP descomprimido en cliente. Necesita una librería (`fflate` es la candidata: pequeña y sin dependencias) que no está en `docs/plan.md` §2.1 — preguntar antes. Con carpetas y varios ficheros ya resueltos en T-102, esto es comodidad, no capacidad: si no se aprueba la dependencia, la tarea se cierra sin hacer.
+
+**Continuidad y compartición**
+
+- [ ] T-103 Exportar e importar una comparación como fichero `.mutadiff.json` (el `ComparisonResult` más `context`), con botón junto a los de exportar y una zona «Importar comparación» en el wizard. Resuelve «te paso el resultado» y «la perdí al cerrar la pestaña» sin servidor. Descartado embeberlo en el HTML exportado aunque `<script type="application/json">` no sea ejecutable: el e2e de T-041 verifica que el informe no lleva `<script>` y reabrir esa decisión por esto no compensa. Validar el JSON importado con Zod (ya en el stack) antes de darlo por bueno.
+- [ ] T-104 Recordar herramienta y umbrales en `localStorage` (best-effort con `try/catch`, mismo criterio que `comparisonStore`). Quien usa la app a diario pone los mismos valores cada vez.
+
+**Ideas sin planificar (requieren decisión previa)**
+
+- [ ] T-105 Más herramientas. El JSON de Stryker es el esquema de mutation-testing-elements, así que Stryker.NET y Stryker4s ya entran sin tocar nada; conviene decirlo en el README. Candidatos con formato estable: Infection (PHP), mutmut (Python), cargo-mutants (Rust). Cada uno es un parser en `core` con el patrón de T-011/T-012, con fixture real obtenida de la herramienta, no escrita a mano.
+- [ ] T-106 Interactividad en el informe exportado (filtro y orden). T-016 decidió sin `<script>` a propósito y el e2e de T-041 lo verifica; con 5.000 filas en HTML estático la decisión merece revisarse, pero es un cambio de principio: tomarlo conscientemente y actualizar `docs/plan.md`, el test y el e2e a la vez, o dejarlo como está.
+
 ### Fase 5 (v2) — Histórico y persistencia
 
-> T-050 a T-058 son el desglose de lo que antes era una única tarea "Persistencia SQLite". Mismo grano que las fases 2 y 3: un endpoint o una pantalla por tarea, un commit por tarea. Cubren HU-10 y HU-11.
+> **Bloqueada por T-096** (Fase 4.7): el desglose que sigue asume un servidor que la Fase 4.6 dejó fuera del despliegue; no empezar T-050 sin esa decisión. T-050 a T-058 son el desglose de lo que antes era una única tarea "Persistencia SQLite". Mismo grano que las fases 2 y 3: un endpoint o una pantalla por tarea, un commit por tarea. Cubren HU-10 y HU-11.
 
 **Backend**
 
@@ -129,5 +172,5 @@
 
 **Independientes de la persistencia**
 
-- [ ] T-059 Atribución de autor vía git log.
-- [ ] T-060 Modo CLI reutilizando `core` (para integrarlo en pipelines).
+- [ ] T-059 Atribución de autor vía git log. Solo tiene sentido desde el CLI (T-094): la SPA estática no tiene acceso al repositorio.
+- [ ] ~~T-060 Modo CLI reutilizando `core` (para integrarlo en pipelines).~~ Sustituida por T-094 (Fase 4.7), que la concreta.
