@@ -6,5 +6,6 @@ export * from './domain/kpiGlossary.js';
 export * from './parsers/pitestParser.js';
 export * from './parsers/strykerParser.js';
 export * from './compare/comparisonEngine.js';
+export * from './compare/mutantComparison.js';
 export * from './compare/unitCounts.js';
 export * from './report/htmlReportGenerator.js';

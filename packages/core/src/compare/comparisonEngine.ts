@@ -6,6 +6,7 @@ import type {
   UnitResult,
 } from '../domain/types.js';
 import { isUncovered } from '../domain/metrics.js';
+import { compareMutants } from './mutantComparison.js';
 
 export interface CompareOptions {
   regressionThreshold?: number;
@@ -61,6 +62,7 @@ function classify(
     scoreDelta,
     coverageDelta,
     isUncovered: isUncovered(headUnit.metrics, uncoveredThreshold),
+    mutantChanges: compareMutants(baseUnit.mutants, headUnit.mutants),
   };
 }
 

@@ -91,6 +91,23 @@ interface NormalizedRun {
 
 type UnitChangeKind = 'improved' | 'regressed' | 'unchanged' | 'added' | 'removed';
 
+// T-090: solo cambios de estado, por eso no hay 'unchanged'
+type MutantChangeKind =
+  | 'newly-survived'             // sobrevive ahora y antes no (el caso accionable)
+  | 'newly-killed'               // detectado ahora (killed/timeout) y antes no
+  | 'newly-uncovered'            // sin cobertura ahora, con ella antes
+  | 'changed'                    // resto de transiciones (killed ↔ timeout, → error/ignored)
+  | 'added' | 'removed';         // presente en una sola ejecución
+
+interface MutantComparison {
+  line: number;
+  mutator: string;
+  description?: string;          // la de head si existe, si no la de base
+  base?: MutantStatus;
+  head?: MutantStatus;
+  kind: MutantChangeKind;
+}
+
 interface UnitComparison {
   key: string;
   kind: UnitChangeKind;
@@ -99,6 +116,7 @@ interface UnitComparison {
   scoreDelta: number | null;
   coverageDelta: number | null;
   isUncovered: boolean;          // según umbral de NO_COVERAGE
+  mutantChanges?: MutantComparison[]; // solo unidades en ambos lados; ordenado por línea
 }
 
 interface ComparisonResult {
@@ -116,6 +134,7 @@ Notas de mapeo:
 - **PiTest** (`mutations.xml`): agrupar `<mutation>` por `mutatedClass`; estados KILLED→killed, SURVIVED→survived, NO_COVERAGE→no_coverage, TIMED_OUT→timeout, NON_VIABLE→killed, MEMORY_ERROR/RUN_ERROR→error. NON_VIABLE va a `killed` porque PiTest lo marca `detected="true"` y lo cuenta en el numerador de su propia cobertura de mutación: mapearlo a `error` dejaba el total de matados de MutaDiff por debajo del informe original.
 - **Stryker** (JSON del schema oficial): iterar `files{}.mutants[]`; Killed→killed, Survived→survived, NoCoverage→no_coverage, Timeout→timeout, CompileError/RuntimeError→error, Ignored→ignored. Normalizar separadores de ruta.
 - El matching entre ejecuciones es por `key`. Documentar limitación: renombrados de clase aparecen como removed + added.
+- El matching de **mutantes** dentro de una unidad (T-090) es por `line` + `mutator`, emparejando por orden de aparición cuando hay varios del mismo mutador en la misma línea; los `id` son contadores por parseo y no sirven entre ejecuciones. Solo se conservan los mutantes cuyo estado cambia: el `ComparisonResult` es lo que se almacena y la lista completa por unidad no cabría en `sessionStorage` para un proyecto grande. Limitación: si una línea se desplaza (código insertado más arriba), sus mutantes aparecen como removed + added.
 
 ### 2.3.1 Ingesta de ficheros PiTest
 
