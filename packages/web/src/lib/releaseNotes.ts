@@ -19,6 +19,13 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.6.1',
+    date: '2026-09-19',
+    changes: [
+      'Actualizadas dependencias con vulnerabilidades publicadas (entre ellas el enrutador de la aplicación); sin cambios de comportamiento.',
+    ],
+  },
+  {
     version: '1.6.0',
     date: '2026-09-18',
     changes: [
