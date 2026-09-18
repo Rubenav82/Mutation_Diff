@@ -432,6 +432,14 @@ La app se despliega como **ficheros estáticos**: `packages/web/dist` (un `index
 - `shortMutatorName` en `lib/format.ts`: PiTest nombra los mutadores por FQCN y el paquete se repite en todas las filas; se muestra el último segmento con el nombre completo en `title`. Un nombre sin punto (Stryker) sale tal cual.
 - Se aplica a las **cuatro** secciones, no solo a «Retrocesos» como decía la tarea: `UnitSection` es un solo componente, las de nuevas/eliminadas no muestran botón por no tener `mutantChanges`, y en «Sin cobertura» los `newly-uncovered` son justo lo que explica la fila.
 
+## Nuevos supervivientes en el informe exportado (fijado en T-092)
+
+- **Fila anidada bajo cada retroceso, no sección nueva** (`renderSurvivorsRow` en `htmlReportGenerator.ts`, activada solo por el `withSurvivors` del bloque «Retrocesos»): CA-HU-07 fija cuatro secciones y el helper `section()` de los tests trocea por `<h2>`. Solo `newly-survived`: es el estado accionable, y la misma unidad vuelve a salir en la tabla completa, donde repetir el detalle costaría el doble sin decir nada nuevo. Hay test de que la tabla completa no lo lleva.
+- **El presupuesto de 2 MB se garantiza por construcción**: `MAX_SURVIVORS_PER_UNIT = 10` (con «y M más») y `MAX_SURVIVOR_ROWS = 2000` sobre **lo que se pintaría** (suma de `min(n, 10)`), no sobre el recuento bruto; por encima, el detalle se omite entero con una nota que sí da el recuento bruto. Todo-o-nada a propósito: un informe con detalle en las primeras clases y sin él en el resto parecería un error. Medido sobre `dist`: el peor caso que se pinta (2.000 retrocesos con un superviviente cada uno + 3.000 iguales) da 1,66 MB; 5.000 retrocesos con detalle omitido, 1,52 MB. Si se sube alguno de los dos topes, volver a medir con `tmp-report-check.mjs` del historial de T-092 o equivalente, no estimar.
+- **`shortMutatorName` vive en `core/domain/mutators.ts`**, no en `web/lib/format.ts` (donde nació en T-091): lo usan la SPA y el informe, y `web → core` está permitido. Mismo criterio que el glosario de T-088.
+- **El test de presupuesto de T-016 no medía el peor caso**: 5.000 `unchanged` con `regressions: []`, aunque las notas de T-079 decían «todas en retroceso». Los dos tests nuevos de `size budget with mutant detail` sí lo hacen; si se toca el markup por fila, son esos los que avisan.
+- Dentro del template `STYLE` los comentarios siguen sin backticks (nota de T-080); los selectores nuevos son `tr.mutants`, `.mutants-title`, `ul.mutants`, `.more`. La fila anidada hereda `tr { break-inside: avoid }` en impresión, así que un retroceso con sus diez supervivientes no se parte entre páginas.
+
 ## Convenciones
 
 - Nombres de código, tipos y comentarios de API en inglés; documentación de producto (docs/) en español.

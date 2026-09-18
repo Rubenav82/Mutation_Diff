@@ -1,6 +1,6 @@
 import { useState } from 'react';
+import { shortMutatorName } from 'core';
 import type { MutantChangeKind, MutantComparison, MutantStatus } from 'core';
-import { shortMutatorName } from '../lib/format';
 
 /** Mismos términos que los KPI del resumen (`kpiGlossary`), para no nombrar un estado de dos formas. */
 const STATUS_LABELS: Record<MutantStatus, string> = {

@@ -5,7 +5,12 @@ import { generateHtmlReport } from './htmlReportGenerator.js';
 import { compareRuns } from '../compare/comparisonEngine.js';
 import { parsePitestReport } from '../parsers/pitestParser.js';
 import { KPI_GLOSSARY } from '../domain/kpiGlossary.js';
-import type { ComparisonResult, UnitComparison, UnitMetrics } from '../domain/types.js';
+import type {
+  ComparisonResult,
+  MutantComparison,
+  UnitComparison,
+  UnitMetrics,
+} from '../domain/types.js';
 
 const fixturesDir = fileURLToPath(new URL('../../test/fixtures/pitest/', import.meta.url));
 
@@ -647,5 +652,224 @@ describe('generateHtmlReport — size budget (CA-HU-07)', () => {
     const html = generateHtmlReport(result);
     const bytes = Buffer.byteLength(html, 'utf-8');
     expect(bytes).toBeLessThan(2 * 1024 * 1024);
+  });
+});
+
+describe('generateHtmlReport — nuevos supervivientes bajo cada retroceso', () => {
+  function regressed(key: string, mutantChanges: MutantComparison[]): UnitComparison {
+    return {
+      key,
+      kind: 'regressed',
+      base: metrics({ score: 90 }),
+      head: metrics({ score: 60 }),
+      scoreDelta: -30,
+      coverageDelta: 0,
+      isUncovered: false,
+      mutantChanges,
+    };
+  }
+
+  const survivor: MutantComparison = {
+    line: 8,
+    mutator: 'org.pitest.mutationtest.engine.gregor.mutators.NegateConditionalsMutator',
+    description: 'negated conditional',
+    base: 'killed',
+    head: 'survived',
+    kind: 'newly-survived',
+  };
+  const detected: MutantComparison = {
+    line: 15,
+    mutator: 'org.pitest.mutationtest.engine.gregor.mutators.MathMutator',
+    base: 'survived',
+    head: 'killed',
+    kind: 'newly-killed',
+  };
+
+  it('lists line, short mutator name and description of each new survivor', () => {
+    const unit = regressed('com.example.StringUtils', [survivor]);
+    const html = generateHtmlReport(resultFrom({ units: [unit], regressions: [unit] }));
+
+    const regressions = section(html, 'Retrocesos');
+    expect(regressions).toContain('Nuevos supervivientes (1)');
+    expect(regressions).toContain('Línea 8');
+    expect(regressions).toContain('NegateConditionalsMutator');
+    expect(regressions).not.toContain('org.pitest.mutationtest.engine.gregor.mutators');
+    expect(regressions).toContain('negated conditional');
+  });
+
+  it('shows only the new survivors, not the other changes of the unit', () => {
+    const unit = regressed('com.example.StringUtils', [survivor, detected]);
+    const html = generateHtmlReport(resultFrom({ units: [unit], regressions: [unit] }));
+
+    const regressions = section(html, 'Retrocesos');
+    expect(regressions).toContain('Nuevos supervivientes (1)');
+    expect(regressions).not.toContain('MathMutator');
+  });
+
+  it('adds nothing under a regressed unit without new survivors', () => {
+    const unit = regressed('com.example.StringUtils', [detected]);
+    const html = generateHtmlReport(resultFrom({ units: [unit], regressions: [unit] }));
+
+    expect(section(html, 'Retrocesos')).not.toContain('Nuevos supervivientes');
+  });
+
+  it('keeps the detail out of the full table, where the same unit also appears', () => {
+    const unit = regressed('com.example.StringUtils', [survivor]);
+    const html = generateHtmlReport(resultFrom({ units: [unit], regressions: [unit] }));
+
+    expect(section(html, 'Todas las unidades')).not.toContain('Nuevos supervivientes');
+    expect(section(html, 'Todas las unidades')).not.toContain('negated conditional');
+  });
+
+  it('escapes mutator and description coming from the report', () => {
+    const unit = regressed('com.example.StringUtils', [
+      { ...survivor, mutator: '<img src=x onerror=alert(1)>', description: '<b>bold</b>' },
+    ]);
+    const html = generateHtmlReport(resultFrom({ units: [unit], regressions: [unit] }));
+
+    expect(html).not.toContain('<img src=x');
+    expect(html).not.toContain('<b>bold</b>');
+    expect(html).toContain('&lt;img src=x');
+  });
+
+  it('caps the list at ten survivors per unit and says how many more there are', () => {
+    const many = Array.from({ length: 12 }, (_, i) => ({ ...survivor, line: 100 + i }));
+    const unit = regressed('com.example.StringUtils', many);
+    const html = generateHtmlReport(resultFrom({ units: [unit], regressions: [unit] }));
+
+    const regressions = section(html, 'Retrocesos');
+    expect(regressions).toContain('Nuevos supervivientes (12)');
+    expect(regressions).toContain('Línea 109');
+    expect(regressions).not.toContain('Línea 110');
+    expect(regressions).toContain('y 2 más');
+  });
+
+  it('does not mention "more" when the unit fits the cap exactly', () => {
+    const ten = Array.from({ length: 10 }, (_, i) => ({ ...survivor, line: 100 + i }));
+    const unit = regressed('com.example.StringUtils', ten);
+    const html = generateHtmlReport(resultFrom({ units: [unit], regressions: [unit] }));
+
+    expect(section(html, 'Retrocesos')).toContain('Línea 109');
+    expect(section(html, 'Retrocesos')).not.toContain('más');
+  });
+
+  it('drops the detail altogether, with a note, when it would exceed 2000 rows', () => {
+    // 201 unidades × 10 supervivientes visibles = 2010 filas, por encima del tope.
+    const units = Array.from({ length: 201 }, (_, i) =>
+      regressed(
+        `com.example.Class${i}`,
+        Array.from({ length: 10 }, (_, j) => ({ ...survivor, line: j + 1 })),
+      ),
+    );
+    const html = generateHtmlReport(resultFrom({ units, regressions: units }));
+
+    const regressions = section(html, 'Retrocesos');
+    expect(regressions).not.toContain('Nuevos supervivientes (');
+    expect(regressions).not.toContain('NegateConditionalsMutator');
+    expect(regressions).toContain(
+      'Detalle de mutantes omitido: 2010 nuevos supervivientes no caben en el informe.',
+    );
+  });
+
+  it('keeps the detail when the total sits exactly at the cap', () => {
+    const units = Array.from({ length: 200 }, (_, i) =>
+      regressed(
+        `com.example.Class${i}`,
+        Array.from({ length: 10 }, (_, j) => ({ ...survivor, line: j + 1 })),
+      ),
+    );
+    const html = generateHtmlReport(resultFrom({ units, regressions: units }));
+
+    expect(section(html, 'Retrocesos')).toContain('Nuevos supervivientes (10)');
+    expect(section(html, 'Retrocesos')).not.toContain('Detalle de mutantes omitido');
+  });
+
+  it('counts only what would be rendered, so a unit above the per-unit cap adds ten', () => {
+    // 100 unidades × 30 supervivientes = 3000 en total, pero solo 1000 filas visibles.
+    const units = Array.from({ length: 100 }, (_, i) =>
+      regressed(
+        `com.example.Class${i}`,
+        Array.from({ length: 30 }, (_, j) => ({ ...survivor, line: j + 1 })),
+      ),
+    );
+    const html = generateHtmlReport(resultFrom({ units, regressions: units }));
+
+    expect(section(html, 'Retrocesos')).toContain('Nuevos supervivientes (30)');
+    expect(section(html, 'Retrocesos')).toContain('y 20 más');
+  });
+
+  it('renders the mini fixture regression with its new survivor', () => {
+    const base = parsePitestReport(readFixture('mini/base.xml'), {
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
+    const head = parsePitestReport(readFixture('mini/head.xml'), {
+      createdAt: '2026-01-02T00:00:00.000Z',
+    });
+    const html = generateHtmlReport(compareRuns(base, head));
+
+    const regressions = section(html, 'Retrocesos');
+    expect(regressions).toContain('Línea 8');
+    expect(regressions).toContain('NegateConditionalsMutator');
+  });
+});
+
+describe('generateHtmlReport — size budget with mutant detail (CA-HU-07)', () => {
+  it('stays under 2 MB when all 5000 units regressed and carry new survivors', () => {
+    const units: UnitComparison[] = Array.from({ length: 5000 }, (_, i) => ({
+      key: `com.example.generated.Class${i}`,
+      kind: 'regressed',
+      base: metrics({ score: 90 }),
+      head: metrics({ score: 60 }),
+      scoreDelta: -30,
+      coverageDelta: 0,
+      isUncovered: false,
+      mutantChanges: Array.from({ length: 3 }, (_, j) => ({
+        line: 10 + j,
+        mutator: 'org.pitest.mutationtest.engine.gregor.mutators.NegateConditionalsMutator',
+        description: 'negated conditional',
+        base: 'killed' as const,
+        head: 'survived' as const,
+        kind: 'newly-survived' as const,
+      })),
+    }));
+    const result = resultFrom({ units, regressions: units });
+
+    const html = generateHtmlReport(result);
+    const bytes = Buffer.byteLength(html, 'utf-8');
+    expect(bytes).toBeLessThan(2 * 1024 * 1024);
+  });
+
+  it('stays under 2 MB with 200 regressed units carrying the full ten survivors each', () => {
+    const units: UnitComparison[] = Array.from({ length: 200 }, (_, i) => ({
+      key: `com.example.generated.Class${i}`,
+      kind: 'regressed',
+      base: metrics({ score: 90 }),
+      head: metrics({ score: 60 }),
+      scoreDelta: -30,
+      coverageDelta: 0,
+      isUncovered: false,
+      mutantChanges: Array.from({ length: 10 }, (_, j) => ({
+        line: 10 + j,
+        mutator: 'org.pitest.mutationtest.engine.gregor.mutators.NegateConditionalsMutator',
+        description: 'Replaced double multiplication with division',
+        base: 'killed' as const,
+        head: 'survived' as const,
+        kind: 'newly-survived' as const,
+      })),
+    }));
+    const filler: UnitComparison[] = Array.from({ length: 4800 }, (_, i) => ({
+      key: `com.example.generated.Other${i}`,
+      kind: 'unchanged',
+      base: metrics(),
+      head: metrics(),
+      scoreDelta: 0,
+      coverageDelta: 0,
+      isUncovered: false,
+      mutantChanges: [],
+    }));
+    const result = resultFrom({ units: [...units, ...filler], regressions: units });
+
+    const html = generateHtmlReport(result);
+    expect(Buffer.byteLength(html, 'utf-8')).toBeLessThan(2 * 1024 * 1024);
   });
 });

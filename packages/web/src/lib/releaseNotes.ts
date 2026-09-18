@@ -19,6 +19,13 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.5.0',
+    date: '2026-09-18',
+    changes: [
+      'El informe exportado lista bajo cada retroceso sus nuevos supervivientes (línea, mutador y descripción), hasta diez por clase; si el detalle no cabe en el informe, lo dice en lugar de omitirlo en silencio.',
+    ],
+  },
+  {
     version: '1.4.0',
     date: '2026-09-18',
     changes: [
