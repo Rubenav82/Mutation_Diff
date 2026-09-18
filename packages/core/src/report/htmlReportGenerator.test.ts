@@ -905,3 +905,98 @@ describe('generateHtmlReport — size budget with mutant detail (CA-HU-07)', () 
     expect(Buffer.byteLength(html, 'utf-8')).toBeLessThan(2 * 1024 * 1024);
   });
 });
+
+describe('generateHtmlReport — tabla por mutador dentro del resumen', () => {
+  const PREFIX = 'org.pitest.mutationtest.engine.gregor.mutators.';
+
+  function miniHtml(): string {
+    const base = parsePitestReport(readFixture('mini/base.xml'), {
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
+    const head = parsePitestReport(readFixture('mini/head.xml'), {
+      createdAt: '2026-01-02T00:00:00.000Z',
+    });
+    return generateHtmlReport(compareRuns(base, head));
+  }
+
+  it('renders the table under the summary cards, not as a fifth section', () => {
+    const html = miniHtml();
+    const summary = section(html, 'Resumen');
+    expect(summary).toContain('<h3 class="sub">Por mutador</h3>');
+    expect(summary).toContain(
+      '<thead><tr><th>Mutador</th><th>Mutantes</th><th>Survivors base</th><th>Survivors nueva</th><th>&Delta; Survivors</th><th>Sin cubrir nueva</th><th>Score nueva</th></tr></thead>',
+    );
+    expect(html.match(/<h2>/g)).toHaveLength(4);
+  });
+
+  it('renders each mutator row with short name, counts, signed delta and new score', () => {
+    const summary = section(miniHtml(), 'Resumen');
+    expect(summary).toContain(
+      `<tr><td title="${PREFIX}NegateConditionalsMutator">NegateConditionalsMutator</td><td>1</td><td>0</td><td>1</td><td class="worse">+1</td><td>0</td><td>0.0%</td></tr>`,
+    );
+    expect(summary).toContain(
+      `<tr><td title="${PREFIX}MathMutator">MathMutator</td><td>3</td><td>1</td><td>0</td><td class="better">-1</td><td>0</td><td>100.0%</td></tr>`,
+    );
+  });
+
+  it('keeps the order core gives: most survivors in the new run first', () => {
+    const summary = section(miniHtml(), 'Resumen');
+    expect(summary.indexOf('NegateConditionalsMutator')).toBeLessThan(
+      summary.indexOf('MathMutator'),
+    );
+    expect(summary.indexOf('ReturnValsMutator')).toBeLessThan(
+      summary.indexOf('VoidMethodCallMutator'),
+    );
+  });
+
+  it('shows an em dash for every cell of the side a mutator is missing from', () => {
+    const summary = section(miniHtml(), 'Resumen');
+    expect(summary).toContain(
+      `<tr><td title="${PREFIX}VoidMethodCallMutator">VoidMethodCallMutator</td><td>—</td><td>0</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>`,
+    );
+    expect(summary).toContain(
+      `<tr><td title="${PREFIX}ReturnValsMutator">ReturnValsMutator</td><td>1</td><td>—</td><td>0</td><td>—</td><td>1</td><td>0.0%</td></tr>`,
+    );
+  });
+
+  it('signs a zero delta and gives it no colour class', () => {
+    const html = generateHtmlReport(
+      resultFrom({
+        mutators: [
+          {
+            mutator: 'Same',
+            base: metrics({ survived: 2 }),
+            head: metrics({ survived: 2 }),
+            survivedDelta: 0,
+            scoreDelta: 0,
+          },
+        ],
+      }),
+    );
+    expect(section(html, 'Resumen')).toContain('<td>&plusmn;0</td>');
+  });
+
+  it('escapes a mutator name coming from the report', () => {
+    const html = generateHtmlReport(
+      resultFrom({
+        mutators: [
+          {
+            mutator: '<img src=x onerror=alert(1)>',
+            head: metrics(),
+            survivedDelta: null,
+            scoreDelta: null,
+          },
+        ],
+      }),
+    );
+    expect(html).not.toContain('<img src=x');
+    expect(html).toContain('&lt;img src=x');
+  });
+
+  it('says so when there are no mutators at all', () => {
+    const summary = section(generateHtmlReport(resultFrom()), 'Resumen');
+    expect(summary).toContain('<h3 class="sub">Por mutador</h3>');
+    expect(summary).toContain('<p class="empty">No hay mutantes.</p>');
+    expect(summary).not.toContain('<table>');
+  });
+});

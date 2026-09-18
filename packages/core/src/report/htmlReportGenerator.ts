@@ -1,6 +1,7 @@
 import type {
   ComparisonResult,
   MutantComparison,
+  MutatorComparison,
   UnitChangeKind,
   UnitComparison,
 } from '../domain/types.js';
@@ -74,6 +75,10 @@ const STYLE = `
   tr.kind-regressed td:last-child { color: #ae1800; }
   tr.kind-improved td:last-child { color: #14622f; }
   .empty { color: #605d5d; font-style: italic; }
+  /* Tabla por mutador, dentro del resumen: CA-HU-07 fija cuatro secciones. */
+  .sub { font-size: 1rem; font-weight: 700; margin: 1.5rem 0 0.5rem; }
+  td.worse { color: #ae1800; }
+  td.better { color: #14622f; }
 
   /* Nuevos supervivientes bajo cada retroceso (T-092): fila anidada, no
      seccion nueva, porque CA-HU-07 fija cuatro secciones. */
@@ -312,6 +317,37 @@ function renderTable(
   return `<section><h2>${escapeHtml(title)} (${units.length})</h2><table>${HEADS[metric]}<tbody>${rows}</tbody></table>${omitted}</section>`;
 }
 
+function count(value: number | undefined): string {
+  return value === undefined ? '—' : String(value);
+}
+
+/** More survivors is worse: the opposite polarity to `deltaCardClass`. */
+function survivorsDeltaCell(delta: number | null): string {
+  if (delta === null) return '<td>—</td>';
+  const cls = delta > 0 ? ' class="worse"' : delta < 0 ? ' class="better"' : '';
+  return `<td${cls}>${formatSignedCount(delta)}</td>`;
+}
+
+function renderMutatorRow(entry: MutatorComparison): string {
+  const score = entry.head ? formatPct(entry.head.score) : '—';
+  return `<tr><td title="${escapeHtml(entry.mutator)}">${escapeHtml(shortMutatorName(entry.mutator))}</td><td>${count(entry.head?.total)}</td><td>${count(entry.base?.survived)}</td><td>${count(entry.head?.survived)}</td>${survivorsDeltaCell(entry.survivedDelta)}<td>${count(entry.head?.noCoverage)}</td><td>${score}</td></tr>`;
+}
+
+const MUTATORS_HEAD =
+  '<thead><tr><th>Mutador</th><th>Mutantes</th><th>Survivors base</th><th>Survivors nueva</th><th>&Delta; Survivors</th><th>Sin cubrir nueva</th><th>Score nueva</th></tr></thead>';
+
+/**
+ * Same table as the dashboard's «Por mutador», under the summary cards: a
+ * global aggregate belongs with the global figures, and a fifth `<h2>` would
+ * break CA-HU-07. Order comes from `core` (most survivors in head first).
+ */
+function renderMutators(mutators: MutatorComparison[]): string {
+  const title = '<h3 class="sub">Por mutador</h3>';
+  if (mutators.length === 0) return `${title}<p class="empty">No hay mutantes.</p>`;
+  const rows = mutators.map(renderMutatorRow).join('');
+  return `${title}<table>${MUTATORS_HEAD}<tbody>${rows}</tbody></table>`;
+}
+
 function renderSummary(result: ComparisonResult): string {
   const { global } = result;
   return `<section><h2>Resumen</h2><div class="cards">
@@ -321,7 +357,7 @@ function renderSummary(result: ComparisonResult): string {
     <div class="card">${cardLabel('Cubiertos base', KPI_GLOSSARY.coveredMutants, 'tip-covered-base')}<span class="value">${formatPct(global.base.coveredPct)}</span></div>
     <div class="card">${cardLabel('Cubiertos nuevos', KPI_GLOSSARY.coveredMutants, 'tip-covered-head')}<span class="value">${formatPct(global.head.coveredPct)}</span></div>
     <div class="card ${deltaCardClass(global.coverageDelta)}">${cardLabel('&Delta; Cubiertos', KPI_GLOSSARY.coveredMutants, 'tip-covered-delta')}<span class="value">${formatDelta(global.coverageDelta)}</span></div>
-  </div></section>`;
+  </div>${renderMutators(result.mutators)}</section>`;
 }
 
 /**

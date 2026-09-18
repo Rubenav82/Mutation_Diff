@@ -22,7 +22,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
     version: '1.6.0',
     date: '2026-09-18',
     changes: [
-      'Nueva tabla «Por mutador» al final del dashboard: mutantes, supervivientes en cada ejecución con su delta, sin cubrir y score nuevo de cada mutador, ordenada por los que más supervivientes producen. Sirve para decidir qué mutadores excluir de la configuración.',
+      'Nueva tabla «Por mutador» al final del dashboard: mutantes, supervivientes en cada ejecución con su delta, sin cubrir y score nuevo de cada mutador, ordenada por los que más supervivientes producen. Sirve para decidir qué mutadores excluir de la configuración. El informe exportado la incluye dentro del resumen.',
     ],
   },
   {
