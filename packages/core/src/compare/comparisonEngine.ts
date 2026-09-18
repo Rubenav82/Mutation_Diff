@@ -6,6 +6,8 @@ import type {
   UnitResult,
 } from '../domain/types.js';
 import { isUncovered } from '../domain/metrics.js';
+import { compareMutants } from './mutantComparison.js';
+import { compareMutatorBreakdown } from './mutatorBreakdown.js';
 
 export interface CompareOptions {
   regressionThreshold?: number;
@@ -61,6 +63,7 @@ function classify(
     scoreDelta,
     coverageDelta,
     isUncovered: isUncovered(headUnit.metrics, uncoveredThreshold),
+    mutantChanges: compareMutants(baseUnit.mutants, headUnit.mutants),
   };
 }
 
@@ -107,5 +110,6 @@ export function compareRuns(
     uncovered: units.filter((u) => u.isUncovered),
     added: units.filter((u) => u.kind === 'added'),
     removed: units.filter((u) => u.kind === 'removed'),
+    mutators: compareMutatorBreakdown(base, head),
   };
 }

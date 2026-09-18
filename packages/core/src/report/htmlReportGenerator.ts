@@ -1,6 +1,13 @@
-import type { ComparisonResult, UnitChangeKind, UnitComparison } from '../domain/types.js';
+import type {
+  ComparisonResult,
+  MutantComparison,
+  MutatorComparison,
+  UnitChangeKind,
+  UnitComparison,
+} from '../domain/types.js';
 import { countUnits } from '../compare/unitCounts.js';
 import { KPI_GLOSSARY, type KpiGlossaryEntry } from '../domain/kpiGlossary.js';
+import { shortMutatorName } from '../domain/mutators.js';
 
 const KIND_LABELS: Record<UnitChangeKind, string> = {
   improved: 'Mejora ▲',
@@ -68,6 +75,26 @@ const STYLE = `
   tr.kind-regressed td:last-child { color: #ae1800; }
   tr.kind-improved td:last-child { color: #14622f; }
   .empty { color: #605d5d; font-style: italic; }
+  /* Tabla por mutador, dentro del resumen: CA-HU-07 fija cuatro secciones. */
+  .sub { font-size: 1rem; font-weight: 700; margin: 1.5rem 0 0.5rem; }
+  td.worse { color: #ae1800; }
+  td.better { color: #14622f; }
+
+  /* Nuevos supervivientes bajo cada retroceso (T-092): fila anidada, no
+     seccion nueva, porque CA-HU-07 fija cuatro secciones. */
+  tr.mutants td { padding: 0.35rem 0.75rem 0.85rem 1.75rem; background: #faf9f9; }
+  .mutants-title {
+    font-family: ui-monospace, Consolas, monospace; font-size: 0.6875rem; font-weight: 500;
+    letter-spacing: 0.14em; text-transform: uppercase; color: #605d5d; margin: 0 0 0.3rem;
+  }
+  ul.mutants { list-style: none; margin: 0; padding: 0; }
+  ul.mutants li { padding: 0.1rem 0; }
+  ul.mutants .line { color: #605d5d; margin-right: 0.6rem; }
+  ul.mutants .desc {
+    font-family: 'Segoe UI Variable Text', 'Segoe UI', -apple-system, system-ui, sans-serif;
+    color: #605d5d; margin-left: 0.6rem;
+  }
+  .more { color: #605d5d; font-style: italic; margin: 0.3rem 0 0; }
 
   /* Tooltips de los KPI: CSS puro, sin JS (el informe sigue sin script, T-016).
      Visibles con hover y con foco de teclado; el termino es focusable. */
@@ -198,6 +225,37 @@ function renderUnitRow(unit: UnitComparison, metric: TableMetric): string {
   return `<tr class="kind-${unit.kind}"><td>${escapeHtml(unit.key)}</td>${score}${covered}<td>${escapeHtml(KIND_LABELS[unit.kind])}</td></tr>`;
 }
 
+/**
+ * Caps that keep the detail inside the 2 MB budget of CA-HU-07 by construction:
+ * at most ten survivors per unit, and no detail at all past 2000 rows in total
+ * (measured on what would render, not on the raw count). Beyond that the report
+ * says what it left out instead of silently growing.
+ */
+const MAX_SURVIVORS_PER_UNIT = 10;
+const MAX_SURVIVOR_ROWS = 2000;
+
+function newSurvivors(unit: UnitComparison): MutantComparison[] {
+  return unit.mutantChanges?.filter((change) => change.kind === 'newly-survived') ?? [];
+}
+
+function renderSurvivor(change: MutantComparison): string {
+  const description =
+    change.description === undefined
+      ? ''
+      : `<span class="desc">${escapeHtml(change.description)}</span>`;
+  return `<li><span class="line">Línea ${change.line}</span><span class="mutator">${escapeHtml(shortMutatorName(change.mutator))}</span>${description}</li>`;
+}
+
+/** Nested row under a regressed unit with its new survivors; empty when it has none. */
+function renderSurvivorsRow(unit: UnitComparison, columns: number): string {
+  const survivors = newSurvivors(unit);
+  if (survivors.length === 0) return '';
+  const shown = survivors.slice(0, MAX_SURVIVORS_PER_UNIT).map(renderSurvivor).join('');
+  const hidden = survivors.length - MAX_SURVIVORS_PER_UNIT;
+  const more = hidden > 0 ? `<p class="more">y ${hidden} más</p>` : '';
+  return `<tr class="mutants"><td colspan="${columns}"><p class="mutants-title">Nuevos supervivientes (${survivors.length})</p><ul class="mutants">${shown}</ul>${more}</td></tr>`;
+}
+
 const SCORE_HEAD =
   '<thead><tr><th>Clase / fichero</th><th>Score base</th><th>Score nuevo</th><th>&Delta; Score</th><th>Estado</th></tr></thead>';
 
@@ -217,6 +275,9 @@ const HEADS: Record<TableMetric, string> = {
   both: GROUPED_HEAD,
 };
 
+/** Columns of each head, for the colspan of a nested row. */
+const COLUMNS: Record<TableMetric, number> = { score: 5, covered: 5, both: 8 };
+
 /**
  * Only the full table shows both metrics: the sections are short lists focused on
  * one reason each, and three more cells on every row of all four tables would eat
@@ -227,13 +288,64 @@ function renderTable(
   title: string,
   units: UnitComparison[],
   emptyMessage: string,
-  metric: TableMetric = 'score',
+  metric: TableMetric,
+  withSurvivors = false,
 ): string {
   if (units.length === 0) {
     return `<section><h2>${escapeHtml(title)}</h2><p class="empty">${escapeHtml(emptyMessage)}</p></section>`;
   }
-  const rows = units.map((unit) => renderUnitRow(unit, metric)).join('');
-  return `<section><h2>${escapeHtml(title)} (${units.length})</h2><table>${HEADS[metric]}<tbody>${rows}</tbody></table></section>`;
+  // Only the regressions block carries the detail, and only the actionable
+  // state: the same unit appears again in the full table, where it would
+  // double the cost for nothing new.
+  const rowsToRender = withSurvivors
+    ? units.reduce(
+        (sum, unit) => sum + Math.min(newSurvivors(unit).length, MAX_SURVIVORS_PER_UNIT),
+        0,
+      )
+    : 0;
+  const detail = withSurvivors && rowsToRender <= MAX_SURVIVOR_ROWS;
+  const rows = units
+    .map(
+      (unit) =>
+        renderUnitRow(unit, metric) + (detail ? renderSurvivorsRow(unit, COLUMNS[metric]) : ''),
+    )
+    .join('');
+  const omitted =
+    withSurvivors && !detail
+      ? `<p class="empty">Detalle de mutantes omitido: ${units.reduce((sum, unit) => sum + newSurvivors(unit).length, 0)} nuevos supervivientes no caben en el informe.</p>`
+      : '';
+  return `<section><h2>${escapeHtml(title)} (${units.length})</h2><table>${HEADS[metric]}<tbody>${rows}</tbody></table>${omitted}</section>`;
+}
+
+function count(value: number | undefined): string {
+  return value === undefined ? '—' : String(value);
+}
+
+/** More survivors is worse: the opposite polarity to `deltaCardClass`. */
+function survivorsDeltaCell(delta: number | null): string {
+  if (delta === null) return '<td>—</td>';
+  const cls = delta > 0 ? ' class="worse"' : delta < 0 ? ' class="better"' : '';
+  return `<td${cls}>${formatSignedCount(delta)}</td>`;
+}
+
+function renderMutatorRow(entry: MutatorComparison): string {
+  const score = entry.head ? formatPct(entry.head.score) : '—';
+  return `<tr><td title="${escapeHtml(entry.mutator)}">${escapeHtml(shortMutatorName(entry.mutator))}</td><td>${count(entry.head?.total)}</td><td>${count(entry.base?.survived)}</td><td>${count(entry.head?.survived)}</td>${survivorsDeltaCell(entry.survivedDelta)}<td>${count(entry.head?.noCoverage)}</td><td>${score}</td></tr>`;
+}
+
+const MUTATORS_HEAD =
+  '<thead><tr><th>Mutador</th><th>Mutantes</th><th>Survivors base</th><th>Survivors nueva</th><th>&Delta; Survivors</th><th>Sin cubrir nueva</th><th>Score nueva</th></tr></thead>';
+
+/**
+ * Same table as the dashboard's «Por mutador», under the summary cards: a
+ * global aggregate belongs with the global figures, and a fifth `<h2>` would
+ * break CA-HU-07. Order comes from `core` (most survivors in head first).
+ */
+function renderMutators(mutators: MutatorComparison[]): string {
+  const title = '<h3 class="sub">Por mutador</h3>';
+  if (mutators.length === 0) return `${title}<p class="empty">No hay mutantes.</p>`;
+  const rows = mutators.map(renderMutatorRow).join('');
+  return `${title}<table>${MUTATORS_HEAD}<tbody>${rows}</tbody></table>`;
 }
 
 function renderSummary(result: ComparisonResult): string {
@@ -245,7 +357,7 @@ function renderSummary(result: ComparisonResult): string {
     <div class="card">${cardLabel('Cubiertos base', KPI_GLOSSARY.coveredMutants, 'tip-covered-base')}<span class="value">${formatPct(global.base.coveredPct)}</span></div>
     <div class="card">${cardLabel('Cubiertos nuevos', KPI_GLOSSARY.coveredMutants, 'tip-covered-head')}<span class="value">${formatPct(global.head.coveredPct)}</span></div>
     <div class="card ${deltaCardClass(global.coverageDelta)}">${cardLabel('&Delta; Cubiertos', KPI_GLOSSARY.coveredMutants, 'tip-covered-delta')}<span class="value">${formatDelta(global.coverageDelta)}</span></div>
-  </div></section>`;
+  </div>${renderMutators(result.mutators)}</section>`;
 }
 
 /**
@@ -294,7 +406,7 @@ export function generateHtmlReport(result: ComparisonResult): string {
 ${renderContext(result)}
 </header>
 ${renderSummary(result)}
-${renderTable('Retrocesos', result.regressions, 'No hay retrocesos.')}
+${renderTable('Retrocesos', result.regressions, 'No hay retrocesos.', 'score', true)}
 ${renderTable('Sin cobertura', result.uncovered, 'No hay clases/ficheros sin cobertura.', 'covered')}
 ${renderTable('Todas las unidades', result.units, 'No hay unidades.', 'both')}
 ${renderGlossary()}

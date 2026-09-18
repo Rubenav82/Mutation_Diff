@@ -27,6 +27,7 @@ function fakeResult(): ComparisonResult {
     uncovered: [],
     added: [],
     removed: [],
+    mutators: [],
   };
 }
 

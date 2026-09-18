@@ -91,6 +91,23 @@ interface NormalizedRun {
 
 type UnitChangeKind = 'improved' | 'regressed' | 'unchanged' | 'added' | 'removed';
 
+// T-090: solo cambios de estado, por eso no hay 'unchanged'
+type MutantChangeKind =
+  | 'newly-survived'             // sobrevive ahora y antes no (el caso accionable)
+  | 'newly-killed'               // detectado ahora (killed/timeout) y antes no
+  | 'newly-uncovered'            // sin cobertura ahora, con ella antes
+  | 'changed'                    // resto de transiciones (killed ↔ timeout, → error/ignored)
+  | 'added' | 'removed';         // presente en una sola ejecución
+
+interface MutantComparison {
+  line: number;
+  mutator: string;
+  description?: string;          // la de head si existe, si no la de base
+  base?: MutantStatus;
+  head?: MutantStatus;
+  kind: MutantChangeKind;
+}
+
 interface UnitComparison {
   key: string;
   kind: UnitChangeKind;
@@ -99,6 +116,7 @@ interface UnitComparison {
   scoreDelta: number | null;
   coverageDelta: number | null;
   isUncovered: boolean;          // según umbral de NO_COVERAGE
+  mutantChanges?: MutantComparison[]; // solo unidades en ambos lados; ordenado por línea
 }
 
 interface ComparisonResult {
@@ -116,6 +134,7 @@ Notas de mapeo:
 - **PiTest** (`mutations.xml`): agrupar `<mutation>` por `mutatedClass`; estados KILLED→killed, SURVIVED→survived, NO_COVERAGE→no_coverage, TIMED_OUT→timeout, NON_VIABLE→killed, MEMORY_ERROR/RUN_ERROR→error. NON_VIABLE va a `killed` porque PiTest lo marca `detected="true"` y lo cuenta en el numerador de su propia cobertura de mutación: mapearlo a `error` dejaba el total de matados de MutaDiff por debajo del informe original.
 - **Stryker** (JSON del schema oficial): iterar `files{}.mutants[]`; Killed→killed, Survived→survived, NoCoverage→no_coverage, Timeout→timeout, CompileError/RuntimeError→error, Ignored→ignored. Normalizar separadores de ruta.
 - El matching entre ejecuciones es por `key`. Documentar limitación: renombrados de clase aparecen como removed + added.
+- El matching de **mutantes** dentro de una unidad (T-090) es por `line` + `mutator`, emparejando por orden de aparición cuando hay varios del mismo mutador en la misma línea; los `id` son contadores por parseo y no sirven entre ejecuciones. Solo se conservan los mutantes cuyo estado cambia: el `ComparisonResult` es lo que se almacena y la lista completa por unidad no cabría en `sessionStorage` para un proyecto grande. Limitación: si una línea se desplaza (código insertado más arriba), sus mutantes aparecen como removed + added.
 
 ### 2.3.1 Ingesta de ficheros PiTest
 
@@ -169,7 +188,7 @@ POST /api/projects/:id/compare   (fase 2) comparar dos runs guardados { baseRunI
 
    Cada panel incluye el snippet de configuración copiable. Si el usuario sube un fichero con extensión incorrecta para la herramienta elegida, el mensaje de error enlaza a esta misma ayuda.
    Junto a **«Umbrales (opcional)»**, un segundo **ⓘ** con su propio panel explica las dos reglas de CA-HU-05: fórmula, valor por defecto y los casos límite (el umbral de retroceso son puntos de score y no un porcentaje relativo; la frontera es inclusiva, así que una caída igual al umbral se tolera; el umbral sin cobertura a 0 marca todas las clases). Son dos paneles independientes a propósito: responden a dudas de momentos distintos.
-2. **Dashboard de resultados**: layout de dos paneles — rail lateral de contexto (herramienta, ficheros comparados, umbrales aplicados, todo en solo lectura) + panel principal con banda de resumen (**clases analizadas** y **clases con cobertura** —ambas base → nueva con su Δ; la segunda según el umbral aplicado, que se muestra a su lado— seguidas de mutation score y mutantes cubiertos), KPIs, secciones "Regresiones", "Sin cobertura", "Nuevas", "Eliminadas", tabla completa filtrable/ordenable y botón "Exportar HTML". La tabla completa muestra por unidad **score** (base, nueva, Δ) y **mutantes cubiertos** (base, nueva, Δ) en cabeceras agrupadas; cada sección muestra solo la métrica que la motiva (score en «Regresiones», «Nuevas» y «Eliminadas»; mutantes cubiertos en «Sin cobertura»). Nunca se etiqueta «Cobertura»: `coveredPct` son mutantes cubiertos, no el *Line Coverage* de PiTest.
+2. **Dashboard de resultados**: layout de dos paneles — rail lateral de contexto (herramienta, ficheros comparados, umbrales aplicados, todo en solo lectura) + panel principal con banda de resumen (**clases analizadas** y **clases con cobertura** —ambas base → nueva con su Δ; la segunda según el umbral aplicado, que se muestra a su lado— seguidas de mutation score y mutantes cubiertos), KPIs, secciones "Regresiones", "Sin cobertura", "Nuevas", "Eliminadas", tabla completa filtrable/ordenable y botón "Exportar HTML". La tabla completa muestra por unidad **score** (base, nueva, Δ) y **mutantes cubiertos** (base, nueva, Δ) en cabeceras agrupadas; cada sección muestra solo la métrica que la motiva (score en «Regresiones», «Nuevas» y «Eliminadas»; mutantes cubiertos en «Sin cobertura»). Nunca se etiqueta «Cobertura»: `coveredPct` son mutantes cubiertos, no el *Line Coverage* de PiTest. Cada fila de las secciones y de la tabla completa cuya unidad tenga mutantes que cambiaron de estado lleva un botón (con el número de cambios) que la despliega en un panel con esos mutantes —línea, mutador, estado antes → ahora y tipo de cambio— y un filtro «Solo nuevos supervivientes» (T-090/T-091). Es la respuesta a «qué dejó de matarse y dónde», que el score de la fila no da. Cierra el dashboard una tabla «Por mutador» (T-093) con mutantes, supervivientes base/nueva/Δ, sin cubrir y score nuevo de cada mutador, ordenada por los que más supervivientes producen: es lo que hace falta para decidir qué mutadores excluir de la configuración. En el informe exportado va dentro del bloque «Resumen», bajo las tarjetas, para no abrir una quinta sección.
 3. **Histórico** (fase 2): lista de runs guardados, selección de par a comparar, gráfico de evolución del score.
 4. **Cromo persistente** (presente en todas las pantallas): cabecera con el logotipo de AQA, el nombre del producto y, a la derecha, un **icono `?`** que abre el panel «Acerca de» (nombre, versión, licencia MIT, contacto por `mailto` para notificar un problema y acceso a la **política de privacidad**, en un diálogo modal); y pie de página con la **nota legal del logotipo** (aclara que la marca es una imagen de referencia conceptual del programa de formación interno, sin implicación contractual ni afiliación). La nota vive en el cromo, no en una pantalla, porque matiza el logotipo de la cabecera, que también está siempre visible.
 

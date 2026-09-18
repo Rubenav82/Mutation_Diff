@@ -19,6 +19,28 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.6.0',
+    date: '2026-09-18',
+    changes: [
+      'Nueva tabla «Por mutador» al final del dashboard: mutantes, supervivientes en cada ejecución con su delta, sin cubrir y score nuevo de cada mutador, ordenada por los que más supervivientes producen. Sirve para decidir qué mutadores excluir de la configuración. El informe exportado la incluye dentro del resumen.',
+    ],
+  },
+  {
+    version: '1.5.0',
+    date: '2026-09-18',
+    changes: [
+      'El informe exportado lista bajo cada retroceso sus nuevos supervivientes (línea, mutador y descripción), hasta diez por clase; si el detalle no cabe en el informe, lo dice en lugar de omitirlo en silencio.',
+    ],
+  },
+  {
+    version: '1.4.0',
+    date: '2026-09-18',
+    changes: [
+      'Cada clase o fichero con mutantes que cambiaron de estado se puede desplegar, en las secciones y en la tabla completa, para ver qué mutantes dejaron de detectarse (o empezaron a detectarse), en qué línea y con qué mutador.',
+      'Dentro del desplegable, un filtro «Solo nuevos supervivientes» deja a la vista únicamente los mutantes que ahora sobreviven y antes no.',
+    ],
+  },
+  {
     version: '1.3.0',
     date: '2026-09-10',
     changes: [

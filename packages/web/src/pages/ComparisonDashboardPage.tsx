@@ -10,6 +10,7 @@ import { LoadingIndicator } from '../components/LoadingIndicator';
 import { SummaryBand } from '../components/SummaryBand';
 import { UnitSection } from '../components/UnitSection';
 import { UnitsTable } from '../components/UnitsTable';
+import { MutatorBreakdown } from '../components/MutatorBreakdown';
 
 export function ComparisonDashboardPage() {
   const { id } = useParams<{ id: string }>();
@@ -111,6 +112,7 @@ export function ComparisonDashboardPage() {
           emptyMessage="No hay unidades eliminadas."
         />
         <UnitsTable units={result.units} tool={result.tool} />
+        <MutatorBreakdown mutators={result.mutators} />
       </main>
     </div>
   );

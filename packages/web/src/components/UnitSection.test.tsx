@@ -101,7 +101,7 @@ describe('UnitSection', () => {
     const [, body] = screen.getAllByRole('rowgroup');
     const keys = within(body as HTMLElement)
       .getAllByRole('row')
-      .map((row) => within(row).getAllByRole('cell')[0]?.textContent);
+      .map((row) => within(row).getAllByRole('cell')[1]?.textContent);
     expect(keys).toEqual(['com.example.TaxCalculator', 'com.example.StringUtils']);
   });
 
@@ -162,7 +162,7 @@ describe('UnitSection — paginación', () => {
     const [, body] = screen.getAllByRole('rowgroup');
     return within(body as HTMLElement)
       .getAllByRole('row')
-      .map((row) => within(row).getAllByRole('cell')[0]?.textContent);
+      .map((row) => within(row).getAllByRole('cell')[1]?.textContent);
   }
 
   it('shows the first five units by default', () => {
@@ -238,5 +238,54 @@ describe('UnitSection — paginación', () => {
 
     expect(screen.getByText('Página 2 de 2')).toBeInTheDocument();
     expect(visibleKeys()).toEqual(['com.example.Clase05']);
+  });
+});
+
+describe('UnitSection — cambios de mutantes', () => {
+  const withChanges: UnitComparison = {
+    ...(REGRESSIONS[0] as UnitComparison),
+    mutantChanges: [
+      {
+        line: 8,
+        mutator: 'org.pitest.mutationtest.engine.gregor.mutators.NegateConditionalsMutator',
+        base: 'killed',
+        head: 'survived',
+        kind: 'newly-survived',
+      },
+    ],
+  };
+  const withoutChanges: UnitComparison = {
+    ...(REGRESSIONS[1] as UnitComparison),
+    mutantChanges: [],
+  };
+
+  it('expands a unit into its mutant changes and collapses it again', async () => {
+    const user = userEvent.setup();
+    render(
+      <UnitSection title="Retrocesos" units={[withChanges, withoutChanges]} emptyMessage="—" />,
+    );
+
+    const toggle = screen.getByRole('button', {
+      name: 'Cambios de mutantes · com.example.TaxCalculator',
+    });
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByText('Nuevo superviviente')).not.toBeInTheDocument();
+
+    await user.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByText('Nuevo superviviente')).toBeInTheDocument();
+
+    await user.click(toggle);
+    expect(screen.queryByText('Nuevo superviviente')).not.toBeInTheDocument();
+  });
+
+  it('offers no toggle for a unit without changed mutants', () => {
+    render(
+      <UnitSection title="Retrocesos" units={[withChanges, withoutChanges]} emptyMessage="—" />,
+    );
+
+    expect(
+      screen.queryByRole('button', { name: 'Cambios de mutantes · com.example.StringUtils' }),
+    ).not.toBeInTheDocument();
   });
 });

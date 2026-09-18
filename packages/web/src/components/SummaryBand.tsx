@@ -6,11 +6,11 @@ import {
   formatSignedCount,
   formatSignedPct,
   trendOf,
+  trendVariant,
   TREND_ARROW,
   type Trend,
+  type Variant,
 } from '../lib/format';
-
-type Variant = 'positive' | 'negative' | 'neutral';
 
 interface SummaryBandProps {
   tool: Tool;
@@ -29,11 +29,6 @@ const VARIANT_CLASS: Record<Variant, string> = {
   negative: 'text-loss-inverse',
   neutral: 'text-deep-muted',
 };
-
-function trendVariant(delta: number): Variant {
-  if (delta === 0) return 'neutral';
-  return delta > 0 ? 'positive' : 'negative';
-}
 
 const EXPORT_BUTTON_CLASS =
   'border-2 border-inverse px-4 py-2 text-sm font-semibold transition-colors hover:bg-inverse hover:text-ink';
@@ -79,7 +74,7 @@ export function SummaryBand({
               value={String(counts.head.total)}
               from={String(counts.base.total)}
               delta={formatSignedCount(counts.totalDelta)}
-              variant={trendVariant(counts.totalDelta)}
+              variant={trendVariant(counts.totalDelta, 'higher-better')}
               trend={trendOf(counts.totalDelta)}
               compact
             />
@@ -88,7 +83,7 @@ export function SummaryBand({
               value={String(counts.head.covered)}
               from={String(counts.base.covered)}
               delta={formatSignedCount(counts.coveredDelta)}
-              variant={trendVariant(counts.coveredDelta)}
+              variant={trendVariant(counts.coveredDelta, 'higher-better')}
               trend={trendOf(counts.coveredDelta)}
               note={`umbral ${uncoveredThreshold}%`}
               compact
@@ -98,7 +93,7 @@ export function SummaryBand({
               value={formatPct(head.score)}
               from={formatPct(base.score)}
               delta={formatSignedPct(scoreDelta)}
-              variant={trendVariant(scoreDelta)}
+              variant={trendVariant(scoreDelta, 'higher-better')}
               trend={trendOf(scoreDelta)}
             />
             <Figure
@@ -106,7 +101,7 @@ export function SummaryBand({
               value={formatPct(head.coveredPct)}
               from={formatPct(base.coveredPct)}
               delta={formatSignedPct(coverageDelta)}
-              variant={trendVariant(coverageDelta)}
+              variant={trendVariant(coverageDelta, 'higher-better')}
               trend={trendOf(coverageDelta)}
             />
           </div>

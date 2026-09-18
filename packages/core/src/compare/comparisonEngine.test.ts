@@ -268,3 +268,85 @@ describe('compareRuns — contexto de la comparación', () => {
     expect(context.baseLabel).toBe('mutations1.xml');
   });
 });
+
+describe('compareRuns — mutant changes per unit', () => {
+  let result: ReturnType<typeof compareRuns>;
+
+  beforeAll(() => {
+    const base = parsePitestReport(readFixture('mini/base.xml'), {
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
+    const head = parsePitestReport(readFixture('mini/head.xml'), {
+      createdAt: '2026-01-02T00:00:00.000Z',
+    });
+    result = compareRuns(base, head);
+  });
+
+  it('lists the mutant that became a survivor in a regressed unit', () => {
+    expect(comparison(result, 'com.example.StringUtils').mutantChanges).toEqual([
+      {
+        line: 8,
+        mutator: 'org.pitest.mutationtest.engine.gregor.mutators.NegateConditionalsMutator',
+        description: 'negated conditional',
+        base: 'killed',
+        head: 'survived',
+        kind: 'newly-survived',
+      },
+    ]);
+  });
+
+  it('lists the mutant that got killed in an improved unit', () => {
+    expect(comparison(result, 'com.example.Calculator').mutantChanges).toEqual([
+      {
+        line: 15,
+        mutator: 'org.pitest.mutationtest.engine.gregor.mutators.MathMutator',
+        description: 'Replaced integer subtraction with addition',
+        base: 'survived',
+        head: 'killed',
+        kind: 'newly-killed',
+      },
+    ]);
+  });
+
+  it('gives an unchanged unit an empty list, not undefined', () => {
+    expect(comparison(result, 'com.example.MathHelper').mutantChanges).toEqual([]);
+  });
+
+  it('omits the key entirely for added and removed units: there is nothing to pair', () => {
+    expect(comparison(result, 'com.example.NewFeature')).not.toHaveProperty('mutantChanges');
+    expect(comparison(result, 'com.example.Legacy')).not.toHaveProperty('mutantChanges');
+  });
+});
+
+describe('compareRuns — mutator breakdown', () => {
+  let result: ReturnType<typeof compareRuns>;
+
+  beforeAll(() => {
+    const base = parsePitestReport(readFixture('mini/base.xml'), {
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
+    const head = parsePitestReport(readFixture('mini/head.xml'), {
+      createdAt: '2026-01-02T00:00:00.000Z',
+    });
+    result = compareRuns(base, head);
+  });
+
+  it('carries the per-mutator comparison, most survivors in head first', () => {
+    const prefix = 'org.pitest.mutationtest.engine.gregor.mutators.';
+    expect(result.mutators.map((entry) => entry.mutator)).toEqual([
+      `${prefix}NegateConditionalsMutator`,
+      `${prefix}ConditionalsBoundaryMutator`,
+      `${prefix}MathMutator`,
+      `${prefix}ReturnValsMutator`,
+      `${prefix}VoidMethodCallMutator`,
+    ]);
+  });
+
+  it('reports the survivor delta per mutator from the fixture', () => {
+    const byName = (name: string) => result.mutators.find((entry) => entry.mutator.endsWith(name));
+    expect(byName('NegateConditionalsMutator')?.survivedDelta).toBe(1);
+    expect(byName('MathMutator')?.survivedDelta).toBe(-1);
+    expect(byName('VoidMethodCallMutator')?.survivedDelta).toBeNull();
+    expect(byName('VoidMethodCallMutator')).not.toHaveProperty('head');
+  });
+});
