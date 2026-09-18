@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import type { UnitComparison } from 'core';
 import { formatOptionalPct, formatOptionalSignedPct } from '../lib/format';
+import { MutantChangesPanel, MutantChangesToggle } from './MutantChangesPanel';
 import { DEFAULT_PAGE_SIZE, TablePagination } from './TablePagination';
 
 /**
@@ -41,6 +42,15 @@ export function UnitSection({ title, units, emptyMessage, metric = 'score' }: Un
   const currentPage = Math.min(pageIndex, pageCount - 1);
   const visibleUnits = units.slice(currentPage * pageSize, currentPage * pageSize + pageSize);
 
+  // Por clave, como en `UnitsTable`: lo desplegado sobrevive al cambio de página.
+  const [expandedKeys, setExpandedKeys] = useState<ReadonlySet<string>>(new Set());
+  const toggleExpanded = (key: string) =>
+    setExpandedKeys((current) => {
+      const next = new Set(current);
+      if (!next.delete(key)) next.add(key);
+      return next;
+    });
+
   return (
     <section aria-label={title}>
       {/* El espacio explícito importa: sin él el nombre accesible sería
@@ -64,6 +74,9 @@ export function UnitSection({ title, units, emptyMessage, metric = 'score' }: Un
               <thead>
                 <tr>
                   <th className="eyebrow border-b-2 border-ink px-3 py-2.5 text-left">
+                    <span className="sr-only">Cambios de mutantes</span>
+                  </th>
+                  <th className="eyebrow border-b-2 border-ink px-3 py-2.5 text-left">
                     Clase / fichero
                   </th>
                   <th className="eyebrow border-b-2 border-ink px-3 py-2.5 text-left">
@@ -78,24 +91,46 @@ export function UnitSection({ title, units, emptyMessage, metric = 'score' }: Un
                 </tr>
               </thead>
               <tbody>
-                {visibleUnits.map((unit) => (
-                  <tr
-                    key={unit.key}
-                    data-kind={unit.kind}
-                    className="border-b border-line last:border-0 hover:bg-wash"
-                  >
-                    <td className="px-3 py-2 font-mono text-sm break-all">{unit.key}</td>
-                    <td className="px-3 py-2 font-mono text-sm tabular-nums">
-                      {formatOptionalPct(valueOf(unit, 'base'))}
-                    </td>
-                    <td className="px-3 py-2 font-mono text-sm tabular-nums">
-                      {formatOptionalPct(valueOf(unit, 'head'))}
-                    </td>
-                    <td className="px-3 py-2 font-mono text-sm tabular-nums">
-                      {formatOptionalSignedPct(deltaOf(unit))}
-                    </td>
-                  </tr>
-                ))}
+                {visibleUnits.map((unit) => {
+                  const changes = unit.mutantChanges ?? [];
+                  const isExpanded = expandedKeys.has(unit.key);
+                  return (
+                    <Fragment key={unit.key}>
+                      <tr
+                        data-kind={unit.kind}
+                        className="border-b border-line last:border-0 hover:bg-wash"
+                      >
+                        <td className="px-3 py-2">
+                          {changes.length > 0 && (
+                            <MutantChangesToggle
+                              unitKey={unit.key}
+                              count={changes.length}
+                              expanded={isExpanded}
+                              onToggle={() => toggleExpanded(unit.key)}
+                            />
+                          )}
+                        </td>
+                        <td className="px-3 py-2 font-mono text-sm break-all">{unit.key}</td>
+                        <td className="px-3 py-2 font-mono text-sm tabular-nums">
+                          {formatOptionalPct(valueOf(unit, 'base'))}
+                        </td>
+                        <td className="px-3 py-2 font-mono text-sm tabular-nums">
+                          {formatOptionalPct(valueOf(unit, 'head'))}
+                        </td>
+                        <td className="px-3 py-2 font-mono text-sm tabular-nums">
+                          {formatOptionalSignedPct(deltaOf(unit))}
+                        </td>
+                      </tr>
+                      {isExpanded && (
+                        <tr className="border-b border-line">
+                          <td colSpan={5} className="p-0">
+                            <MutantChangesPanel unitKey={unit.key} changes={changes} />
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  );
+                })}
               </tbody>
             </table>
           </div>

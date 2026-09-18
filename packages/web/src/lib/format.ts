@@ -22,6 +22,16 @@ export function splitUnitKey(key: string, tool: Tool): { prefix: string; name: s
   return { prefix: key.slice(0, cut), name: key.slice(cut) };
 }
 
+/**
+ * PiTest names mutators by their fully-qualified class
+ * (`org.pitest.mutationtest.engine.gregor.mutators.MathMutator`); Stryker by a
+ * bare name. The package repeats on every row and says nothing, so only the
+ * last segment is shown; the full name stays available as a title.
+ */
+export function shortMutatorName(mutator: string): string {
+  return mutator.slice(mutator.lastIndexOf('.') + 1);
+}
+
 export function formatPct(value: number): string {
   return `${value.toFixed(1)}%`;
 }

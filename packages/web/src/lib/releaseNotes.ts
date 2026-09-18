@@ -19,6 +19,14 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.4.0',
+    date: '2026-09-18',
+    changes: [
+      'Cada clase o fichero con mutantes que cambiaron de estado se puede desplegar, en las secciones y en la tabla completa, para ver qué mutantes dejaron de detectarse (o empezaron a detectarse), en qué línea y con qué mutador.',
+      'Dentro del desplegable, un filtro «Solo nuevos supervivientes» deja a la vista únicamente los mutantes que ahora sobreviven y antes no.',
+    ],
+  },
+  {
     version: '1.3.0',
     date: '2026-09-10',
     changes: [

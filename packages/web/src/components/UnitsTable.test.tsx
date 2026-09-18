@@ -144,7 +144,7 @@ describe('UnitsTable', () => {
 
     await user.click(screen.getByRole('button', { name: /ordenar por δ cubiertos/i }));
 
-    const keys = bodyRows().map((row) => within(row).getAllByRole('cell')[0]?.textContent);
+    const keys = bodyRows().map((row) => within(row).getAllByRole('cell')[1]?.textContent);
     expect(keys.slice(0, 2)).toEqual(['com.example.StringUtils', 'com.example.Calculator']);
   });
 
@@ -203,12 +203,12 @@ describe('UnitsTable', () => {
     await user.click(screen.getByRole('button', { name: /δ score/i }));
 
     // ascending: most negative delta first, null deltas always last
-    let keys = bodyRows().map((row) => within(row).getAllByRole('cell')[0]?.textContent);
+    let keys = bodyRows().map((row) => within(row).getAllByRole('cell')[1]?.textContent);
     expect(keys.slice(0, 2)).toEqual(['com.example.StringUtils', 'com.example.Calculator']);
 
     await user.click(screen.getByRole('button', { name: /δ score/i }));
 
-    keys = bodyRows().map((row) => within(row).getAllByRole('cell')[0]?.textContent);
+    keys = bodyRows().map((row) => within(row).getAllByRole('cell')[1]?.textContent);
     expect(keys.slice(0, 2)).toEqual(['com.example.Calculator', 'com.example.StringUtils']);
   });
 
@@ -218,7 +218,7 @@ describe('UnitsTable', () => {
 
     await user.click(screen.getByRole('button', { name: /clase \/ fichero/i }));
 
-    const keys = bodyRows().map((row) => within(row).getAllByRole('cell')[0]?.textContent);
+    const keys = bodyRows().map((row) => within(row).getAllByRole('cell')[1]?.textContent);
     expect(keys).toEqual([
       'com.example.Calculator',
       'com.example.Legacy',
@@ -366,5 +366,92 @@ describe('UnitsTable — paginación', () => {
       screen.queryByRole('button', { name: 'Página siguiente · Todas las unidades' }),
     ).not.toBeInTheDocument();
     expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+  });
+});
+
+describe('UnitsTable — cambios de mutantes', () => {
+  const changes = [
+    {
+      line: 8,
+      mutator: 'org.pitest.mutationtest.engine.gregor.mutators.NegateConditionalsMutator',
+      base: 'killed' as const,
+      head: 'survived' as const,
+      kind: 'newly-survived' as const,
+    },
+    {
+      line: 15,
+      mutator: 'org.pitest.mutationtest.engine.gregor.mutators.MathMutator',
+      base: 'survived' as const,
+      head: 'killed' as const,
+      kind: 'newly-killed' as const,
+    },
+  ];
+  const units: UnitComparison[] = [
+    unit({
+      key: 'com.example.StringUtils',
+      kind: 'regressed',
+      base: metrics({ score: 90 }),
+      head: metrics({ score: 60 }),
+      scoreDelta: -30,
+      coverageDelta: 0,
+      mutantChanges: changes,
+    }),
+    unit({
+      key: 'com.example.MathHelper',
+      kind: 'unchanged',
+      base: metrics({ score: 80 }),
+      head: metrics({ score: 80 }),
+      scoreDelta: 0,
+      coverageDelta: 0,
+      mutantChanges: [],
+    }),
+    unit({ key: 'com.example.NewFeature', kind: 'added', head: metrics({ score: 50 }) }),
+  ];
+
+  it('offers a toggle only for units with changed mutants, showing how many', () => {
+    render(<UnitsTable units={units} tool="pitest" />);
+
+    const toggle = screen.getByRole('button', {
+      name: 'Cambios de mutantes · com.example.StringUtils',
+    });
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(toggle).toHaveTextContent('2');
+    expect(
+      screen.queryByRole('button', { name: 'Cambios de mutantes · com.example.MathHelper' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Cambios de mutantes · com.example.NewFeature' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('expands the unit into its mutant changes and collapses it again', async () => {
+    const user = userEvent.setup();
+    render(<UnitsTable units={units} tool="pitest" />);
+
+    const toggle = screen.getByRole('button', {
+      name: 'Cambios de mutantes · com.example.StringUtils',
+    });
+    expect(screen.queryByText('Nuevo superviviente')).not.toBeInTheDocument();
+
+    await user.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByText('Nuevo superviviente')).toBeInTheDocument();
+    expect(screen.getByText('Ahora detectado')).toBeInTheDocument();
+
+    await user.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByText('Nuevo superviviente')).not.toBeInTheDocument();
+  });
+
+  it('keeps the unit expanded when the table is re-sorted', async () => {
+    const user = userEvent.setup();
+    render(<UnitsTable units={units} tool="pitest" />);
+
+    await user.click(
+      screen.getByRole('button', { name: 'Cambios de mutantes · com.example.StringUtils' }),
+    );
+    await user.click(screen.getByRole('button', { name: 'Ordenar por Clase / fichero' }));
+
+    expect(screen.getByText('Nuevo superviviente')).toBeInTheDocument();
   });
 });
