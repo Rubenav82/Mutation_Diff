@@ -49,6 +49,10 @@ export function MutatorBreakdown({ mutators }: { mutators: MutatorComparison[] }
                 <th className={HEADER_CLASS}>Survivors base</th>
                 <th className={HEADER_CLASS}>Survivors nueva</th>
                 <th className={HEADER_CLASS}>Δ Survivors</th>
+                {/* Sin esta columna la fila no cuadra a ojo: mutantes = detectados
+                    + supervivientes + sin cubrir, y el score bajo de un mutador
+                    puede venir de lo tercero, no de lo segundo. */}
+                <th className={HEADER_CLASS}>Sin cubrir nueva</th>
                 <th className={HEADER_CLASS}>Score nueva</th>
               </tr>
             </thead>
@@ -76,6 +80,7 @@ export function MutatorBreakdown({ mutators }: { mutators: MutatorComparison[] }
                     >
                       {entry.survivedDelta === null ? '—' : formatSignedCount(entry.survivedDelta)}
                     </td>
+                    <td className={CELL_CLASS}>{count(entry.head?.noCoverage)}</td>
                     <td className={CELL_CLASS}>{formatOptionalPct(entry.head?.score)}</td>
                   </tr>
                 );

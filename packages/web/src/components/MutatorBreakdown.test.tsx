@@ -23,7 +23,7 @@ const MUTATORS: MutatorComparison[] = [
   {
     mutator: 'org.pitest.mutationtest.engine.gregor.mutators.NegateConditionalsMutator',
     base: metrics({ total: 12, survived: 1, score: 91.7 }),
-    head: metrics({ total: 14, survived: 3, score: 78.6 }),
+    head: metrics({ total: 14, survived: 3, noCoverage: 2, score: 78.6 }),
     survivedDelta: 2,
     scoreDelta: -13.1,
   },
@@ -76,14 +76,14 @@ describe('MutatorBreakdown', () => {
     );
   });
 
-  it('shows mutants in the new run, survivors on both sides with delta, and new score', () => {
+  it('shows mutants in the new run, survivors on both sides with delta, uncovered and new score', () => {
     render(<MutatorBreakdown mutators={MUTATORS} />);
 
     const row = screen.getByText('NegateConditionalsMutator').closest('tr') as HTMLElement;
     const cells = within(row)
       .getAllByRole('cell')
       .map((cell) => cell.textContent);
-    expect(cells).toEqual(['NegateConditionalsMutator', '14', '1', '3', '+2', '78.6%']);
+    expect(cells).toEqual(['NegateConditionalsMutator', '14', '1', '3', '+2', '2', '78.6%']);
   });
 
   it('colours the survivor delta with more-is-worse polarity', () => {
@@ -112,7 +112,7 @@ describe('MutatorBreakdown', () => {
     const cells = within(row)
       .getAllByRole('cell')
       .map((cell) => cell.textContent);
-    expect(cells).toEqual(['VoidMethodCallMutator', '—', '1', '—', '—', '—']);
+    expect(cells).toEqual(['VoidMethodCallMutator', '—', '1', '—', '—', '—', '—']);
     expect(within(row).getAllByRole('cell')[4]?.getAttribute('data-variant')).toBe('neutral');
   });
 
