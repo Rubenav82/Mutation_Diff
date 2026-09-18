@@ -57,8 +57,10 @@ export function formatOptionalSignedPct(value: number | null | undefined): strin
 export type Trend = 'up' | 'down' | 'flat';
 
 export function trendOf(delta: number): Trend {
-  if (delta === 0) return 'flat';
-  return delta > 0 ? 'up' : 'down';
+  // Un solo sitio compara, sin `return` temprano para el cero: con el atajo, el
+  // `> 0` de después ya nunca ve un cero y `>` y `>=` se vuelven indistinguibles
+  // (un mutante equivalente que ningún test puede matar).
+  return delta > 0 ? 'up' : delta < 0 ? 'down' : 'flat';
 }
 
 /** Same glyphs as the state tags in `UnitsTable`, so a rise reads alike everywhere. */
@@ -74,7 +76,10 @@ export type Polarity = 'higher-better' | 'higher-worse' | 'neutral';
 export type Variant = 'positive' | 'negative' | 'neutral';
 
 export function trendVariant(delta: number, polarity: Polarity): Variant {
-  if (delta === 0 || polarity === 'neutral') return 'neutral';
-  const isGood = polarity === 'higher-better' ? delta > 0 : delta < 0;
+  // Sobre `trendOf`, sin comparar el delta otra vez: la dirección se decide en
+  // un solo sitio y aquí solo se cruza con la polaridad.
+  const trend = trendOf(delta);
+  if (trend === 'flat' || polarity === 'neutral') return 'neutral';
+  const isGood = (trend === 'up') === (polarity === 'higher-better');
   return isGood ? 'positive' : 'negative';
 }

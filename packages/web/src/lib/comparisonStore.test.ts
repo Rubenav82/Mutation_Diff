@@ -1,6 +1,6 @@
 import type { ComparisonResult, Tool, UnitMetrics } from 'core';
 import { describe, expect, it, vi } from 'vitest';
-import { createComparisonStore } from './comparisonStore';
+import { comparisonStore, createComparisonStore } from './comparisonStore';
 
 const metrics: UnitMetrics = {
   total: 1,
@@ -91,10 +91,28 @@ describe('createComparisonStore', () => {
     expect(store.load('abc')).toEqual(result());
   });
 
+  it('namespaces its keys, so it cannot collide with other entries of the same storage', () => {
+    const storage = fakeStorage();
+    createComparisonStore(storage).save('abc', result());
+
+    expect(storage.getItem('mutadiff:comparison:abc')).toBe(JSON.stringify(result()));
+    expect(storage.length).toBe(1);
+  });
+
   it('ignores unreadable storage entries', () => {
     const storage = fakeStorage();
     storage.setItem('mutadiff:comparison:abc', '{ not json');
 
     expect(createComparisonStore(storage).load('abc')).toBeUndefined();
+  });
+});
+
+describe('comparisonStore (module singleton)', () => {
+  it('backs the session on sessionStorage, which is what survives a reload', () => {
+    comparisonStore.save('singleton', result('stryker'));
+
+    expect(sessionStorage.getItem('mutadiff:comparison:singleton')).toBe(
+      JSON.stringify(result('stryker')),
+    );
   });
 });

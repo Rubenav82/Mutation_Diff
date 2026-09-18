@@ -25,6 +25,9 @@ export function createComparisonStore(storage: Storage | undefined): ComparisonS
   return {
     save(id, result) {
       memory.set(id, result);
+      // `storage?.` y el `try` se solapan a propósito: sin storage, el `?.` evita
+      // la llamada; y si la hay pero falla, el `catch` la absorbe. Un mutante que
+      // quite el `?.` acaba en el `catch` con el mismo resultado: es equivalente.
       try {
         storage?.setItem(`${KEY_PREFIX}${id}`, JSON.stringify(result));
       } catch {
@@ -54,6 +57,7 @@ export function createComparisonStore(storage: Storage | undefined): ComparisonS
   };
 }
 
-export const comparisonStore = createComparisonStore(
-  typeof sessionStorage === 'undefined' ? undefined : sessionStorage,
-);
+// Sin guard `typeof sessionStorage`: este módulo solo corre en el navegador o
+// en jsdom, y en los dos existe. El parámetro sigue siendo inyectable para los
+// tests de los modos de fallo.
+export const comparisonStore = createComparisonStore(sessionStorage);

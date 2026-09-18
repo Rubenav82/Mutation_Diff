@@ -61,6 +61,32 @@ describe('printReport', () => {
     expect(document.title).toBe('Mutator Assessment Report');
   });
 
+  it('keeps the iframe out of view and out of the accessibility tree without hiding it', () => {
+    const { frame } = spyOnPrint();
+
+    printReport(HTML, 'mutadiff-report-abc');
+
+    const node = frame();
+    expect(node.getAttribute('aria-hidden')).toBe('true');
+    expect(node.tabIndex).toBe(-1);
+    // Tamaño cero y fuera del flujo, nunca `display:none`: así sigue componiendo
+    // layout, que es lo que hace falta para que no se imprima en blanco.
+    expect(node.style.position).toBe('fixed');
+    expect(node.style.width).toMatch(/^0(px)?$/);
+    expect(node.style.height).toMatch(/^0(px)?$/);
+    expect(node.style.display).not.toBe('none');
+  });
+
+  it('gives up cleanly when the iframe gets no window to print from', () => {
+    document.title = 'Mutator Assessment Report';
+    // Sin insertarlo en el documento, el iframe no tiene `contentWindow`.
+    vi.spyOn(document.body, 'appendChild').mockImplementation(<T extends Node>(node: T): T => node);
+
+    expect(() => printReport(HTML, 'mutadiff-report-abc')).not.toThrow();
+    expect(document.title).toBe('Mutator Assessment Report');
+    expect(document.querySelectorAll('iframe')).toHaveLength(0);
+  });
+
   it('leaves no iframe behind', () => {
     spyOnPrint();
 

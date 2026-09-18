@@ -20,12 +20,14 @@ export function printReport(html: string, fileName: string): void {
   frame.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
   document.body.appendChild(frame);
 
-  const frameDocument = frame.contentDocument;
+  // Un iframe que no llegó a insertarse no tiene ventana; el documento se saca
+  // de la ventana y no de `contentDocument` para que haya un solo guard.
   const frameWindow = frame.contentWindow;
-  if (!frameDocument || !frameWindow) {
+  if (!frameWindow) {
     frame.remove();
     return;
   }
+  const frameDocument = frameWindow.document;
 
   // `document.write` y no `srcdoc`: deja el documento listo de forma síncrona,
   // sin depender de un evento `load`. Es seguro precisamente aquí porque el

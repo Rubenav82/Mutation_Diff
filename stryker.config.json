@@ -4,6 +4,16 @@
   "testRunner": "vitest",
   "coverageAnalysis": "perTest",
   "reporters": ["clear-text", "progress", "html", "json"],
-  "mutate": ["packages/core/src/**/*.ts", "!packages/core/src/**/*.test.ts"],
-  "thresholds": { "high": 85, "low": 70, "break": 70 }
+  "mutate": [
+    "packages/core/src/**/*.ts",
+    "!packages/core/src/**/*.test.ts",
+    "packages/web/src/lib/**/*.ts",
+    "!packages/web/src/lib/**/*.test.ts",
+    "!packages/web/src/lib/releaseNotes.ts"
+  ],
+  "thresholds": {
+    "high": 85,
+    "low": 70,
+    "break": 70
+  }
 }
