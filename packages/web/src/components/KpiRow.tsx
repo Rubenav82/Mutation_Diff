@@ -1,10 +1,14 @@
 import { KPI_GLOSSARY } from 'core';
 import type { ComparisonResult, KpiGlossaryEntry } from 'core';
 import { KpiTerm } from './KpiTerm';
-import { trendOf, TREND_ARROW, type Trend } from '../lib/format';
-
-type Polarity = 'higher-better' | 'higher-worse' | 'neutral';
-type Variant = 'positive' | 'negative' | 'neutral';
+import {
+  trendOf,
+  trendVariant,
+  TREND_ARROW,
+  type Polarity,
+  type Trend,
+  type Variant,
+} from '../lib/format';
 
 interface CardSpec {
   entry: KpiGlossaryEntry;
@@ -13,12 +17,6 @@ interface CardSpec {
   deltaText: string;
   variant: Variant;
   trend: Trend;
-}
-
-function trendVariant(delta: number, polarity: Polarity): Variant {
-  if (delta === 0 || polarity === 'neutral') return 'neutral';
-  const isGood = polarity === 'higher-better' ? delta > 0 : delta < 0;
-  return isGood ? 'positive' : 'negative';
 }
 
 function formatCountDelta(value: number): string {

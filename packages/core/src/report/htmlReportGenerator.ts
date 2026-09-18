@@ -230,7 +230,7 @@ const MAX_SURVIVORS_PER_UNIT = 10;
 const MAX_SURVIVOR_ROWS = 2000;
 
 function newSurvivors(unit: UnitComparison): MutantComparison[] {
-  return (unit.mutantChanges ?? []).filter((change) => change.kind === 'newly-survived');
+  return unit.mutantChanges?.filter((change) => change.kind === 'newly-survived') ?? [];
 }
 
 function renderSurvivor(change: MutantComparison): string {
@@ -270,6 +270,9 @@ const HEADS: Record<TableMetric, string> = {
   both: GROUPED_HEAD,
 };
 
+/** Columns of each head, for the colspan of a nested row. */
+const COLUMNS: Record<TableMetric, number> = { score: 5, covered: 5, both: 8 };
+
 /**
  * Only the full table shows both metrics: the sections are short lists focused on
  * one reason each, and three more cells on every row of all four tables would eat
@@ -280,7 +283,7 @@ function renderTable(
   title: string,
   units: UnitComparison[],
   emptyMessage: string,
-  metric: TableMetric = 'score',
+  metric: TableMetric,
   withSurvivors = false,
 ): string {
   if (units.length === 0) {
@@ -296,9 +299,11 @@ function renderTable(
       )
     : 0;
   const detail = withSurvivors && rowsToRender <= MAX_SURVIVOR_ROWS;
-  const columns = metric === 'both' ? 8 : 5;
   const rows = units
-    .map((unit) => renderUnitRow(unit, metric) + (detail ? renderSurvivorsRow(unit, columns) : ''))
+    .map(
+      (unit) =>
+        renderUnitRow(unit, metric) + (detail ? renderSurvivorsRow(unit, COLUMNS[metric]) : ''),
+    )
     .join('');
   const omitted =
     withSurvivors && !detail

@@ -49,6 +49,7 @@ function resultFrom(overrides: Partial<ComparisonResult> = {}): ComparisonResult
     uncovered: [],
     added: [],
     removed: [],
+    mutators: [],
     ...overrides,
   };
 }
@@ -695,6 +696,31 @@ describe('generateHtmlReport — nuevos supervivientes bajo cada retroceso', () 
     expect(regressions).toContain('NegateConditionalsMutator');
     expect(regressions).not.toContain('org.pitest.mutationtest.engine.gregor.mutators');
     expect(regressions).toContain('negated conditional');
+    // La fila anidada abarca las cinco columnas de la tabla de retrocesos.
+    expect(regressions).toContain('<tr class="mutants"><td colspan="5">');
+  });
+
+  it('omits the description span when the mutant has none', () => {
+    const bare: MutantComparison = { ...survivor };
+    delete bare.description;
+    const unit = regressed('com.example.StringUtils', [bare]);
+    const html = generateHtmlReport(resultFrom({ units: [unit], regressions: [unit] }));
+
+    const regressions = section(html, 'Retrocesos');
+    expect(regressions).toContain('Línea 8');
+    expect(regressions).not.toContain('class="desc"');
+    expect(regressions).not.toContain('undefined');
+    expect(regressions).not.toContain('Stryker was here');
+  });
+
+  it('renders no detail for a regressed unit built without mutantChanges at all', () => {
+    const unit = regressed('com.example.StringUtils', [survivor]);
+    delete unit.mutantChanges;
+    const html = generateHtmlReport(resultFrom({ units: [unit], regressions: [unit] }));
+
+    const regressions = section(html, 'Retrocesos');
+    expect(regressions).not.toContain('Nuevos supervivientes');
+    expect(regressions).not.toContain('Stryker was here');
   });
 
   it('shows only the new survivors, not the other changes of the unit', () => {
@@ -710,7 +736,10 @@ describe('generateHtmlReport — nuevos supervivientes bajo cada retroceso', () 
     const unit = regressed('com.example.StringUtils', [detected]);
     const html = generateHtmlReport(resultFrom({ units: [unit], regressions: [unit] }));
 
-    expect(section(html, 'Retrocesos')).not.toContain('Nuevos supervivientes');
+    const regressions = section(html, 'Retrocesos');
+    expect(regressions).not.toContain('Nuevos supervivientes');
+    // Tripwire: the unit row must be followed by nothing at all, not by any text.
+    expect(regressions).not.toContain('Stryker was here');
   });
 
   it('keeps the detail out of the full table, where the same unit also appears', () => {
@@ -742,6 +771,9 @@ describe('generateHtmlReport — nuevos supervivientes bajo cada retroceso', () 
     expect(regressions).toContain('Línea 109');
     expect(regressions).not.toContain('Línea 110');
     expect(regressions).toContain('y 2 más');
+    // Consecutive items are joined with nothing in between.
+    expect(regressions).toContain('</li><li>');
+    expect(regressions).not.toContain('Stryker was here');
   });
 
   it('does not mention "more" when the unit fits the cap exactly', () => {

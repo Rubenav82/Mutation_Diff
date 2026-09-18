@@ -64,6 +64,19 @@ export interface MutantComparison {
   kind: MutantChangeKind;
 }
 
+/**
+ * One mutator across the whole run on each side, with the same metrics as a
+ * unit. `base`/`head` only for the sides where the mutator appears; deltas are
+ * null when one side is missing, never 0.
+ */
+export interface MutatorComparison {
+  mutator: string;
+  base?: UnitMetrics;
+  head?: UnitMetrics;
+  survivedDelta: number | null;
+  scoreDelta: number | null;
+}
+
 export interface UnitComparison {
   key: string;
   kind: UnitChangeKind;
@@ -102,4 +115,6 @@ export interface ComparisonResult {
   uncovered: UnitComparison[];
   added: UnitComparison[];
   removed: UnitComparison[];
+  /** Most survivors in the new run first; a mutator absent from it goes last. */
+  mutators: MutatorComparison[];
 }

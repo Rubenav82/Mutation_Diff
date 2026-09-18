@@ -317,3 +317,36 @@ describe('compareRuns — mutant changes per unit', () => {
     expect(comparison(result, 'com.example.Legacy')).not.toHaveProperty('mutantChanges');
   });
 });
+
+describe('compareRuns — mutator breakdown', () => {
+  let result: ReturnType<typeof compareRuns>;
+
+  beforeAll(() => {
+    const base = parsePitestReport(readFixture('mini/base.xml'), {
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
+    const head = parsePitestReport(readFixture('mini/head.xml'), {
+      createdAt: '2026-01-02T00:00:00.000Z',
+    });
+    result = compareRuns(base, head);
+  });
+
+  it('carries the per-mutator comparison, most survivors in head first', () => {
+    const prefix = 'org.pitest.mutationtest.engine.gregor.mutators.';
+    expect(result.mutators.map((entry) => entry.mutator)).toEqual([
+      `${prefix}NegateConditionalsMutator`,
+      `${prefix}ConditionalsBoundaryMutator`,
+      `${prefix}MathMutator`,
+      `${prefix}ReturnValsMutator`,
+      `${prefix}VoidMethodCallMutator`,
+    ]);
+  });
+
+  it('reports the survivor delta per mutator from the fixture', () => {
+    const byName = (name: string) => result.mutators.find((entry) => entry.mutator.endsWith(name));
+    expect(byName('NegateConditionalsMutator')?.survivedDelta).toBe(1);
+    expect(byName('MathMutator')?.survivedDelta).toBe(-1);
+    expect(byName('VoidMethodCallMutator')?.survivedDelta).toBeNull();
+    expect(byName('VoidMethodCallMutator')).not.toHaveProperty('head');
+  });
+});

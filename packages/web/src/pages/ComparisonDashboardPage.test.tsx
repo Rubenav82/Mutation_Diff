@@ -110,6 +110,7 @@ function makeResult(): ComparisonResult {
     uncovered: [uncovered],
     added: [added],
     removed: [],
+    mutators: [],
   };
 }
 

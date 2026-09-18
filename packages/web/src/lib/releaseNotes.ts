@@ -19,6 +19,13 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.6.0',
+    date: '2026-09-18',
+    changes: [
+      'Nueva tabla «Por mutador» al final del dashboard: mutantes, supervivientes en cada ejecución con su delta y score nuevo de cada mutador, ordenada por los que más supervivientes producen. Sirve para decidir qué mutadores excluir de la configuración.',
+    ],
+  },
+  {
     version: '1.5.0',
     date: '2026-09-18',
     changes: [

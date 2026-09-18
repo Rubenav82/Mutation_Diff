@@ -25,6 +25,7 @@ function result(tool: Tool = 'pitest'): ComparisonResult {
     uncovered: [],
     added: [],
     removed: [],
+    mutators: [],
   };
 }
 

@@ -63,3 +63,18 @@ export function trendOf(delta: number): Trend {
 
 /** Same glyphs as the state tags in `UnitsTable`, so a rise reads alike everywhere. */
 export const TREND_ARROW: Record<Trend, string> = { up: '▲', down: '▼', flat: '' };
+
+/**
+ * Whether a rise is good (score, killed), bad (survivors, uncovered) or neither
+ * (timeouts). The other axis, next to `Trend`: colour comes from here, the arrow
+ * from the sign, and neither can be derived from the other.
+ */
+export type Polarity = 'higher-better' | 'higher-worse' | 'neutral';
+
+export type Variant = 'positive' | 'negative' | 'neutral';
+
+export function trendVariant(delta: number, polarity: Polarity): Variant {
+  if (delta === 0 || polarity === 'neutral') return 'neutral';
+  const isGood = polarity === 'higher-better' ? delta > 0 : delta < 0;
+  return isGood ? 'positive' : 'negative';
+}
