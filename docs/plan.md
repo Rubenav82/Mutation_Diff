@@ -6,7 +6,7 @@
 
 | Capa | Tecnología |
 |---|---|
-| Backend | Node 20+, Express 5, TypeScript, Zod (validación), fast-xml-parser (PiTest), multer (upload) |
+| Backend | Node 22+, Express 5, TypeScript, Zod (validación), fast-xml-parser (PiTest), multer (upload) |
 | Frontend | Vite + React 18 + TypeScript, TanStack Table (tablas), Recharts (gráficos), CSS modules o Tailwind |
 | Persistencia (fase 2) | SQLite vía better-sqlite3 |
 | Tests | Vitest (unit back y front), React Testing Library, Supertest (API), Playwright (e2e, fase 4), axe-core vía `@axe-core/playwright` (accesibilidad dentro de los e2e, T-100), Stryker (mutation testing del propio proyecto) |
