@@ -36,11 +36,13 @@ jobs:
 
       - run: npm ci
 
-      # Solo Chromium: es el único proyecto declarado en playwright.config.ts.
+      # Solo Chromium: los dos proyectos de playwright.config.ts (`dev-server`
+      # y `artifact`) usan el mismo navegador.
       - run: npx playwright install --with-deps chromium
 
-      # `pretest:e2e` hace `tsc -b` antes: el servidor de desarrollo importa
-      # `core` desde su `dist`, que está gitignorado.
+      # `pretest:e2e` hace `tsc -b` y construye `packages/web/dist`: el servidor
+      # de desarrollo importa `core` desde su `dist` (gitignorado) y el proyecto
+      # `artifact` sirve el bundle construido, que es lo que publica la release.
       - run: npm run test:e2e
 
       - uses: actions/upload-artifact@v4

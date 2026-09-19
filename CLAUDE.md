@@ -460,6 +460,17 @@ La app se despliega como **ficheros estáticos**: `packages/web/dist` (un `index
 - `.github/dependabot.yml` agrupa minor/patch de npm en un PR semanal (lunes 06:00 Europe/Madrid) y las acciones en otro; los mayores llegan sueltos. `.github/**` está en el `paths-ignore` de `release.yml` (T-086), así que esos PR no publican nada por sí mismos, pero **un PR de Dependabot que toque `package.json`/`package-lock.json` sí dispara release al fusionarse**, porque esos ficheros no están ignorados. Es lo deseable (las correcciones llegan a la máquina interna) siempre que CI esté en verde antes de fusionar.
 - `npm ls react react-dom` tras cada reinstalación sigue siendo la comprobación de una sola copia (T-030); en esta pasada se mantuvo deduplicada.
 
+## e2e del artefacto construido (fijado en T-099)
+
+- **`e2e/artifact.spec.ts` ejercita `packages/web/dist`, no el servidor de desarrollo**, y cierra el hueco que dejó T-073: hasta aquí ni CI ni la release tocaban lo que de verdad se publica. Vite en desarrollo sirve desde la raíz y reescribe cualquier ruta, así que un `base` mal resuelto o una vuelta a `BrowserRouter` dejaban la app en blanco sin que ningún test se enterase.
+- **El servidor de ese proyecto es propio (`e2e/artifactServer.ts`) y no tiene fallback a `index.html`, a propósito.** `vite preview` habría servido igual pero con `appType: 'spa'`, es decir, reescribiendo historial: taparía exactamente el fallo que se busca. Son ~40 líneas sin dependencia nueva, y replican lo que hace el nginx de `compose/`. Sirve bajo **subpath** (`/mutadiff/`) porque es el caso que `base: './'` tiene que soportar (T-072).
+- **La prueba del 404 no es decorativa**: sin ella, la de recarga pasaría igual con un servidor que reescribe todo a `index.html`, y entonces no probaría que las rutas viven en el hash. Cada vez que se toque el servidor de test, esa es la que fija su contrato.
+- **`pretest:e2e` construye el `dist` (`tsc -b && npm run build -w web`), y no el `command` del `webServer`**: con `reuseExistingServer` en local, un servidor ya levantado se salta el comando y la pasada mediría un artefacto viejo — el mismo tipo de falso verde que la nota de T-048b sobre los scripts que leen `dist`.
+- **Dos proyectos de Playwright, un solo navegador**: `dev-server` (el bucle rápido, `testIgnore` del artefacto) y `artifact` (`testMatch`), cada uno con su `baseURL`. El nombre `chromium` desapareció: con dos objetivos ya no distinguía nada.
+- **El test se verificó rompiendo el artefacto**, no solo viéndolo en verde: con `base: '/'` y el bundle reconstruido, dos de las tres pruebas fallan. Un e2e de infraestructura que nunca se ha visto fallar no prueba que vigile nada. Mismo criterio empírico que T-040.
+- El favicon se filtra de los errores de consola: el `dist` no declara ninguno y el navegador pide `/favicon.ico` igualmente, que el servidor responde con 404. Es real y no es del artefacto.
+- **Riesgo conocido**: el `webServer` lo lanza con `npx tsx`, y `tsx` es devDependency de `packages/server`. Si algún día se retira ese paquete, este e2e deja de arrancar; la solución sería declarar `tsx` en la raíz, que es donde se usa.
+
 ## Convenciones
 
 - Nombres de código, tipos y comentarios de API en inglés; documentación de producto (docs/) en español.
