@@ -64,6 +64,28 @@ async function openComparison(page: Page): Promise<void> {
 }
 
 test.describe('accesibilidad (axe-core, WCAG 2.1 AA)', () => {
+  /**
+   * Sin esto el análisis es una carrera contra `.rise`, la aparición escalonada
+   * de T-037: anima `opacity` de 0 a 1, y axe mide el contraste sobre el color
+   * **ya compuesto**, así que un elemento a medio aparecer se mezcla con el
+   * fondo y baja del umbral. Daba violaciones distintas en cada pasada y solo
+   * en las máquinas que pierden la carrera: verde en local, rojo en CI.
+   *
+   * Es el mismo fotograma a medias que ya obligó a `reducedMotion` en las
+   * capturas (T-048b). No se pierde cobertura: `prefers-reduced-motion` solo
+   * apaga la animación de entrada, y los colores del estado final —que es el
+   * que gobierna WCAG 1.4.3— son idénticos.
+   *
+   * **Tiene que ser esta llamada explícita, no la opción `reducedMotion` de
+   * `use`.** Con Playwright 1.62 la opción se resuelve (`test.info().project.use`
+   * la muestra) pero no llega a la página: `matchMedia` sigue diciendo `false`
+   * y la animación sigue corriendo, tanto puesta en el proyecto como en un
+   * `test.use`. Medido, no supuesto.
+   */
+  test.beforeEach(async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+  });
+
   test('wizard vacío', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { name: /nueva comparación/i })).toBeVisible();
