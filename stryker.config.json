@@ -12,8 +12,8 @@
     "!packages/web/src/lib/releaseNotes.ts"
   ],
   "thresholds": {
-    "high": 85,
-    "low": 70,
-    "break": 70
+    "high": 98,
+    "low": 95,
+    "break": 95
   }
 }
