@@ -6,7 +6,7 @@
   "description": "Comparador de ejecuciones de mutation testing (PiTest / Stryker).",
   "license": "MIT",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "workspaces": [
     "packages/*"
@@ -29,6 +29,7 @@
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
     "dev": "concurrently -n server,web -c blue,magenta \"npm run dev -w server\" \"npm run dev -w web\"",
+    "premutation": "tsc -b",
     "mutation": "stryker run"
   },
   "devDependencies": {

@@ -7,9 +7,11 @@
 #
 # Minor/patch de npm llegan juntos en un PR y las acciones de GitHub en otro.
 # Los cambios de versión mayor van fuera de ese grupo, que es donde hace falta
-# leer el changelog antes de fusionar, con dos excepciones:
+# leer el changelog antes de fusionar, con tres excepciones:
 # - Vitest y sus paquetes `@vitest/*` suben de mayor juntos: por separado,
 #   `@vitest/coverage-v8` N exige `vitest` N y el PR ni siquiera instala.
+# - Lo mismo con Stryker: `@stryker-mutator/vitest-runner` N exige
+#   `@stryker-mutator/core` N.
 # - React y `react-dom` (y sus tipos) no se proponen de mayor: docs/plan.md
 #   §2.1 fija React 18 y el `overrides` de package.json lo impone (T-030), así
 #   que un PR de React 19 no puede pasar. Migrar es una tarea, no un bump.
@@ -31,6 +33,8 @@ updates:
         update-types: [minor, patch]
       vitest:
         patterns: ['vitest', '@vitest/*']
+      stryker:
+        patterns: ['@stryker-mutator/*']
     ignore:
       - dependency-name: react
         update-types: ['version-update:semver-major']
