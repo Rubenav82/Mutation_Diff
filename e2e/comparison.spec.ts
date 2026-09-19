@@ -1,23 +1,9 @@
 import { readFile } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
 import { expect, test, type Page } from '@playwright/test';
-
-/**
- * The e2e suite reuses the very same fixtures the `core` unit tests parse, so a
- * change in the expected classes shows up in both layers at once.
- */
-function fixture(tool: 'pitest' | 'stryker', side: 'base' | 'head'): string {
-  const extension = tool === 'pitest' ? 'xml' : 'json';
-  return fileURLToPath(
-    new URL(
-      `../packages/core/test/fixtures/${tool}/realistic/${side}.${extension}`,
-      import.meta.url,
-    ),
-  );
-}
+import { fixture, type Tool } from './fixtures.js';
 
 interface SubmitOptions {
-  tool: 'pitest' | 'stryker';
+  tool: Tool;
   uncoveredThreshold?: string;
 }
 

@@ -18,7 +18,14 @@ function AppHeader() {
       <div className="mx-auto flex max-w-7xl items-center gap-3 px-6 py-4">
         <Link to="/" className="flex items-center gap-3">
           <LogoAqa className="h-9 w-auto shrink-0" />
-          <span className="border-l border-line pl-3 font-mono text-base font-semibold tracking-tight text-ink">
+          {/* `data-brand` marks the wordmark as the brand name, which WCAG 1.4.3
+              exempts from the contrast minimum: the accent is 3.76:1 by design
+              (T-045). The a11y scan of T-100 excludes this node by that hook, so
+              an accent that leaks onto real text elsewhere still fails. */}
+          <span
+            data-brand
+            className="border-l border-line pl-3 font-mono text-base font-semibold tracking-tight text-ink"
+          >
             Mutator <span className="text-accent">Assessment</span> Report
           </span>
         </Link>

@@ -101,6 +101,7 @@ describe('createComparison', () => {
 
     await expect(promise).rejects.toBeInstanceOf(ComparisonError);
     await expect(promise).rejects.toMatchObject({
+      name: 'ComparisonError',
       status: 422,
       code: 'INVALID_REPORT',
     });
@@ -124,8 +125,10 @@ describe('getComparison', () => {
 
     await expect(promise).rejects.toBeInstanceOf(ComparisonError);
     await expect(promise).rejects.toMatchObject({
+      name: 'ComparisonError',
       status: 404,
       code: 'COMPARISON_NOT_FOUND',
     });
+    await expect(promise).rejects.toThrow('No comparison found for id "desconocido"');
   });
 });

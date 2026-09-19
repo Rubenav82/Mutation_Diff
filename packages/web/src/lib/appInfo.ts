@@ -13,7 +13,7 @@ export const APP_NAME = 'Mutator Assessment Report';
 export const APP_VERSION = version;
 
 /** Copyright holder tal cual figura en LICENSE: si divergen, uno de los dos miente. */
-export const COPYRIGHT = '© 2026 Rubenav82';
+export const COPYRIGHT = '© 2026 Rubén Asenjo Vega';
 export const LICENSE = 'MIT License';
 
 export const CONTACT_EMAIL = 'rubenav82@gmail.com';

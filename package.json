@@ -1,6 +1,6 @@
 {
   "name": "mutadiff",
-  "version": "1.6.0",
+  "version": "1.6.2",
   "private": true,
   "type": "module",
   "description": "Comparador de ejecuciones de mutation testing (PiTest / Stryker).",
@@ -13,14 +13,15 @@
   ],
   "overrides": {
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "qs": "^6.16.0"
   },
   "scripts": {
     "build": "tsc -b",
     "pretest": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",
-    "pretest:e2e": "tsc -b",
+    "pretest:e2e": "tsc -b && npm run build -w web",
     "test:e2e": "playwright test --tsconfig=e2e/tsconfig.json",
     "coverage": "vitest run --coverage",
     "pretypecheck": "tsc -b",
@@ -31,12 +32,13 @@
     "mutation": "stryker run"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.62.0",
     "@stryker-mutator/core": "^9.6.1",
     "@stryker-mutator/vitest-runner": "^9.6.1",
     "@types/node": "^26.1.1",
-    "@vitest/coverage-v8": "^4.1.10",
+    "@vitest/coverage-v8": "^4.1.11",
     "concurrently": "^10.0.3",
     "eslint": "^10.6.0",
     "eslint-config-prettier": "^10.1.8",
@@ -44,6 +46,6 @@
     "prettier": "^3.9.4",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.63.0",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
   }
 }

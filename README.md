@@ -1,6 +1,6 @@
 # Mutator Assessment Report
 
-Compara dos ejecuciones de mutation testing —[PiTest](https://pitest.org/) o [Stryker](https://stryker-mutator.io/)— y te dice qué ha empeorado: retrocesos de score (mutantes detectados "Killed") por clase, clases nuevas sin tests, clases eliminadas y cobertura de mutantes perdida. Exporta el resultado como un informe HTML autocontenido —o como PDF— para adjuntarlo a una PR o archivarlo.
+Compara dos ejecuciones de mutation testing —[PiTest](https://pitest.org/) o [Stryker](https://stryker-mutator.io/)— y te dice qué ha empeorado: retrocesos de score (mutantes detectados "Killed") por clase, clases nuevas sin tests, clases eliminadas y cobertura de mutantes perdida. Para cada clase que retrocede, baja hasta el mutante: qué dejó de detectarse, en qué línea y con qué mutador. Y agrupa por mutador para que veas cuáles producen los supervivientes. Exporta el resultado como un informe HTML autocontenido —o como PDF— para adjuntarlo a una PR o archivarlo.
 
 Mirar dos `mutations.xml` en paralelo para averiguar qué clase ha bajado de score es tedioso y se hace mal. Esto lo automatiza.
 
@@ -83,8 +83,10 @@ La misma información está dentro de la app, detrás del icono ⓘ junto al sel
    - **Umbral sin cobertura (%)**: qué porcentaje de mutantes en `NO_COVERAGE` marca una clase como «sin cobertura». Por defecto `100` — solo las que no tienen ni un mutante cubierto. Bájalo a `75` para incluir también las casi descubiertas.
    Las dos reglas completas, con fórmula y casos límite, están dentro de la app detrás del icono ⓘ que hay junto a «Umbrales (opcional)».
 3. El dashboard muestra las métricas globales con su delta, las secciones de retrocesos / sin cobertura / nuevas / eliminadas, y la tabla completa con filtro y orden por columna. Todas las tablas se paginan de 5 en 5 para que la comparación entera se recorra sin scroll; cada una lleva su propio selector con 25, 50, 100 o «Todas», que es lo que necesitas si quieres buscar con Ctrl+F sobre el conjunto entero. Una tabla con 5 filas o menos no muestra controles: ya está toda a la vista.
-4. **Exportar HTML** descarga el informe completo como un único fichero, sin CSS ni JS externos: se abre offline y se puede adjuntar donde sea.
-5. **Exportar PDF** abre el diálogo de impresión del navegador con ese mismo informe ya maquetado para papel; elige «Guardar como PDF» y te propondrá el nombre `mutadiff-report-<id>`. Los dos formatos conviven a propósito: el HTML se explora (buscable, sin cortes de página) y el PDF se adjunta a un correo o a una incidencia. Con miles de unidades el PDF sale largo — la tabla completa lo es de por sí.
+4. **Baja al mutante.** Toda fila cuya clase tenga mutantes que cambiaron de estado lleva un botón con el número de cambios; al desplegarla ves cada uno con su línea, mutador, estado antes → ahora y el tipo de cambio (nuevo superviviente, ahora detectado, sin cobertura ahora…). La casilla «Solo nuevos supervivientes» deja a la vista lo accionable: lo que antes se mataba y ahora no.
+5. **Por mutador**, al final del dashboard: mutantes, supervivientes en cada ejecución con su delta, sin cubrir y score de cada mutador, ordenados por los que más supervivientes producen. Es lo que hace falta para decidir si un mutador merece tests o si es mejor excluirlo de la configuración (`VoidMethodCallMutator` sobre llamadas de log es el caso típico).
+6. **Exportar HTML** descarga el informe completo como un único fichero, sin CSS ni JS externos: se abre offline y se puede adjuntar donde sea. Incluye la tabla por mutador en el resumen y, bajo cada retroceso, sus nuevos supervivientes (hasta diez por clase; si el detalle no cabe en el informe, lo dice en lugar de omitirlo en silencio).
+7. **Exportar PDF** abre el diálogo de impresión del navegador con ese mismo informe ya maquetado para papel; elige «Guardar como PDF» y te propondrá el nombre `mutadiff-report-<id>`. Los dos formatos conviven a propósito: el HTML se explora (buscable, sin cortes de página) y el PDF se adjunta a un correo o a una incidencia. Con miles de unidades el PDF sale largo — la tabla completa lo es de por sí.
 
 ## API REST (opcional, autoalojada)
 
@@ -138,7 +140,7 @@ npm test           # suite completa (Vitest)
 npm run test:e2e   # e2e con Playwright — requiere `npx playwright install chromium`
 npm run typecheck  # tsc --noEmit en todos los workspaces + e2e
 npm run lint       # ESLint + Prettier
-npm run mutation   # Stryker sobre packages/core
+npm run mutation   # Stryker sobre packages/core y packages/web/src/lib (~8 min)
 npm run build      # tsc -b
 ```
 
@@ -166,13 +168,14 @@ Importa porque un `mutations.xml` lleva dentro los nombres de clases y las rutas
 
 Funcional para el flujo completo de comparación puntual. Sabidas y pendientes:
 
-- **Un fichero por lado.** 
-- **Sin histórico.** Una comparación vive en la pestaña que la creó: sobrevive a recargar, pero no a cerrar el navegador, y no se puede compartir por enlace. Para conservar o mandar un resultado, exporta el HTML. La persistencia opt-in, la atribución de autor vía `git log` y el modo CLI irán en una fase posterior.
+- **Un fichero por lado.** Un proyecto Maven multi-módulo genera un `mutations.xml` por módulo; hay que elegir uno o fusionarlos antes de subirlos. No está planificado de momento.
+- **Sin histórico.** Una comparación vive en la pestaña que la creó: sobrevive a recargar, pero no a cerrar el navegador, y no se puede compartir por enlace. Para conservar o mandar un resultado, exporta el HTML. La persistencia opt-in, la atribución de autor vía `git log` y el modo CLI para integrarlo en pipelines están pendientes de decisión, no de implementación: cómo se distribuye el CLI y de dónde sale el informe base en CI son las preguntas abiertas.
+- **Solo PiTest y Stryker.** El JSON de Stryker es el esquema estándar de mutation-testing-elements, así que los reportes de Stryker.NET y Stryker4s entran igual.
 - **Los reportes se procesan en memoria del navegador.** Con ficheros muy grandes (decenas de MB) el consumo lo paga tu pestaña. A cambio, nadie compite por la memoria de un servidor compartido.
 
 ## Calidad
 
-El proyecto se somete a su propio tipo de análisis: mutation testing con Stryker sobre `packages/core`, con el umbral en 70 y el score actual en **99,54 %**. La suite tiene, a día de hoy, 350 tests unitarios/integración y 5 e2e sobre el flujo real en navegador. CI ejecuta lint, typecheck, tests y e2e en cada PR; Stryker va en un workflow aparte, y la release no se publica sin pasar la misma barra.
+El proyecto se somete a su propio tipo de análisis: mutation testing con Stryker sobre `packages/core` y la lógica de `packages/web/src/lib`, con el umbral en 70 y el score actual en **98,58 %** (`core` al 99,70 %; los vivos que quedan son equivalentes documentados). La suite tiene, a día de hoy, 455 tests unitarios/integración y 12 e2e en navegador: cinco sobre el flujo real, tres sobre el **artefacto ya construido** —servido como lo sirve un servidor de ficheros, desde un subpath y sin reescribir rutas, que es exactamente lo que se publica en la release— y cuatro de **accesibilidad** con axe-core sobre WCAG 2.1 AA. CI ejecuta lint, typecheck, tests y e2e en cada PR; Stryker va en un workflow aparte, y la release no se publica sin pasar la misma barra. Dependabot abre un PR semanal con las actualizaciones de dependencias agrupadas.
 
 ## Documentación
 

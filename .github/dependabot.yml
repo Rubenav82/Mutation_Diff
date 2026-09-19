@@ -1,0 +1,40 @@
+# Actualizaciones de dependencias agrupadas (T-097): un PR semanal con todos los
+# minor/patch de npm y otro con las acciones de GitHub, para que las
+# vulnerabilidades no se acumulen entre auditorías manuales. Los cambios de
+# versión mayor quedan fuera de los grupos y llegan como PR individuales, que es
+# donde hace falta leer el changelog antes de fusionar.
+#
+# El monorepo usa workspaces con un único package-lock.json en la raíz, así que
+# un solo directorio cubre core/server/web. `.github/**` está en el
+# paths-ignore de release.yml: estos PR no disparan una release por sí mismos.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Europe/Madrid
+    open-pull-requests-limit: 5
+    groups:
+      npm-minor-patch:
+        patterns: ['*']
+        update-types: [minor, patch]
+    commit-message:
+      prefix: 'chore(deps)'
+    labels: [dependencies]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Europe/Madrid
+    groups:
+      github-actions:
+        patterns: ['*']
+    commit-message:
+      prefix: 'chore(ci)'
+    labels: [dependencies]
