@@ -28,7 +28,7 @@ Se publica una release por cada cambio que llegue a `master`, etiquetada `vAÑO.
 
 ## Desarrollo
 
-Requiere Node.js ≥ 20 y npm ≥ 10 (workspaces).
+Requiere Node.js ≥ 22 y npm ≥ 10 (workspaces).
 
 ```bash
 git clone https://github.com/Rubenav82/Mutation_Diff.git
