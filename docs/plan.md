@@ -211,7 +211,7 @@ Rediseño basado en el sistema **Modernist**: flat, arquitectónico, radio de bo
 - **mutation testing del proyecto**: Stryker sobre `packages/core` en CI; el resultado se puede… comparar con la propia app 🙂
 - **e2e**: Playwright (solo Chromium) sobre el flujo real wizard → API → dashboard → export, usando las mismas fixtures que los tests de `core`.
 - **accesibilidad**: axe-core sobre el DOM real en los mismos e2e (WCAG 2.1 AA). Cubre las regresiones estructurales —contraste, nombres accesibles, `aria-*` que apunta a la nada—, no sustituye a una revisión manual.
-- **CI** (GitHub Actions): lint + typecheck + tests + e2e; stryker en un workflow aparte (job nightly).
+- **CI** (GitHub Actions): lint + typecheck + tests + e2e; stryker en un workflow aparte, disparado al fusionar en `master` un cambio que toque lo que se muta (antes era un job nightly: el reloj repetía la pasada sin código nuevo que medir).
 
 ### 2.7 Riesgos y decisiones abiertas
 
