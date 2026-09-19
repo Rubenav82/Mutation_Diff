@@ -44,6 +44,15 @@ updates:
         update-types: ['version-update:semver-major']
       - dependency-name: '@types/react-dom'
         update-types: ['version-update:semver-major']
+      # Vitest 5 instala sin quejarse (el runner de Stryker pide `>=2.0.0`)
+      # pero deja de matar mutantes: los tests corren contra el código sin
+      # mutar y el score cayó de 98,26 % a 70,68 % (PR #42). Retirar este
+      # ignore cuando @stryker-mutator/vitest-runner declare soporte de
+      # Vitest 5, y comprobarlo con una pasada de mutation, no con el CI.
+      - dependency-name: vitest
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@vitest/*'
+        update-types: ['version-update:semver-major']
     commit-message:
       prefix: 'chore(deps)'
     labels: [dependencies]
