@@ -1,11 +1,26 @@
 name: Mutation
 
-# Job nightly (docs/plan.md §5): el mutation testing es demasiado lento para
-# ejecutarlo en cada push/PR como lint, typecheck y tests. `workflow_dispatch`
-# permite lanzarlo a mano antes de cerrar una fase.
+# Se dispara al fusionar en master un cambio que toque lo que se muta, no por
+# reloj: un nightly repetía la pasada aunque nadie hubiera tocado el código, y
+# lo que interesa saber es si un cambio concreto ha empeorado la calidad de los
+# tests. `docs/plan.md` §5 lo planteaba como job nightly; esto lo sustituye.
+#
+# En master y no en cada PR (criterio de T-040): la pasada tarda ~4 min en CI y
+# retrasaría el feedback rápido de lint/typecheck/tests. master es lo que se
+# publica, así que el aviso llega antes de que importe.
+#
+# Las rutas son las de `mutate` en stryker.config.json más el propio config: un
+# cambio de documentación, de compose/ o de workflows produce el mismo
+# resultado y no hay nada que medir. `workflow_dispatch` sigue, para lanzarla a
+# mano sobre una rama antes de fusionar (es como se validaron Stryker 10 y el
+# corte en 95).
 on:
-  # schedule:
-  #   - cron: '0 3 * * *'
+  push:
+    branches: [master]
+    paths:
+      - 'packages/core/src/**'
+      - 'packages/web/src/lib/**'
+      - 'stryker.config.json'
   workflow_dispatch:
 
 jobs:
@@ -21,8 +36,8 @@ jobs:
 
       - run: npm ci
 
-      # `break: 70` en stryker.config.json hace fallar este paso por debajo del
-      # umbral mínimo de docs/constitution.md #2.
+      # `break: 95` en stryker.config.json hace fallar este paso; el umbral no
+      # se repite aquí para que tenga una sola fuente de verdad.
       - run: npm run mutation
 
       # Sin esto, un fallo por umbral no dice qué mutantes sobrevivieron.
