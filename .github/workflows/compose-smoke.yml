@@ -15,7 +15,7 @@ jobs:
   smoke:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # `depends_on: service_completed_successfully` hace que esto ya espere a
       # que el updater termine bien: si falla la descarga, falla aquí.
