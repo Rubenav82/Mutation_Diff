@@ -471,6 +471,16 @@ La app se despliega como **ficheros estáticos**: `packages/web/dist` (un `index
 - El favicon se filtra de los errores de consola: el `dist` no declara ninguno y el navegador pide `/favicon.ico` igualmente, que el servidor responde con 404. Es real y no es del artefacto.
 - **Riesgo conocido**: el `webServer` lo lanza con `npx tsx`, y `tsx` es devDependency de `packages/server`. Si algún día se retira ese paquete, este e2e deja de arrancar; la solución sería declarar `tsx` en la raíz, que es donde se usa.
 
+## Accesibilidad automatizada (fijado en T-100)
+
+- **`e2e/a11y.spec.ts` corre axe-core sobre el DOM real** en cuatro estados (wizard vacío, con error de validación, con el panel de ayuda abierto, dashboard con datos). Existe porque desde T-036 hay roles, live regions y nombres accesibles puestos a mano —y ampliados en T-076/T-077, T-083 y T-088— y nada avisaba si se degradaban: un test de RTL comprueba el nombre que consulta él mismo, no si el árbol de accesibilidad es coherente. axe detecta en torno a un tercio de los problemas reales; **no sustituye a una revisión manual**, sí atrapa las regresiones estructurales.
+- **Acotado a WCAG 2.1 AA** (`wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`). `best-practice` no se incluye: son reglas opinables de Deque, no un estándar, y meterlas convertiría cada fallo en una discusión de criterio en vez de un incumplimiento.
+- **Lo único excluido es el logotipo textual de la cabecera, por `[data-brand]`.** WCAG 1.4.3 exime del mínimo de contraste al texto que forma parte de un nombre de marca, y axe no puede distinguirlo: da `color-contrast` sobre el «Assessment» en acento, que son 3,76:1 **a propósito** (T-045). Se excluye por ese atributo y **no por `.text-accent`** porque ese es justo el caso que hay que seguir detectando —la clase de acento sobre un dato real ya fue un error una vez, en `UnitsTable`—; hay verificación empírica de que sigue fallando.
+- **Las violaciones se reducen a `{id, impact, help, targets}` antes de asertar contra `[]`**: el objeto de axe trae el `html` completo de cada nodo, y un fallo con el objeto crudo imprime cientos de líneas en las que no se encuentra qué regla saltó.
+- **Verificado rompiendo la app, no solo viéndolo en verde** (mismo criterio que T-040 y T-099): con el acento sobre texto real del pie fallan los cuatro escenarios con `color-contrast`; quitando el nombre accesible del botón ⓘ de umbrales fallan los tres del wizard con `button-name`, y el del dashboard se queda verde —el botón no está en esa pantalla—, que es el alcance correcto y no un fallo del test.
+- Corre en el proyecto `dev-server` de Playwright, no en `artifact`: verifica el marcado de la aplicación, que es el mismo en los dos, y el bucle rápido es donde tiene que avisar.
+- **Lo que este spec no cubre**: los modales «Acerca de» y «Notas de versión» (T-076/T-077/T-089), construidos a mano y por tanto el sitio con más riesgo de los que quedan, y los paneles de mutantes desplegados (T-091). Si se amplía, es por ahí.
+
 ## Convenciones
 
 - Nombres de código, tipos y comentarios de API en inglés; documentación de producto (docs/) en español.
