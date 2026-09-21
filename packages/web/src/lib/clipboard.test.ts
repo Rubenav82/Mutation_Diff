@@ -28,11 +28,11 @@ describe('copyText', () => {
     // Servido por HTTP plano no hay contexto seguro y `navigator.clipboard` no
     // existe. Sin este camino, el botón «Copiar» lanzaría un TypeError.
     withClipboard(undefined);
-    let selectedText: string | undefined;
+    let focusedValue: string | undefined;
     let scratch: { readonly: string | null; position: string; top: string } | undefined;
     const execCommand = vi.fn(() => {
       const node = document.activeElement as HTMLTextAreaElement;
-      selectedText = node.value;
+      focusedValue = node.value;
       scratch = {
         readonly: node.getAttribute('readonly'),
         position: node.style.position,
@@ -45,11 +45,32 @@ describe('copyText', () => {
     await copyText('outputFormats = XML');
 
     expect(execCommand).toHaveBeenCalledWith('copy');
-    // El texto tiene que estar seleccionado *en el momento* de copiar, no antes.
-    expect(selectedText).toBe('outputFormats = XML');
+    // El nodo con el texto tiene que tener el foco *en el momento* de copiar.
+    // Que además esté seleccionado lo fija el test siguiente: leer `value` no
+    // lo comprueba, y por eso un mutante sin `select()` sobrevivía (T-102).
+    expect(focusedValue).toBe('outputFormats = XML');
     // Solo lectura (sin teclado virtual en móvil) y fuera de la vista, nunca
     // oculto: un nodo oculto no se puede seleccionar.
     expect(scratch).toEqual({ readonly: '', position: 'fixed', top: '-100vh' });
+  });
+
+  it('selects the whole text before copying, since execCommand copies the selection', async () => {
+    // `execCommand('copy')` copia lo que está seleccionado, no el valor del
+    // nodo: sin `select()` el cursor queda al final del texto y lo copiado sería
+    // una cadena vacía. jsdom sí modela la selección de un `<textarea>`.
+    withClipboard(undefined);
+    let selection: { start: number; end: number } | undefined;
+    Object.assign(document, {
+      execCommand: vi.fn(() => {
+        const node = document.activeElement as HTMLTextAreaElement;
+        selection = { start: node.selectionStart, end: node.selectionEnd };
+        return true;
+      }),
+    });
+
+    await copyText('outputFormats = XML');
+
+    expect(selection).toEqual({ start: 0, end: 'outputFormats = XML'.length });
   });
 
   it('leaves no scratch node behind after the fallback', async () => {
