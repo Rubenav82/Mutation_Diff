@@ -21,10 +21,12 @@ export function printReport(html: string, fileName: string): void {
   document.body.appendChild(frame);
 
   // Un iframe que no llegó a insertarse no tiene ventana; el documento se saca
-  // de la ventana y no de `contentDocument` para que haya un solo guard.
+  // de la ventana y no de `contentDocument` para que haya un solo guard. Sin
+  // `frame.remove()` aquí: un iframe conectado a este documento siempre tiene
+  // ventana, así que si no la tiene es que no está en el DOM y no hay nada que
+  // retirar (Stryker lo marcó como superviviente por eso, T-101).
   const frameWindow = frame.contentWindow;
   if (!frameWindow) {
-    frame.remove();
     return;
   }
   const frameDocument = frameWindow.document;
