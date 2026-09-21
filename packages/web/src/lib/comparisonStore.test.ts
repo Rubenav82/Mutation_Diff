@@ -69,6 +69,23 @@ describe('createComparisonStore', () => {
     expect(afterReload.load('abc')).toEqual(result('stryker'));
   });
 
+  it('keeps a rehydrated comparison in memory, so later loads return the same object', () => {
+    // Tras recargar, el primer `load` parsea el JSON de storage. Si no lo guarda
+    // en el `Map`, cada `load` siguiente vuelve a parsear —miles de unidades en
+    // un proyecto grande— y devuelve un objeto nuevo, distinto por referencia
+    // aunque igual en contenido.
+    const storage = fakeStorage();
+    createComparisonStore(storage).save('abc', result('stryker'));
+    const afterReload = createComparisonStore(storage);
+
+    const first = afterReload.load('abc');
+    storage.clear();
+
+    // Ya no está en storage: si sigue saliendo, y es el mismo objeto, es que
+    // viene del `Map`.
+    expect(afterReload.load('abc')).toBe(first);
+  });
+
   it('keeps working in memory when storage rejects the write', () => {
     // Un resultado de miles de unidades puede reventar la cuota (~5 MB). Que
     // no se pueda guardar para la recarga no debe romper la sesión en curso.
