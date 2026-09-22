@@ -488,6 +488,18 @@ La app se despliega como **ficheros estáticos**: `packages/web/dist` (un `index
 - Corre en el proyecto `dev-server` de Playwright, no en `artifact`: verifica el marcado de la aplicación, que es el mismo en los dos, y el bucle rápido es donde tiene que avisar.
 - **Lo que este spec no cubre**: los modales «Acerca de» y «Notas de versión» (T-076/T-077/T-089), construidos a mano y por tanto el sitio con más riesgo de los que quedan, y los paneles de mutantes desplegados (T-091). Si se amplía, es por ahí.
 
+## Exportar e importar la comparación (fijado en T-103)
+
+- **`lib/comparisonFile.ts` define el formato `.mutadiff.json`**: `{ format: 'mutadiff-comparison', version: 1, result }`. La marca distingue el fichero de cualquier otro JSON —el `mutation.json` de Stryker sale del mismo selector de ficheros— y la versión permite rechazar con un mensaje claro un formato que esta build no sabe leer. **Subir `VERSION` cuando `ComparisonResult` gane un campo obligatorio**: un fichero viejo no lo traería y el dashboard fallaría al pintarlo, que es justo lo que la validación evita (el test de «sin `mutators`» documenta el caso de T-093).
+- **La importación es entrada no confiable y se valida entera con Zod** antes de guardarla. El esquema lleva la anotación `z.ZodMiniType<ComparisonResult>`, así que si el tipo de `core` cambia y el esquema no, `tsc` falla: es lo que mantiene los dos a la par. `exactOptional` y no `optional`, por `exactOptionalPropertyTypes`. El mensaje de error da solo la ruta del primer fallo: basta para saber qué se rompió y un fichero corrupto puede tener miles.
+- **`zod/mini`, no `zod`**: la variante clásica, con métodos encadenados, no se deja podar y añadía **89 kB (25 kB gzip)** al bundle por un solo esquema; `mini` se quedó en ~20 kB (6 kB gzip) con el código nuevo incluido. Medido contra el `vite build` del último workflow de release. Si se usa Zod en otro sitio de `web`, que sea también `mini`.
+- **`parseComparisonFile` lanza un `Error` plano e `importComparison` lo envuelve en `ComparisonError(422, 'INVALID_COMPARISON_FILE')`**: el mismo reparto que los parsers de `core` con `INVALID_REPORT`, y evita el import circular que habría si el formato importara `ComparisonError` de `comparisons.ts`.
+- **Importar da un id nuevo**: el de origen vivía en otra pestaña u otra máquina y aquí no significa nada.
+- `lib/download.ts` (`downloadFile`) sale de la descarga que hacía el dashboard para el HTML (T-071) y ahora la comparten los dos exports. El botón se llama **«Exportar JSON»**, por formato como los otros dos y para no descolocar la columna de botones medida en T-084; el `title` dice para qué sirve.
+- **La zona de importar va fuera del `<form>`** y no depende de la herramienta: el fichero ya dice de cuál salió. Se importa al elegir el fichero, sin botón, y su error es un estado propio (`importError`), no el del submit: son dos acciones y cada error va junto a la suya. Efecto colateral en los tests del wizard: la pista «Arrastra un fichero .mutadiff.json» también casa con `/\.json/`, así que el test que contaba las pistas de Stryker busca ahora `/fichero \.json/`.
+- **En e2e, `download.path()` no sirve para volver a subir el fichero**: Playwright guarda la descarga con un nombre aleatorio sin extensión, y la zona la rechaza por no ser `.mutadiff.json`. Hay que pasar `{ name: download.suggestedFilename(), buffer }` a `setInputFiles`. El síntoma es un `toHaveURL` que no cambia, no un error visible.
+- La política de privacidad (T-077) se amplió en el mismo commit: su sección pasa a «Ficheros exportados» y dice que la comparación en JSON se descarga e importa sin red.
+
 ## Convenciones
 
 - Nombres de código, tipos y comentarios de API en inglés; documentación de producto (docs/) en español.

@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ComparisonResult, UnitComparison, UnitMetrics } from 'core';
 import { ComparisonError, getComparison } from '../lib/comparisons';
+import { serializeComparison } from '../lib/comparisonFile';
 import { printReport } from '../lib/printReport';
 import { ComparisonDashboardPage } from './ComparisonDashboardPage';
 
@@ -208,6 +209,25 @@ describe('ComparisonDashboardPage', () => {
     const anchor = click.mock.contexts[0] as HTMLAnchorElement;
     expect(anchor.download).toBe('mutadiff-report-abc 123.html');
     // Sin revoke, cada export deja el informe entero retenido en memoria.
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:mutadiff');
+
+    click.mockRestore();
+    restoreObjectUrl();
+  });
+
+  it('hands over the comparison itself as a file that the wizard can import back', async () => {
+    getComparisonMock.mockResolvedValue(makeResult());
+    const { createObjectURL, revokeObjectURL, restoreObjectUrl } = stubObjectUrl();
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    renderDashboard('abc 123');
+
+    await userEvent.setup().click(await screen.findByRole('button', { name: 'Exportar JSON' }));
+
+    const blob = createObjectURL.mock.calls[0]?.[0] as Blob;
+    expect(blob.type).toBe('application/json');
+    await expect(blob.text()).resolves.toBe(serializeComparison(makeResult()));
+    const anchor = click.mock.contexts[0] as HTMLAnchorElement;
+    expect(anchor.download).toBe('mutadiff-comparison-abc 123.mutadiff.json');
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:mutadiff');
 
     click.mockRestore();

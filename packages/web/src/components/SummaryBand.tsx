@@ -21,6 +21,7 @@ interface SummaryBandProps {
   regressionCount: number;
   onExport: () => void;
   onExportPdf: () => void;
+  onExportComparison: () => void;
 }
 
 /** Sobre la banda oscura, no los tokens del tema claro: ahí dan 1.9:1. */
@@ -51,6 +52,7 @@ export function SummaryBand({
   regressionCount,
   onExport,
   onExportPdf,
+  onExportComparison,
 }: SummaryBandProps) {
   const { base, head, scoreDelta, coverageDelta } = global;
 
@@ -122,6 +124,17 @@ export function SummaryBand({
             </button>
             <button type="button" onClick={onExportPdf} className={EXPORT_BUTTON_CLASS}>
               Exportar PDF
+            </button>
+            {/* El `title` es la pista, no el nombre: el botón se llama por su
+                formato, como los otros dos, pero este no es un informe sino la
+                comparación que el wizard sabe volver a abrir. */}
+            <button
+              type="button"
+              onClick={onExportComparison}
+              title="La comparación en sí, para volver a abrirla con «Importar comparación»"
+              className={EXPORT_BUTTON_CLASS}
+            >
+              Exportar JSON
             </button>
           </div>
           <span

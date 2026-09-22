@@ -2,17 +2,28 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ComparisonError, createComparison, getComparison } from '../lib/comparisons';
+import {
+  ComparisonError,
+  createComparison,
+  getComparison,
+  importComparison,
+} from '../lib/comparisons';
 import { ComparisonDashboardPage } from './ComparisonDashboardPage';
 import { NewComparisonPage } from './NewComparisonPage';
 
 vi.mock('../lib/comparisons', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../lib/comparisons')>();
-  return { ...actual, createComparison: vi.fn(), getComparison: vi.fn() };
+  return {
+    ...actual,
+    createComparison: vi.fn(),
+    getComparison: vi.fn(),
+    importComparison: vi.fn(),
+  };
 });
 
 const createComparisonMock = vi.mocked(createComparison);
 const getComparisonMock = vi.mocked(getComparison);
+const importComparisonMock = vi.mocked(importComparison);
 
 function renderWizard() {
   return render(
@@ -43,6 +54,7 @@ async function selectFiles(
 beforeEach(() => {
   createComparisonMock.mockReset();
   getComparisonMock.mockReset();
+  importComparisonMock.mockReset();
   // The dashboard fetches on mount after navigation; keep it pending so tests
   // that only assert the wizard's navigation don't hit an unmocked fetch.
   getComparisonMock.mockReturnValue(new Promise(() => {}));
@@ -63,7 +75,9 @@ describe('NewComparisonPage', () => {
 
     await user.click(screen.getByRole('radio', { name: /stryker/i }));
 
-    expect(screen.getAllByText(/\.json/)).toHaveLength(2);
+    // «fichero .json» y no «.json» a secas: la zona de importar pide un
+    // «.mutadiff.json», que no depende de la herramienta.
+    expect(screen.getAllByText(/fichero \.json/)).toHaveLength(2);
     expect(screen.queryByText('base.xml')).not.toBeInTheDocument();
   });
 
@@ -207,5 +221,108 @@ describe('NewComparisonPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /ver instrucciones/i }));
 
     expect(screen.getByRole('region', { name: /ayuda de configuración/i })).toBeInTheDocument();
+  });
+
+  describe('importing an exported comparison', () => {
+    function importInput(): HTMLInputElement {
+      return screen.getByLabelText(/importar comparación/i, { selector: 'input' });
+    }
+
+    function comparisonFile(): File {
+      return new File(['{}'], 'resultado.mutadiff.json', { type: 'application/json' });
+    }
+
+    it('offers a separate zone that only takes exported comparisons', () => {
+      renderWizard();
+
+      expect(importInput()).toHaveAttribute('accept', '.mutadiff.json');
+    });
+
+    it('does not depend on the tool, since the file already says which one it was', async () => {
+      const user = userEvent.setup();
+      renderWizard();
+
+      await user.click(screen.getByRole('radio', { name: /stryker/i }));
+
+      expect(importInput()).toHaveAttribute('accept', '.mutadiff.json');
+    });
+
+    it('opens the comparison as soon as the file is chosen, with no extra button', async () => {
+      const user = userEvent.setup();
+      importComparisonMock.mockResolvedValue({ comparisonId: 'imported-1', result: {} as never });
+      renderWizard();
+      const file = comparisonFile();
+
+      await user.upload(importInput(), file);
+
+      expect(importComparisonMock).toHaveBeenCalledWith(file);
+      await waitFor(() => expect(getComparisonMock).toHaveBeenCalledWith('imported-1'));
+    });
+
+    it('announces progress while the file is read', async () => {
+      const user = userEvent.setup();
+      importComparisonMock.mockReturnValue(new Promise(() => {}));
+      renderWizard();
+
+      await user.upload(importInput(), comparisonFile());
+
+      expect(await screen.findByRole('status')).toHaveTextContent('Importando…');
+    });
+
+    it('shows why the file was rejected and stays on the wizard', async () => {
+      const user = userEvent.setup();
+      importComparisonMock.mockRejectedValue(
+        new ComparisonError(
+          422,
+          'INVALID_COMPARISON_FILE',
+          'La comparación exportada está incompleta o dañada (units).',
+        ),
+      );
+      renderWizard();
+
+      await user.upload(importInput(), comparisonFile());
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'La comparación exportada está incompleta o dañada (units).',
+      );
+      expect(screen.getByRole('heading', { name: /nueva comparación/i })).toBeInTheDocument();
+      // Se retira el fichero rechazado, para que el siguiente intento empiece limpio.
+      expect(screen.queryByText('resultado.mutadiff.json')).not.toBeInTheDocument();
+    });
+
+    it('falls back to a generic message for an unexpected failure', async () => {
+      const user = userEvent.setup();
+      importComparisonMock.mockRejectedValue(new Error('boom'));
+      renderWizard();
+
+      await user.upload(importInput(), comparisonFile());
+
+      expect(await screen.findByRole('alert')).toHaveTextContent('Error inesperado al importar');
+    });
+
+    it('keeps an import error apart from a comparison error', async () => {
+      // Dos acciones distintas: un error al importar no debe quedarse pegado al
+      // botón «Comparar», ni al revés.
+      const user = userEvent.setup();
+      importComparisonMock.mockRejectedValue(
+        new ComparisonError(422, 'INVALID_COMPARISON_FILE', 'fichero dañado'),
+      );
+      renderWizard();
+      await user.upload(importInput(), comparisonFile());
+      await screen.findByRole('alert');
+
+      createComparisonMock.mockRejectedValue(
+        new ComparisonError(422, 'INVALID_REPORT', 'Invalid PiTest report'),
+      );
+      await selectFiles(user, 'base.xml', 'head.xml');
+      await user.click(screen.getByRole('button', { name: /comparar/i }));
+
+      await waitFor(() => expect(screen.getAllByRole('alert')).toHaveLength(2));
+      // Cada uno en su sitio: el de comparar con el formulario, el de importar
+      // con su zona, que va después.
+      const [compareAlert, importAlert] = screen.getAllByRole('alert');
+      expect(compareAlert).toHaveTextContent('Invalid PiTest report');
+      expect(importAlert).toHaveTextContent('fichero dañado');
+    });
   });
 });

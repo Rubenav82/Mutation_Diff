@@ -1,6 +1,7 @@
 import type { Tool } from 'core';
 import { describe, expect, it } from 'vitest';
-import { ComparisonError, createComparison, getComparison } from './comparisons';
+import { serializeComparison } from './comparisonFile';
+import { ComparisonError, createComparison, getComparison, importComparison } from './comparisons';
 // Las mismas fixtures que usan los tests de `core` y los e2e: si cambian las
 // clases esperadas, salta en los tres sitios a la vez. Se cargan con `?raw` en
 // vez de `node:fs` porque bajo jsdom `import.meta.url` llega como URL `/@fs/`
@@ -130,5 +131,39 @@ describe('getComparison', () => {
       code: 'COMPARISON_NOT_FOUND',
     });
     await expect(promise).rejects.toThrow('No comparison found for id "desconocido"');
+  });
+});
+
+describe('importComparison', () => {
+  it('reopens an exported comparison under a new id, as if it had just been made', async () => {
+    const { comparisonId, result } = await createComparison({
+      tool: 'stryker',
+      baseFile: reportFile('stryker', 'base'),
+      headFile: reportFile('stryker', 'head'),
+    });
+    const file = new File([serializeComparison(result)], 'resultado.mutadiff.json');
+
+    const imported = await importComparison(file);
+
+    // Id nuevo: el de origen es de otra pestaña, u otra máquina, y no significa
+    // nada aquí. Lo que se conserva es el resultado, con su contexto.
+    expect(imported.comparisonId).toMatch(/^[0-9a-f-]{36}$/);
+    expect(imported.comparisonId).not.toBe(comparisonId);
+    expect(imported.result).toEqual(result);
+    await expect(getComparison(imported.comparisonId)).resolves.toEqual(result);
+  });
+
+  it('rejects a file that is not an exported comparison, in the shape the pages handle', async () => {
+    const promise = importComparison(new File([fixture('stryker', 'base')], 'mutation.json'));
+
+    await expect(promise).rejects.toBeInstanceOf(ComparisonError);
+    await expect(promise).rejects.toMatchObject({
+      name: 'ComparisonError',
+      status: 422,
+      code: 'INVALID_COMPARISON_FILE',
+    });
+    await expect(promise).rejects.toThrow(
+      'El fichero no es una comparación exportada por Mutator Assessment Report.',
+    );
   });
 });

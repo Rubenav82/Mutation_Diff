@@ -6,6 +6,7 @@ import {
   type NormalizedRun,
   type Tool,
 } from 'core';
+import { parseComparisonFile } from './comparisonFile';
 import { comparisonStore } from './comparisonStore';
 import { newComparisonId } from './id';
 
@@ -88,6 +89,26 @@ export async function createComparison(
       ? { uncoveredThreshold: input.uncoveredThreshold }
       : {}),
   });
+
+  const comparisonId = newComparisonId();
+  comparisonStore.save(comparisonId, result);
+  return { comparisonId, result };
+}
+
+/**
+ * Reopens a comparison saved with `serializeComparison`. It gets a new id: the
+ * one it had lived in another tab, or on someone else's machine.
+ */
+export async function importComparison(file: File): Promise<CreateComparisonResponse> {
+  const text = await file.text();
+  let result: ComparisonResult;
+  try {
+    result = parseComparisonFile(text);
+  } catch (error) {
+    // Siempre un `Error` con el mensaje para el usuario: `parseComparisonFile` no
+    // lanza otra cosa, y es el mismo trato que reciben los parsers de informes.
+    throw new ComparisonError(422, 'INVALID_COMPARISON_FILE', (error as Error).message);
+  }
 
   const comparisonId = newComparisonId();
   comparisonStore.save(comparisonId, result);

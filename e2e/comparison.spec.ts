@@ -112,6 +112,39 @@ test.describe('flujo completo de comparación', () => {
     expect(html).not.toMatch(/<link\s|<script|src="https?:|href="https?:/i);
   });
 
+  test('reabre una comparación exportada sin volver a subir los reportes', async ({ page }) => {
+    await submitComparison(page, { tool: 'stryker', uncoveredThreshold: '75' });
+
+    const downloadPromise = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Exportar JSON' }).click();
+    const download = await downloadPromise;
+    expect(download.suggestedFilename()).toMatch(
+      /^mutadiff-comparison-[0-9a-f-]+\.mutadiff\.json$/,
+    );
+
+    // Otra pestaña equivale a partir de cero: sin nada en `sessionStorage`, lo
+    // único que tiene la comparación es el fichero.
+    const fresh = await page.context().newPage();
+    await fresh.goto('/');
+    // Con el nombre sugerido y no la ruta tal cual: Playwright guarda la descarga
+    // con un nombre aleatorio sin extensión, y la zona exige `.mutadiff.json`.
+    await fresh.getByLabel('Importar comparación').setInputFiles({
+      name: download.suggestedFilename(),
+      mimeType: 'application/json',
+      buffer: await readFile(await download.path()),
+    });
+    await expect(fresh.getByRole('alert')).toHaveCount(0);
+
+    await expect(fresh).toHaveURL(/#\/comparisons\/[0-9a-f-]{36}$/);
+    await expect(fresh.getByRole('heading', { name: 'Comparación · stryker' })).toBeVisible();
+    // Viaja con su contexto: ficheros de origen y el umbral que se aplicó.
+    const rail = fresh.getByRole('complementary', { name: 'Contexto de la comparación' });
+    await expect(rail.getByText('base.json')).toBeVisible();
+    await expect(rail.getByText('75%')).toBeVisible();
+    const uncovered = fresh.getByRole('region', { name: 'Sin cobertura' });
+    await expect(uncovered.getByText('src/billing/refundService.js')).toBeVisible();
+  });
+
   test('muestra un error legible cuando el fichero no es un reporte válido', async ({ page }) => {
     await page.goto('/');
     await page.getByLabel('Ejecución base').setInputFiles({
