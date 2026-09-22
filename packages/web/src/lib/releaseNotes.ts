@@ -19,6 +19,14 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.7.0',
+    date: '2026-09-22',
+    changes: [
+      'Nuevo botón «Exportar JSON» en el dashboard: guarda la comparación entera, con sus ficheros de origen y umbrales, en un fichero .mutadiff.json.',
+      'Nueva zona «Importar comparación» en la pantalla inicial: abre ese fichero y vuelve al dashboard sin subir otra vez los reportes. Sirve para recuperar una comparación tras cerrar la pestaña o para pasársela a otra persona.',
+    ],
+  },
+  {
     version: '1.6.2',
     date: '2026-09-19',
     changes: [

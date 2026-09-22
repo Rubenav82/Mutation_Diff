@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Tool } from 'core';
-import { ComparisonError, createComparison } from '../lib/comparisons';
+import { COMPARISON_FILE_EXTENSION } from '../lib/comparisonFile';
+import { ComparisonError, createComparison, importComparison } from '../lib/comparisons';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { FileDropZone } from '../components/FileDropZone';
 import { LoadingIndicator } from '../components/LoadingIndicator';
@@ -32,6 +33,8 @@ export function NewComparisonPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isThresholdHelpOpen, setIsThresholdHelpOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
 
   function handleToolChange(nextTool: Tool) {
     setTool(nextTool);
@@ -62,6 +65,24 @@ export function NewComparisonPage() {
       setSubmitError(err instanceof ComparisonError ? err.message : 'Error inesperado al comparar');
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  // Sin botón de confirmar: elegir el fichero ya es la decisión, y no hay nada
+  // más que configurar — herramienta y umbrales vienen dentro del fichero.
+  async function handleImport(file: File) {
+    setImportFile(file);
+    setImportError(null);
+    try {
+      const { comparisonId } = await importComparison(file);
+      navigate(`/comparisons/${comparisonId}`);
+    } catch (err) {
+      setImportFile(null);
+      setImportError(
+        err instanceof ComparisonError
+          ? err.message
+          : 'Error inesperado al importar la comparación',
+      );
     }
   }
 
@@ -208,6 +229,30 @@ export function NewComparisonPage() {
           )}
         </div>
       </form>
+
+      {/* Fuera del formulario: no se envía con «Comparar» ni depende de la
+          herramienta elegida, porque el fichero ya dice de cuál salió. */}
+      <section aria-labelledby="import-heading" className="mt-12 flex flex-col gap-4">
+        <div>
+          <h2 id="import-heading" className="eyebrow">
+            ¿Ya tienes la comparación?
+          </h2>
+          <p className="mt-2 text-sm text-balance text-muted">
+            Ábrela desde el fichero que guardaste con «Exportar JSON», sin volver a subir los
+            reportes.
+          </p>
+        </div>
+        <FileDropZone
+          id="comparisonFile"
+          label="Importar comparación"
+          acceptedExtension={COMPARISON_FILE_EXTENSION}
+          file={importFile}
+          onFileSelected={(file) => void handleImport(file)}
+          onClear={() => setImportFile(null)}
+        />
+        {importError && <ErrorMessage message={importError} />}
+        {importFile && !importError && <LoadingIndicator label="Importando…" />}
+      </section>
     </main>
   );
 }

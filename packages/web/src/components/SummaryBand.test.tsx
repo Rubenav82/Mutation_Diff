@@ -48,6 +48,7 @@ function renderBand(over: Partial<Parameters<typeof SummaryBand>[0]> = {}) {
       regressionCount={0}
       onExport={() => {}}
       onExportPdf={() => {}}
+      onExportComparison={() => {}}
       {...over}
     />,
   );
@@ -309,6 +310,24 @@ describe('SummaryBand', () => {
     await userEvent.setup().click(screen.getByRole('button', { name: 'Exportar PDF' }));
 
     expect(onExportPdf).toHaveBeenCalledOnce();
+    expect(onExport).not.toHaveBeenCalled();
+  });
+
+  // El tercer formato no es otro informe: es la comparación en sí, para volver a
+  // abrirla desde el wizard. De ahí la pista de para qué sirve.
+  it('offers the comparison itself as a JSON file to reopen later', async () => {
+    const onExport = vi.fn();
+    const onExportComparison = vi.fn();
+    renderBand({ onExport, onExportComparison });
+
+    const button = screen.getByRole('button', { name: 'Exportar JSON' });
+    expect(button).toHaveAttribute(
+      'title',
+      'La comparación en sí, para volver a abrirla con «Importar comparación»',
+    );
+    await userEvent.setup().click(button);
+
+    expect(onExportComparison).toHaveBeenCalledOnce();
     expect(onExport).not.toHaveBeenCalled();
   });
 });

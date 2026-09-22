@@ -11,9 +11,10 @@ interface PrivacyPolicyDialogProps {
  * Cada afirmación de aquí es verificable en el código, no una promesa comercial:
  * no hay ninguna llamada de red en la comparación (`lib/comparisons.ts` llama a
  * `core` directamente), el resultado solo se guarda en `sessionStorage`
- * (`lib/comparisonStore.ts`) y el informe exportado es un único fichero sin
- * recursos externos (CA-HU-07). Si alguna de las tres cosas cambia, este texto
- * pasa a ser falso y hay que tocarlo en el mismo commit.
+ * (`lib/comparisonStore.ts`), el informe exportado es un único fichero sin
+ * recursos externos (CA-HU-07) y la comparación en JSON se descarga e importa
+ * sin red (`lib/comparisonFile.ts`, T-103). Si alguna de estas cosas cambia,
+ * este texto pasa a ser falso y hay que tocarlo en el mismo commit.
  *
  * No usa `<dialog>` nativo: `showModal()` no está implementado de forma fiable
  * en jsdom, así que el comportamiento modal se construye a mano — que además es
@@ -99,11 +100,13 @@ export function PrivacyPolicyDialog({ onClose }: PrivacyPolicyDialogProps) {
           </section>
 
           <section>
-            <h3 className="eyebrow">Informe exportado</h3>
+            <h3 className="eyebrow">Ficheros exportados</h3>
             <p className="mt-2">
               El informe HTML descargable se genera y se almacena en tu dispositivo. Es un único
               fichero autocontenido, sin CSS ni JavaScript externos, así que abrirlo tampoco envía
-              nada a ningún servicio.
+              nada a ningún servicio. Lo mismo vale para la comparación en JSON: se descarga a tu
+              dispositivo, y al importar una comparación el fichero se lee en el navegador igual que
+              los reportes, sin salir de él. Quién recibe esos ficheros lo decides tú.
             </p>
           </section>
 

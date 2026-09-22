@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { countUnits, generateHtmlReport, type ComparisonResult } from 'core';
 import { ComparisonError, getComparison } from '../lib/comparisons';
+import { COMPARISON_FILE_EXTENSION, serializeComparison } from '../lib/comparisonFile';
+import { downloadFile } from '../lib/download';
 import { printReport } from '../lib/printReport';
 import { ComparisonContextRail } from '../components/ComparisonContextRail';
 import { ErrorMessage } from '../components/ErrorMessage';
@@ -57,15 +59,23 @@ export function ComparisonDashboardPage() {
   }
 
   // Built on click rather than up front: nobody should pay for rendering a
-  // report they never export, and there is no blob URL left dangling.
+  // report they never export.
   const handleExport = () => {
-    const blob = new Blob([generateHtmlReport(result)], { type: 'text/html;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = `mutadiff-report-${id}.html`;
-    anchor.click();
-    URL.revokeObjectURL(url);
+    downloadFile(
+      generateHtmlReport(result),
+      'text/html;charset=utf-8',
+      `mutadiff-report-${id}.html`,
+    );
+  };
+
+  // No es un informe sino la comparación misma: lo que el wizard sabe volver a
+  // abrir, sin servidor que la guarde (T-103).
+  const handleExportComparison = () => {
+    downloadFile(
+      serializeComparison(result),
+      'application/json',
+      `mutadiff-comparison-${id}${COMPARISON_FILE_EXTENSION}`,
+    );
   };
 
   // El PDF sale del mismo informe: se imprime, no se dibuja aparte. Ver
@@ -92,6 +102,7 @@ export function ComparisonDashboardPage() {
           regressionCount={result.regressions.length}
           onExport={handleExport}
           onExportPdf={handleExportPdf}
+          onExportComparison={handleExportComparison}
         />
         <KpiRow global={result.global} />
         <UnitSection
