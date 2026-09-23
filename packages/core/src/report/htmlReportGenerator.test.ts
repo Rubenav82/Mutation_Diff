@@ -656,7 +656,7 @@ describe('generateHtmlReport — size budget (CA-HU-07)', () => {
   });
 });
 
-describe('generateHtmlReport — nuevos supervivientes bajo cada retroceso', () => {
+describe('generateHtmlReport — mutantes sin detectar bajo cada retroceso', () => {
   function regressed(key: string, mutantChanges: MutantComparison[]): UnitComparison {
     return {
       key,
@@ -685,13 +685,33 @@ describe('generateHtmlReport — nuevos supervivientes bajo cada retroceso', () 
     head: 'killed',
     kind: 'newly-killed',
   };
+  /** Nace sin que nadie lo detecte: baja la robustez igual que perder un `killed`. */
+  const bornSurviving: MutantComparison = {
+    line: 20,
+    mutator: 'org.pitest.mutationtest.engine.gregor.mutators.IncrementsMutator',
+    head: 'survived',
+    kind: 'added',
+  };
+  const nowUncovered: MutantComparison = {
+    line: 25,
+    mutator: 'org.pitest.mutationtest.engine.gregor.mutators.VoidMethodCallMutator',
+    base: 'killed',
+    head: 'no_coverage',
+    kind: 'newly-uncovered',
+  };
+  const gone: MutantComparison = {
+    line: 30,
+    mutator: 'org.pitest.mutationtest.engine.gregor.mutators.ReturnValsMutator',
+    base: 'survived',
+    kind: 'removed',
+  };
 
   it('lists line, short mutator name and description of each new survivor', () => {
     const unit = regressed('com.example.StringUtils', [survivor]);
     const html = generateHtmlReport(resultFrom({ units: [unit], regressions: [unit] }));
 
     const regressions = section(html, 'Retrocesos');
-    expect(regressions).toContain('Nuevos supervivientes (1)');
+    expect(regressions).toContain('Mutantes sin detectar (1)');
     expect(regressions).toContain('Línea 8');
     expect(regressions).toContain('NegateConditionalsMutator');
     expect(regressions).not.toContain('org.pitest.mutationtest.engine.gregor.mutators');
@@ -719,25 +739,46 @@ describe('generateHtmlReport — nuevos supervivientes bajo cada retroceso', () 
     const html = generateHtmlReport(resultFrom({ units: [unit], regressions: [unit] }));
 
     const regressions = section(html, 'Retrocesos');
-    expect(regressions).not.toContain('Nuevos supervivientes');
+    expect(regressions).not.toContain('Mutantes sin detectar');
     expect(regressions).not.toContain('Stryker was here');
   });
 
-  it('shows only the new survivors, not the other changes of the unit', () => {
+  it('shows only the undetected ones, not the other changes of the unit', () => {
     const unit = regressed('com.example.StringUtils', [survivor, detected]);
     const html = generateHtmlReport(resultFrom({ units: [unit], regressions: [unit] }));
 
     const regressions = section(html, 'Retrocesos');
-    expect(regressions).toContain('Nuevos supervivientes (1)');
+    expect(regressions).toContain('Mutantes sin detectar (1)');
     expect(regressions).not.toContain('MathMutator');
   });
 
-  it('adds nothing under a regressed unit without new survivors', () => {
-    const unit = regressed('com.example.StringUtils', [detected]);
+  it('counts a mutant born surviving and one left uncovered, not only the newly survived', () => {
+    // Todo lo que nadie detecta en la ejecución nueva baja la robustez, lo trajera
+    // esta ejecución o lo hubiera matado la anterior.
+    const unit = regressed('com.example.StringUtils', [survivor, bornSurviving, nowUncovered]);
     const html = generateHtmlReport(resultFrom({ units: [unit], regressions: [unit] }));
 
     const regressions = section(html, 'Retrocesos');
-    expect(regressions).not.toContain('Nuevos supervivientes');
+    expect(regressions).toContain('Mutantes sin detectar (3)');
+    expect(regressions).toContain('IncrementsMutator');
+    expect(regressions).toContain('VoidMethodCallMutator');
+  });
+
+  it('leaves out a mutant that no longer exists, however it ended in the base run', () => {
+    const unit = regressed('com.example.StringUtils', [survivor, gone]);
+    const html = generateHtmlReport(resultFrom({ units: [unit], regressions: [unit] }));
+
+    const regressions = section(html, 'Retrocesos');
+    expect(regressions).toContain('Mutantes sin detectar (1)');
+    expect(regressions).not.toContain('ReturnValsMutator');
+  });
+
+  it('adds nothing under a regressed unit with nothing left undetected', () => {
+    const unit = regressed('com.example.StringUtils', [detected, gone]);
+    const html = generateHtmlReport(resultFrom({ units: [unit], regressions: [unit] }));
+
+    const regressions = section(html, 'Retrocesos');
+    expect(regressions).not.toContain('Mutantes sin detectar');
     // Tripwire: the unit row must be followed by nothing at all, not by any text.
     expect(regressions).not.toContain('Stryker was here');
   });
@@ -746,7 +787,7 @@ describe('generateHtmlReport — nuevos supervivientes bajo cada retroceso', () 
     const unit = regressed('com.example.StringUtils', [survivor]);
     const html = generateHtmlReport(resultFrom({ units: [unit], regressions: [unit] }));
 
-    expect(section(html, 'Todas las unidades')).not.toContain('Nuevos supervivientes');
+    expect(section(html, 'Todas las unidades')).not.toContain('Mutantes sin detectar');
     expect(section(html, 'Todas las unidades')).not.toContain('negated conditional');
   });
 
@@ -767,7 +808,7 @@ describe('generateHtmlReport — nuevos supervivientes bajo cada retroceso', () 
     const html = generateHtmlReport(resultFrom({ units: [unit], regressions: [unit] }));
 
     const regressions = section(html, 'Retrocesos');
-    expect(regressions).toContain('Nuevos supervivientes (12)');
+    expect(regressions).toContain('Mutantes sin detectar (12)');
     expect(regressions).toContain('Línea 109');
     expect(regressions).not.toContain('Línea 110');
     expect(regressions).toContain('y 2 más');
@@ -796,10 +837,10 @@ describe('generateHtmlReport — nuevos supervivientes bajo cada retroceso', () 
     const html = generateHtmlReport(resultFrom({ units, regressions: units }));
 
     const regressions = section(html, 'Retrocesos');
-    expect(regressions).not.toContain('Nuevos supervivientes (');
+    expect(regressions).not.toContain('Mutantes sin detectar (');
     expect(regressions).not.toContain('NegateConditionalsMutator');
     expect(regressions).toContain(
-      'Detalle de mutantes omitido: 2010 nuevos supervivientes no caben en el informe.',
+      'Detalle de mutantes omitido: 2010 mutantes sin detectar no caben en el informe.',
     );
   });
 
@@ -812,7 +853,7 @@ describe('generateHtmlReport — nuevos supervivientes bajo cada retroceso', () 
     );
     const html = generateHtmlReport(resultFrom({ units, regressions: units }));
 
-    expect(section(html, 'Retrocesos')).toContain('Nuevos supervivientes (10)');
+    expect(section(html, 'Retrocesos')).toContain('Mutantes sin detectar (10)');
     expect(section(html, 'Retrocesos')).not.toContain('Detalle de mutantes omitido');
   });
 
@@ -826,7 +867,7 @@ describe('generateHtmlReport — nuevos supervivientes bajo cada retroceso', () 
     );
     const html = generateHtmlReport(resultFrom({ units, regressions: units }));
 
-    expect(section(html, 'Retrocesos')).toContain('Nuevos supervivientes (30)');
+    expect(section(html, 'Retrocesos')).toContain('Mutantes sin detectar (30)');
     expect(section(html, 'Retrocesos')).toContain('y 20 más');
   });
 

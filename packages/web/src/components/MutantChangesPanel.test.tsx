@@ -93,21 +93,47 @@ describe('MutantChangesPanel', () => {
     expect(within(added).getByText('Sin cubrir')).toBeInTheDocument();
   });
 
-  it('filters down to the new survivors and back', async () => {
+  it('filters down to what nobody detects now, and back', async () => {
+    // Lo que baja la robustez no es solo perder un `killed`: un mutante nuevo que
+    // nace sobreviviendo o sin cobertura cuenta igual. Lo que ya no existe, no.
     const user = userEvent.setup();
     render(<MutantChangesPanel unitKey="com.example.StringUtils" changes={CHANGES} />);
 
     const toggle = screen.getByRole('checkbox', {
-      name: 'Solo nuevos supervivientes · com.example.StringUtils',
+      name: 'Solo mutantes sin detectar · com.example.StringUtils',
     });
     expect(toggle).not.toBeChecked();
 
     await user.click(toggle);
-    expect(bodyRows()).toHaveLength(1);
-    expect(screen.getByText('Nuevo superviviente')).toBeInTheDocument();
+    expect(bodyRows().map((row) => row.getAttribute('data-change-kind'))).toEqual([
+      'newly-survived',
+      'added',
+    ]);
 
     await user.click(toggle);
     expect(bodyRows()).toHaveLength(4);
+  });
+
+  it('keeps a mutant that is now uncovered, not only the ones that survive', async () => {
+    const user = userEvent.setup();
+    render(
+      <MutantChangesPanel
+        unitKey="com.example.StringUtils"
+        changes={[
+          {
+            line: 40,
+            mutator: 'VoidMethodCall',
+            base: 'killed',
+            head: 'no_coverage',
+            kind: 'newly-uncovered',
+          },
+        ]}
+      />,
+    );
+
+    await user.click(screen.getByRole('checkbox'));
+    expect(bodyRows()).toHaveLength(1);
+    expect(screen.getByText('Sin cobertura ahora')).toBeInTheDocument();
   });
 
   it('says so when the filter leaves nothing', async () => {
@@ -115,12 +141,14 @@ describe('MutantChangesPanel', () => {
     render(
       <MutantChangesPanel
         unitKey="com.example.Calculator"
-        changes={CHANGES.filter((change) => change.kind !== 'newly-survived')}
+        changes={CHANGES.filter(
+          (change) => change.kind === 'newly-killed' || change.kind === 'removed',
+        )}
       />,
     );
 
     await user.click(screen.getByRole('checkbox'));
     expect(screen.queryAllByRole('rowgroup')).toHaveLength(0);
-    expect(screen.getByText('Ningún mutante nuevo sobrevive.')).toBeInTheDocument();
+    expect(screen.getByText('Ningún mutante queda sin detectar.')).toBeInTheDocument();
   });
 });
