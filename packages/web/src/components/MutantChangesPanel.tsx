@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { shortMutatorName } from 'core';
+import { isUndetected, shortMutatorName } from 'core';
 import type { MutantChangeKind, MutantComparison, MutantStatus } from 'core';
 
 /** Mismos términos que los KPI del resumen (`kpiGlossary`), para no nombrar un estado de dos formas. */
@@ -80,24 +80,24 @@ interface MutantChangesPanelProps {
  * matarse y dónde», que el score de la fila no puede dar.
  */
 export function MutantChangesPanel({ unitKey, changes }: MutantChangesPanelProps) {
-  const [onlyNewSurvivors, setOnlyNewSurvivors] = useState(false);
-  const visible = onlyNewSurvivors
-    ? changes.filter((change) => change.kind === 'newly-survived')
-    : changes;
+  const [onlyUndetected, setOnlyUndetected] = useState(false);
+  // `isUndetected` vive en `core` y lo comparten el panel y el informe exportado:
+  // qué cuenta como una bajada de detección se define en un solo sitio.
+  const visible = onlyUndetected ? changes.filter(isUndetected) : changes;
 
   return (
     <div className="border-l-2 border-ink bg-surface px-4 py-3">
       <label className="mb-2 flex items-center gap-2 text-sm text-muted">
         <input
           type="checkbox"
-          aria-label={`Solo nuevos supervivientes · ${unitKey}`}
-          checked={onlyNewSurvivors}
-          onChange={(event) => setOnlyNewSurvivors(event.target.checked)}
+          aria-label={`Solo mutantes sin detectar · ${unitKey}`}
+          checked={onlyUndetected}
+          onChange={(event) => setOnlyUndetected(event.target.checked)}
         />
-        Solo nuevos supervivientes
+        Solo mutantes sin detectar
       </label>
       {visible.length === 0 ? (
-        <p className="py-2 text-sm text-muted">Ningún mutante nuevo sobrevive.</p>
+        <p className="py-2 text-sm text-muted">Ningún mutante queda sin detectar.</p>
       ) : (
         <table className="w-full border-collapse text-sm">
           <thead>

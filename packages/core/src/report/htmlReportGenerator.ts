@@ -6,6 +6,7 @@ import type {
   UnitComparison,
 } from '../domain/types.js';
 import { countUnits } from '../compare/unitCounts.js';
+import { isUndetected } from '../compare/mutantComparison.js';
 import { KPI_GLOSSARY, type KpiGlossaryEntry } from '../domain/kpiGlossary.js';
 import { shortMutatorName } from '../domain/mutators.js';
 
@@ -80,8 +81,8 @@ const STYLE = `
   td.worse { color: #ae1800; }
   td.better { color: #14622f; }
 
-  /* Nuevos supervivientes bajo cada retroceso (T-092): fila anidada, no
-     seccion nueva, porque CA-HU-07 fija cuatro secciones. */
+  /* Mutantes sin detectar bajo cada retroceso (T-092, ampliado en T-107): fila
+     anidada, no seccion nueva, porque CA-HU-07 fija cuatro secciones. */
   tr.mutants td { padding: 0.35rem 0.75rem 0.85rem 1.75rem; background: #faf9f9; }
   .mutants-title {
     font-family: ui-monospace, Consolas, monospace; font-size: 0.6875rem; font-weight: 500;
@@ -227,18 +228,18 @@ function renderUnitRow(unit: UnitComparison, metric: TableMetric): string {
 
 /**
  * Caps that keep the detail inside the 2 MB budget of CA-HU-07 by construction:
- * at most ten survivors per unit, and no detail at all past 2000 rows in total
+ * at most ten mutants per unit, and no detail at all past 2000 rows in total
  * (measured on what would render, not on the raw count). Beyond that the report
  * says what it left out instead of silently growing.
  */
-const MAX_SURVIVORS_PER_UNIT = 10;
-const MAX_SURVIVOR_ROWS = 2000;
+const MAX_UNDETECTED_PER_UNIT = 10;
+const MAX_UNDETECTED_ROWS = 2000;
 
-function newSurvivors(unit: UnitComparison): MutantComparison[] {
-  return unit.mutantChanges?.filter((change) => change.kind === 'newly-survived') ?? [];
+function undetectedMutants(unit: UnitComparison): MutantComparison[] {
+  return unit.mutantChanges?.filter(isUndetected) ?? [];
 }
 
-function renderSurvivor(change: MutantComparison): string {
+function renderUndetected(change: MutantComparison): string {
   const description =
     change.description === undefined
       ? ''
@@ -246,14 +247,14 @@ function renderSurvivor(change: MutantComparison): string {
   return `<li><span class="line">Línea ${change.line}</span><span class="mutator">${escapeHtml(shortMutatorName(change.mutator))}</span>${description}</li>`;
 }
 
-/** Nested row under a regressed unit with its new survivors; empty when it has none. */
-function renderSurvivorsRow(unit: UnitComparison, columns: number): string {
-  const survivors = newSurvivors(unit);
-  if (survivors.length === 0) return '';
-  const shown = survivors.slice(0, MAX_SURVIVORS_PER_UNIT).map(renderSurvivor).join('');
-  const hidden = survivors.length - MAX_SURVIVORS_PER_UNIT;
+/** Nested row under a regressed unit with its undetected mutants; empty when it has none. */
+function renderUndetectedRow(unit: UnitComparison, columns: number): string {
+  const undetected = undetectedMutants(unit);
+  if (undetected.length === 0) return '';
+  const shown = undetected.slice(0, MAX_UNDETECTED_PER_UNIT).map(renderUndetected).join('');
+  const hidden = undetected.length - MAX_UNDETECTED_PER_UNIT;
   const more = hidden > 0 ? `<p class="more">y ${hidden} más</p>` : '';
-  return `<tr class="mutants"><td colspan="${columns}"><p class="mutants-title">Nuevos supervivientes (${survivors.length})</p><ul class="mutants">${shown}</ul>${more}</td></tr>`;
+  return `<tr class="mutants"><td colspan="${columns}"><p class="mutants-title">Mutantes sin detectar (${undetected.length})</p><ul class="mutants">${shown}</ul>${more}</td></tr>`;
 }
 
 const SCORE_HEAD =
@@ -289,7 +290,7 @@ function renderTable(
   units: UnitComparison[],
   emptyMessage: string,
   metric: TableMetric,
-  withSurvivors = false,
+  withUndetected = false,
 ): string {
   if (units.length === 0) {
     return `<section><h2>${escapeHtml(title)}</h2><p class="empty">${escapeHtml(emptyMessage)}</p></section>`;
@@ -297,22 +298,22 @@ function renderTable(
   // Only the regressions block carries the detail, and only the actionable
   // state: the same unit appears again in the full table, where it would
   // double the cost for nothing new.
-  const rowsToRender = withSurvivors
+  const rowsToRender = withUndetected
     ? units.reduce(
-        (sum, unit) => sum + Math.min(newSurvivors(unit).length, MAX_SURVIVORS_PER_UNIT),
+        (sum, unit) => sum + Math.min(undetectedMutants(unit).length, MAX_UNDETECTED_PER_UNIT),
         0,
       )
     : 0;
-  const detail = withSurvivors && rowsToRender <= MAX_SURVIVOR_ROWS;
+  const detail = withUndetected && rowsToRender <= MAX_UNDETECTED_ROWS;
   const rows = units
     .map(
       (unit) =>
-        renderUnitRow(unit, metric) + (detail ? renderSurvivorsRow(unit, COLUMNS[metric]) : ''),
+        renderUnitRow(unit, metric) + (detail ? renderUndetectedRow(unit, COLUMNS[metric]) : ''),
     )
     .join('');
   const omitted =
-    withSurvivors && !detail
-      ? `<p class="empty">Detalle de mutantes omitido: ${units.reduce((sum, unit) => sum + newSurvivors(unit).length, 0)} nuevos supervivientes no caben en el informe.</p>`
+    withUndetected && !detail
+      ? `<p class="empty">Detalle de mutantes omitido: ${units.reduce((sum, unit) => sum + undetectedMutants(unit).length, 0)} mutantes sin detectar no caben en el informe.</p>`
       : '';
   return `<section><h2>${escapeHtml(title)} (${units.length})</h2><table>${HEADS[metric]}<tbody>${rows}</tbody></table>${omitted}</section>`;
 }

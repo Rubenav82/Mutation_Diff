@@ -35,6 +35,17 @@ function classify(base: MutantStatus, head: MutantStatus): MutantChangeKind {
   return 'changed';
 }
 
+/**
+ * Whether the mutant is alive in the new run: it survives or nothing covers it.
+ * Reads the head status alone, so it holds both for a mutant that used to be
+ * detected (`newly-survived`, `newly-uncovered`) and for one that is born that
+ * way (`added`) — everything that means less detection than before. A `removed`
+ * mutant has no head status and cannot make anything worse.
+ */
+export function isUndetected(change: MutantComparison): boolean {
+  return change.head === 'survived' || change.head === 'no_coverage';
+}
+
 function withDescription(
   comparison: MutantComparison,
   description: string | undefined,

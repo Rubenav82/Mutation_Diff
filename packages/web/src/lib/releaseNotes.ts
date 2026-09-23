@@ -19,6 +19,14 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.8.0',
+    date: '2026-09-23',
+    changes: [
+      'El filtro del desplegable de mutantes pasa a llamarse «Solo mutantes sin detectar» y deja a la vista todo lo que baja la detección: los que antes se mataban y ahora sobreviven o se quedan sin cobertura, y también los mutantes nuevos que nacen así. Antes solo mostraba los primeros.',
+      'El informe exportado aplica el mismo criterio bajo cada retroceso, donde el bloque pasa a titularse «Mutantes sin detectar».',
+    ],
+  },
+  {
     version: '1.7.0',
     date: '2026-09-22',
     changes: [

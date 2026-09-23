@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { compareMutants } from './mutantComparison.js';
-import type { Mutant, MutantStatus } from '../domain/types.js';
+import { compareMutants, isUndetected } from './mutantComparison.js';
+import type { Mutant, MutantComparison, MutantStatus } from '../domain/types.js';
 
 let nextId = 0;
 
@@ -205,5 +205,45 @@ describe('compareMutants — ordering', () => {
       [mutant(10, 'MathMutator', 'survived'), mutant(10, 'MathMutator', 'killed')],
     );
     expect(result.map((m) => m.kind)).toEqual(['newly-survived', 'newly-killed']);
+  });
+});
+
+describe('isUndetected', () => {
+  function change(
+    kind: MutantComparison['kind'],
+    head: MutantStatus | undefined,
+    base?: MutantStatus,
+  ): MutantComparison {
+    return {
+      line: 10,
+      mutator: 'MathMutator',
+      kind,
+      ...(base !== undefined ? { base } : {}),
+      ...(head !== undefined ? { head } : {}),
+    };
+  }
+
+  it.each<[MutantComparison['kind'], MutantStatus]>([
+    ['newly-survived', 'survived'],
+    ['newly-uncovered', 'no_coverage'],
+    ['added', 'survived'],
+    ['added', 'no_coverage'],
+  ])('is true for a %s mutant that ends up %s', (kind, head) => {
+    expect(isUndetected(change(kind, head, 'killed'))).toBe(true);
+  });
+
+  it.each<[MutantComparison['kind'], MutantStatus]>([
+    ['newly-killed', 'killed'],
+    ['changed', 'timeout'],
+    ['changed', 'error'],
+    ['changed', 'ignored'],
+    ['added', 'killed'],
+  ])('is false for a %s mutant that ends up %s', (kind, head) => {
+    expect(isUndetected(change(kind, head, 'survived'))).toBe(false);
+  });
+
+  it('is false for a mutant that no longer exists, whatever it was before', () => {
+    // Un mutante eliminado no puede empeorar nada: ya no hay código que mutar.
+    expect(isUndetected(change('removed', undefined, 'survived'))).toBe(false);
   });
 });
