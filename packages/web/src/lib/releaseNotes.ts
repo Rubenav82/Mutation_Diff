@@ -19,6 +19,13 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.9.0',
+    date: '2026-09-29',
+    changes: [
+      'El desplegable con el detalle de los mutantes desaparece de la tabla «Todas las unidades» y se queda donde explica algo: las secciones «Retrocesos» y «Sin cobertura». La tabla completa vuelve a empezar por la clase, sin la columna del botón.',
+    ],
+  },
+  {
     version: '1.8.0',
     date: '2026-09-23',
     changes: [

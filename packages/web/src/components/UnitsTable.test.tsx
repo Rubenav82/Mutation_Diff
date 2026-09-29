@@ -144,7 +144,7 @@ describe('UnitsTable', () => {
 
     await user.click(screen.getByRole('button', { name: /ordenar por δ cubiertos/i }));
 
-    const keys = bodyRows().map((row) => within(row).getAllByRole('cell')[1]?.textContent);
+    const keys = bodyRows().map((row) => within(row).getAllByRole('cell')[0]?.textContent);
     expect(keys.slice(0, 2)).toEqual(['com.example.StringUtils', 'com.example.Calculator']);
   });
 
@@ -203,12 +203,12 @@ describe('UnitsTable', () => {
     await user.click(screen.getByRole('button', { name: /δ score/i }));
 
     // ascending: most negative delta first, null deltas always last
-    let keys = bodyRows().map((row) => within(row).getAllByRole('cell')[1]?.textContent);
+    let keys = bodyRows().map((row) => within(row).getAllByRole('cell')[0]?.textContent);
     expect(keys.slice(0, 2)).toEqual(['com.example.StringUtils', 'com.example.Calculator']);
 
     await user.click(screen.getByRole('button', { name: /δ score/i }));
 
-    keys = bodyRows().map((row) => within(row).getAllByRole('cell')[1]?.textContent);
+    keys = bodyRows().map((row) => within(row).getAllByRole('cell')[0]?.textContent);
     expect(keys.slice(0, 2)).toEqual(['com.example.Calculator', 'com.example.StringUtils']);
   });
 
@@ -218,7 +218,7 @@ describe('UnitsTable', () => {
 
     await user.click(screen.getByRole('button', { name: /clase \/ fichero/i }));
 
-    const keys = bodyRows().map((row) => within(row).getAllByRole('cell')[1]?.textContent);
+    const keys = bodyRows().map((row) => within(row).getAllByRole('cell')[0]?.textContent);
     expect(keys).toEqual([
       'com.example.Calculator',
       'com.example.Legacy',
@@ -408,50 +408,22 @@ describe('UnitsTable — cambios de mutantes', () => {
     unit({ key: 'com.example.NewFeature', kind: 'added', head: metrics({ score: 50 }) }),
   ];
 
-  it('offers a toggle only for units with changed mutants, showing how many', () => {
+  // El detalle por mutante vive en las secciones que lo explican («Retrocesos» y
+  // «Sin cobertura»), no aquí: la tabla completa responde a «cómo ha quedado cada
+  // clase» y la misma unidad ya sale arriba con su desplegable.
+  it('offers no mutant detail, not even for a unit that has changes', () => {
     render(<UnitsTable units={units} tool="pitest" />);
 
-    const toggle = screen.getByRole('button', {
-      name: 'Cambios de mutantes · com.example.StringUtils',
-    });
-    expect(toggle).toHaveAttribute('aria-expanded', 'false');
-    expect(toggle).toHaveTextContent('2');
     expect(
-      screen.queryByRole('button', { name: 'Cambios de mutantes · com.example.MathHelper' }),
+      screen.queryByRole('button', { name: 'Cambios de mutantes · com.example.StringUtils' }),
     ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: 'Cambios de mutantes · com.example.NewFeature' }),
-    ).not.toBeInTheDocument();
-  });
-
-  it('expands the unit into its mutant changes and collapses it again', async () => {
-    const user = userEvent.setup();
-    render(<UnitsTable units={units} tool="pitest" />);
-
-    const toggle = screen.getByRole('button', {
-      name: 'Cambios de mutantes · com.example.StringUtils',
-    });
-    expect(screen.queryByText('Nuevo superviviente')).not.toBeInTheDocument();
-
-    await user.click(toggle);
-    expect(toggle).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByText('Nuevo superviviente')).toBeInTheDocument();
-    expect(screen.getByText('Ahora detectado')).toBeInTheDocument();
-
-    await user.click(toggle);
-    expect(toggle).toHaveAttribute('aria-expanded', 'false');
     expect(screen.queryByText('Nuevo superviviente')).not.toBeInTheDocument();
   });
 
-  it('keeps the unit expanded when the table is re-sorted', async () => {
-    const user = userEvent.setup();
+  it('starts each row at the unit key, with no leading cell left behind', () => {
     render(<UnitsTable units={units} tool="pitest" />);
 
-    await user.click(
-      screen.getByRole('button', { name: 'Cambios de mutantes · com.example.StringUtils' }),
-    );
-    await user.click(screen.getByRole('button', { name: 'Ordenar por Clase / fichero' }));
-
-    expect(screen.getByText('Nuevo superviviente')).toBeInTheDocument();
+    const first = bodyRows()[0] as HTMLElement;
+    expect(within(first).getAllByRole('cell')[0]).toHaveTextContent('com.example.StringUtils');
   });
 });

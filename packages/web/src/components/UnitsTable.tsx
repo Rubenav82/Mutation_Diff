@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   flexRender,
   getCoreRowModel,
@@ -7,12 +7,10 @@ import {
   getSortedRowModel,
   useReactTable,
   type ColumnDef,
-  type ExpandedState,
   type SortingState,
 } from '@tanstack/react-table';
 import type { Tool, UnitChangeKind, UnitComparison } from 'core';
 import { formatOptionalPct, formatOptionalSignedPct, splitUnitKey } from '../lib/format';
-import { MutantChangesPanel, MutantChangesToggle } from './MutantChangesPanel';
 import { DEFAULT_PAGE_SIZE, TablePagination } from './TablePagination';
 
 const KIND_LABELS: Record<UnitChangeKind, string> = {
@@ -51,22 +49,6 @@ const SORT_LABELS: Record<string, string> = {
 const TITLE = 'Todas las unidades';
 
 const buildColumns = (tool: Tool): ColumnDef<UnitComparison>[] => [
-  {
-    id: 'expand',
-    header: () => <span className="sr-only">Cambios de mutantes</span>,
-    enableSorting: false,
-    // Solo las unidades con algún mutante cambiado tienen algo que desplegar;
-    // una `added`/`removed` no lleva `mutantChanges` y una igual lo lleva vacío.
-    cell: ({ row }) =>
-      row.getCanExpand() ? (
-        <MutantChangesToggle
-          unitKey={row.original.key}
-          count={row.original.mutantChanges?.length ?? 0}
-          expanded={row.getIsExpanded()}
-          onToggle={row.getToggleExpandedHandler()}
-        />
-      ) : null,
-  },
   {
     id: 'key',
     accessorKey: 'key',
@@ -165,7 +147,6 @@ const buildColumns = (tool: Tool): ColumnDef<UnitComparison>[] => [
 export function UnitsTable({ units, tool }: { units: UnitComparison[]; tool: Tool }) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
-  const [expanded, setExpanded] = useState<ExpandedState>({});
   // El separador de la clave depende de la herramienta, así que las columnas se
   // rehacen solo cuando esta cambia.
   const columns = useMemo(() => buildColumns(tool), [tool]);
@@ -173,17 +154,12 @@ export function UnitsTable({ units, tool }: { units: UnitComparison[]; tool: Too
   const table = useReactTable({
     data: units,
     columns,
-    state: { sorting, globalFilter, expanded },
+    state: { sorting, globalFilter },
     // First click sorts ascending on every column: for Δ Score that surfaces
     // the most severe drop first, mirroring how core orders `regressions`.
     sortDescFirst: false,
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
-    onExpandedChange: setExpanded,
-    // Por clave y no por índice: así lo desplegado sigue desplegado al ordenar o
-    // filtrar, que mueven las filas de sitio.
-    getRowId: (unit) => unit.key,
-    getRowCanExpand: (row) => (row.original.mutantChanges?.length ?? 0) > 0,
     globalFilterFn: (row, _columnId, filterValue) =>
       row.original.key.toLowerCase().includes(String(filterValue).toLowerCase()),
     // Con miles de unidades, montarlas todas de golpe cuesta caro y no hay
@@ -268,31 +244,20 @@ export function UnitsTable({ units, tool }: { units: UnitComparison[]; tool: Too
           </thead>
           <tbody>
             {rows.map((row) => (
-              <Fragment key={row.id}>
-                <tr
-                  data-kind={row.original.kind}
-                  className="border-b border-line last:border-0 hover:bg-wash"
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <td
-                      key={cell.id}
-                      className="px-3 py-2 font-mono text-sm whitespace-nowrap tabular-nums"
-                    >
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
-                  ))}
-                </tr>
-                {row.getIsExpanded() && (
-                  <tr className="border-b border-line">
-                    <td colSpan={row.getVisibleCells().length} className="p-0">
-                      <MutantChangesPanel
-                        unitKey={row.original.key}
-                        changes={row.original.mutantChanges ?? []}
-                      />
-                    </td>
-                  </tr>
-                )}
-              </Fragment>
+              <tr
+                key={row.id}
+                data-kind={row.original.kind}
+                className="border-b border-line last:border-0 hover:bg-wash"
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <td
+                    key={cell.id}
+                    className="px-3 py-2 font-mono text-sm whitespace-nowrap tabular-nums"
+                  >
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
+              </tr>
             ))}
           </tbody>
         </table>
