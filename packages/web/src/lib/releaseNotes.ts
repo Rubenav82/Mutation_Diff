@@ -19,6 +19,13 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.10.0',
+    date: '2026-10-22',
+    changes: [
+      'La pantalla de nueva comparación recuerda la herramienta y los umbrales de la última comparación que hiciste, en este navegador y también después de cerrarlo. Solo se guardan esos tres valores de configuración, nunca los reportes ni los resultados; la política de privacidad lo detalla.',
+    ],
+  },
+  {
     version: '1.9.0',
     date: '2026-09-29',
     changes: [

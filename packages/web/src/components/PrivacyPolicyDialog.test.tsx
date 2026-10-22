@@ -21,6 +21,10 @@ describe('PrivacyPolicyDialog', () => {
     // T-103: la comparación también sale a un fichero, y entra desde uno.
     expect(dialog).toHaveTextContent(/comparación en JSON/i);
     expect(dialog).toHaveTextContent(/importar una comparación/i);
+    // T-104: lo único que sobrevive a cerrar el navegador, y el texto tiene que
+    // decir qué se guarda y qué no.
+    expect(dialog).toHaveTextContent(/localStorage/);
+    expect(dialog).toHaveTextContent(/herramienta y los umbrales/i);
     expect(screen.getByRole('link', { name: /rubenav82@gmail\.com/i })).toHaveAttribute(
       'href',
       'mailto:rubenav82@gmail.com',

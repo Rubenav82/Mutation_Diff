@@ -51,7 +51,17 @@ async function selectFiles(
   await user.upload(headInput, xmlFile(headName));
 }
 
+const PREFERENCES_KEY = 'mutadiff:preferences';
+
+function storedPreferences(): unknown {
+  return JSON.parse(localStorage.getItem(PREFERENCES_KEY) ?? 'null');
+}
+
 beforeEach(() => {
+  // Las preferencias viven en el localStorage real de jsdom, que persiste entre
+  // tests del mismo fichero: sin esto, el primero que guarde cambia el estado
+  // inicial de todos los siguientes.
+  localStorage.clear();
   createComparisonMock.mockReset();
   getComparisonMock.mockReset();
   importComparisonMock.mockReset();
@@ -324,5 +334,80 @@ describe('NewComparisonPage', () => {
       expect(compareAlert).toHaveTextContent('Invalid PiTest report');
       expect(importAlert).toHaveTextContent('fichero dañado');
     });
+  });
+});
+
+describe('NewComparisonPage — preferencias recordadas', () => {
+  const saved = { tool: 'stryker', regressionThreshold: '5', uncoveredThreshold: '75' };
+
+  function savePreferences(value: unknown) {
+    localStorage.setItem(PREFERENCES_KEY, JSON.stringify(value));
+  }
+
+  function importComparisonFile(user: ReturnType<typeof userEvent.setup>) {
+    const input = screen.getByLabelText(/importar comparación/i, { selector: 'input' });
+    return user.upload(input, new File(['{}'], 'resultado.mutadiff.json'));
+  }
+
+  it('starts with the tool and thresholds of the last comparison', () => {
+    savePreferences(saved);
+    renderWizard();
+
+    expect(screen.getByRole('radio', { name: /stryker/i })).toBeChecked();
+    expect(screen.getByLabelText(/umbral de retroceso/i)).toHaveValue(5);
+    expect(screen.getByLabelText(/umbral sin cobertura/i)).toHaveValue(75);
+    // Y las zonas piden ya la extension de esa herramienta, sin tocar nada.
+    expect(screen.getAllByText(/fichero \.json/)).toHaveLength(2);
+  });
+
+  it('remembers the tool and thresholds of a comparison that worked', async () => {
+    const user = userEvent.setup();
+    createComparisonMock.mockResolvedValue({ comparisonId: 'id', result: {} as never });
+    renderWizard();
+    await user.click(screen.getByRole('radio', { name: /stryker/i }));
+    await selectFiles(user, 'base.json', 'head.json');
+    await user.type(screen.getByLabelText(/umbral de retroceso/i), '5');
+
+    await user.click(screen.getByRole('button', { name: /comparar/i }));
+
+    await waitFor(() =>
+      expect(storedPreferences()).toEqual({
+        tool: 'stryker',
+        regressionThreshold: '5',
+        // Vacio tal cual: no se convierte a «100» ni se inventa un valor que el
+        // usuario no escribio.
+        uncoveredThreshold: '',
+      }),
+    );
+  });
+
+  it('remembers nothing when the comparison failed', async () => {
+    // Lo que se recuerda son los valores de una comparacion que salio bien: si
+    // el reporte no era valido, no hay nada que repetir la proxima vez.
+    const user = userEvent.setup();
+    createComparisonMock.mockRejectedValue(
+      new ComparisonError(422, 'INVALID_REPORT', 'Invalid PiTest report'),
+    );
+    renderWizard();
+    await selectFiles(user, 'base.xml', 'head.xml');
+
+    await user.click(screen.getByRole('button', { name: /comparar/i }));
+
+    await screen.findByRole('alert');
+    expect(storedPreferences()).toBeNull();
+  });
+
+  it('leaves the preferences alone when a comparison is imported', async () => {
+    // El fichero trae su propia herramienta y sus umbrales dentro: importar no
+    // dice nada sobre lo que el usuario quiere la proxima vez que compare.
+    const user = userEvent.setup();
+    savePreferences(saved);
+    importComparisonMock.mockResolvedValue({ comparisonId: 'imported', result: {} as never });
+    renderWizard();
+
+    await importComparisonFile(user);
+
+    await waitFor(() => expect(getComparisonMock).toHaveBeenCalledWith('imported'));
+    expect(storedPreferences()).toEqual(saved);
   });
 });
