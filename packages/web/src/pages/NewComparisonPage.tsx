@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import type { Tool } from 'core';
 import { COMPARISON_FILE_EXTENSION } from '../lib/comparisonFile';
 import { ComparisonError, createComparison, importComparison } from '../lib/comparisons';
+import { preferencesStore } from '../lib/preferences';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { FileDropZone } from '../components/FileDropZone';
 import { LoadingIndicator } from '../components/LoadingIndicator';
@@ -24,11 +25,14 @@ const TOOLS: { value: Tool; label: string }[] = [
 
 export function NewComparisonPage() {
   const navigate = useNavigate();
-  const [tool, setTool] = useState<Tool>('pitest');
+  // Una sola lectura por montaje, con el inicializador de `useState`: leer en el
+  // cuerpo del componente repetiría el parseo en cada render.
+  const [remembered] = useState(() => preferencesStore.load());
+  const [tool, setTool] = useState<Tool>(remembered.tool);
   const [baseFile, setBaseFile] = useState<File | null>(null);
   const [headFile, setHeadFile] = useState<File | null>(null);
-  const [regressionThreshold, setRegressionThreshold] = useState('');
-  const [uncoveredThreshold, setUncoveredThreshold] = useState('');
+  const [regressionThreshold, setRegressionThreshold] = useState(remembered.regressionThreshold);
+  const [uncoveredThreshold, setUncoveredThreshold] = useState(remembered.uncoveredThreshold);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -60,6 +64,9 @@ export function NewComparisonPage() {
         ...(regressionThreshold !== '' ? { regressionThreshold: Number(regressionThreshold) } : {}),
         ...(uncoveredThreshold !== '' ? { uncoveredThreshold: Number(uncoveredThreshold) } : {}),
       });
+      // Solo tras una comparación que salió bien: lo que se recuerda es una
+      // configuración que sirvió, no cualquier cosa escrita a medias.
+      preferencesStore.save({ tool, regressionThreshold, uncoveredThreshold });
       navigate(`/comparisons/${comparisonId}`);
     } catch (err) {
       setSubmitError(err instanceof ComparisonError ? err.message : 'Error inesperado al comparar');

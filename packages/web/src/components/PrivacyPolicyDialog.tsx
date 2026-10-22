@@ -12,9 +12,11 @@ interface PrivacyPolicyDialogProps {
  * no hay ninguna llamada de red en la comparación (`lib/comparisons.ts` llama a
  * `core` directamente), el resultado solo se guarda en `sessionStorage`
  * (`lib/comparisonStore.ts`), el informe exportado es un único fichero sin
- * recursos externos (CA-HU-07) y la comparación en JSON se descarga e importa
- * sin red (`lib/comparisonFile.ts`, T-103). Si alguna de estas cosas cambia,
- * este texto pasa a ser falso y hay que tocarlo en el mismo commit.
+ * recursos externos (CA-HU-07), la comparación en JSON se descarga e importa
+ * sin red (`lib/comparisonFile.ts`, T-103) y lo único que queda en
+ * `localStorage` son la herramienta y los umbrales (`lib/preferences.ts`,
+ * T-104). Si alguna de estas cosas cambia, este texto pasa a ser falso y hay
+ * que tocarlo en el mismo commit.
  *
  * No usa `<dialog>` nativo: `showModal()` no está implementado de forma fiable
  * en jsdom, así que el comportamiento modal se construye a mano — que además es
@@ -96,6 +98,17 @@ export function PrivacyPolicyDialog({ onClose }: PrivacyPolicyDialogProps) {
               página no lo pierda; el navegador lo borra al cerrarla. Puedes comprobarlo tú mismo:
               abre las herramientas de desarrollo en la pestaña de red y verás que comparar no
               genera ni una petición.
+            </p>
+          </section>
+
+          <section>
+            <h3 className="eyebrow">Preferencias</h3>
+            <p className="mt-2">
+              Para no pedirte lo mismo cada vez, al comparar se guardan en el{' '}
+              <code className="font-mono">localStorage</code> de este navegador la herramienta y los
+              umbrales que acabas de usar. Eso es todo lo que sobrevive a cerrar el navegador: tres
+              valores de configuración, nunca el contenido de los reportes ni los resultados.
+              Borrarlos es tan fácil como limpiar los datos del sitio desde tu navegador.
             </p>
           </section>
 
