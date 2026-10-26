@@ -170,7 +170,7 @@ Importa porque un `mutations.xml` lleva dentro los nombres de clases y las rutas
 
 Funcional para el flujo completo de comparación puntual. Sabidas y pendientes:
 
-- **Un fichero por lado.** Un proyecto Maven multi-módulo genera un `mutations.xml` por módulo; hay que elegir uno o fusionarlos antes de subirlos. No está planificado de momento.
+- **Un fichero por lado.** Un proyecto Maven multi-módulo genera un `mutations.xml` por módulo; hay que elegir uno o fusionarlos antes de subirlos. Planificado en T-115.
 - **Sin histórico.** Una comparación vive en la pestaña que la creó: sobrevive a recargar, pero no a cerrar el navegador, y no se puede compartir por enlace. Para conservar o mandar un resultado, exporta el JSON (se vuelve a abrir en la app) o el HTML (se lee sin ella). La persistencia opt-in, la atribución de autor vía `git log` y el modo CLI para integrarlo en pipelines están pendientes de decisión, no de implementación: cómo se distribuye el CLI y de dónde sale el informe base en CI son las preguntas abiertas.
 - **Solo PiTest y Stryker.** El JSON de Stryker es el esquema estándar de mutation-testing-elements, así que los reportes de Stryker.NET y Stryker4s entran igual.
 - **Los reportes se procesan en memoria del navegador.** Con ficheros muy grandes (decenas de MB) el consumo lo paga tu pestaña. A cambio, nadie compite por la memoria de un servidor compartido.
