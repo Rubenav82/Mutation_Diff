@@ -90,54 +90,10 @@ La misma información está dentro de la app, detrás del icono ⓘ junto al sel
 7. **Exportar PDF** abre el diálogo de impresión del navegador con ese mismo informe ya maquetado para papel; elige «Guardar como PDF» y te propondrá el nombre `mutadiff-report-<id>`. Los dos formatos conviven a propósito: el HTML se explora (buscable, sin cortes de página) y el PDF se adjunta a un correo o a una incidencia. Con miles de unidades el PDF sale largo — la tabla completa lo es de por sí.
 8. **Exportar JSON** guarda la comparación en sí —no un informe, sino el resultado con sus ficheros de origen y umbrales— como `mutadiff-comparison-<id>.mutadiff.json`. En la pantalla inicial, **Importar comparación** lo abre y vuelve al mismo dashboard sin subir otra vez los reportes: sirve para recuperarla tras cerrar la pestaña o para pasársela a alguien que la quiera explorar, no solo leer. El fichero se valida al importarlo; si no es una comparación exportada, o viene de un formato que esta versión no sabe leer, la app lo dice en vez de abrir un dashboard roto.
 
-## API REST (opcional, autoalojada)
-
-**No hace falta para usar la aplicación** y no forma parte del artefacto estático: la web no llama a ningún endpoint. El repo mantiene un servidor Express equivalente por si algún equipo quiere lanzar comparaciones desde su CI. Se levanta aparte, desde el código fuente:
-
-```bash
-npm run build && npm run dev -w server   # escucha en el 3000
-```
-
-Ojo con dos cosas si lo despliegas: guarda los resultados **en memoria** con un TTL de 1 hora, así que necesita **una sola instancia** (con varias réplicas, un `GET` puede caer en la que no tiene el resultado) y los pierde en cada reinicio.
-
-Los tres endpoints:
-
-```bash
-# Crear una comparación. Devuelve { comparisonId, result }
-curl -s -X POST http://localhost:3000/api/comparisons \
-  -F tool=pitest \
-  -F baseFile=@packages/core/test/fixtures/pitest/realistic/base.xml \
-  -F headFile=@packages/core/test/fixtures/pitest/realistic/head.xml \
-  -F uncoveredThreshold=75
-
-# Recuperar un resultado ya calculado
-curl -s http://localhost:3000/api/comparisons/<comparisonId>
-
-# Descargar el informe HTML autocontenido
-curl -s -OJ http://localhost:3000/api/comparisons/<comparisonId>/report
-```
-
-`tool` es un único campo compartido por ambos ficheros: no se pueden mezclar un XML de PiTest y un JSON de Stryker en la misma comparación.
-
-Los errores tienen siempre la misma forma, sin stack traces:
-
-```json
-{ "error": { "code": "INVALID_REPORT", "message": "Invalid PiTest report: ..." } }
-```
-
-| Código                 | Status | Cuándo                                                |
-| ---------------------- | ------ | ----------------------------------------------------- |
-| `VALIDATION_ERROR`     | 422    | Falta un campo del formulario o `tool` no es válido    |
-| `INVALID_REPORT`       | 422    | El fichero no es un reporte válido de esa herramienta  |
-| `COMPARISON_NOT_FOUND` | 404    | El id no existe o su TTL ya expiró                     |
-| `FILE_TOO_LARGE`       | 413    | El fichero supera los 50 MB                            |
-| `INVALID_UPLOAD`       | 400    | Fichero adjunto bajo un nombre de campo inesperado     |
-
 ## Comandos
 
 ```bash
-npm run dev -w web # la aplicación (5173)
-npm run dev        # además, el servidor REST opcional (3000)
+npm run dev        # la aplicación (5173)
 npm test           # suite completa (Vitest)
 npm run test:e2e   # e2e con Playwright — requiere `npx playwright install chromium`
 npm run typecheck  # tsc --noEmit en todos los workspaces + e2e
@@ -154,9 +110,8 @@ Monorepo npm workspaces, TypeScript strict, ESM:
 | ----------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | `packages/core`   | Dominio puro, sin I/O. Parsers PiTest/Stryker → modelo normalizado, motor de comparación y generador del informe HTML.   |
 | `packages/web`    | Vite + React 18: wizard, dashboard, tablas con TanStack Table. Es lo que se publica.                                     |
-| `packages/server` | Express 5 con la API REST opcional. No entra en el artefacto estático.                                                   |
 
-Que `core` sea dominio puro —sin I/O, sin Node— es lo que permite que la misma lógica corra en el navegador, en el servidor opcional y, en su día, en un CLI. Ninguno de los tres duplica una línea de comparación.
+Que `core` sea dominio puro —sin I/O, sin Node— es lo que permite que la misma lógica corra en el navegador y, en su día, en un CLI. Ninguno de los dos duplica una línea de comparación.
 
 PiTest trabaja por clase y Stryker por fichero; el modelo usa una `key` genérica para ambos.
 
@@ -170,20 +125,20 @@ Importa porque un `mutations.xml` lleva dentro los nombres de clases y las rutas
 
 Funcional para el flujo completo de comparación puntual. Sabidas y pendientes:
 
-- **Un fichero por lado.** Un proyecto Maven multi-módulo genera un `mutations.xml` por módulo; hay que elegir uno o fusionarlos antes de subirlos. Planificado en T-115.
+- **Un fichero por lado.** Un proyecto Maven multi-módulo genera un `mutations.xml` por módulo; hay que elegir uno o fusionarlos antes de subirlos. Está planificado.
 - **Sin histórico.** Una comparación vive en la pestaña que la creó: sobrevive a recargar, pero no a cerrar el navegador, y no se puede compartir por enlace. Para conservar o mandar un resultado, exporta el JSON (se vuelve a abrir en la app) o el HTML (se lee sin ella). Guardar un histórico de ejecuciones está descartado de momento. La atribución de autor vía `git log` y el modo CLI para integrarlo en pipelines están pendientes de decisión, no de implementación: cómo se distribuye el CLI y de dónde sale el informe base en CI son las preguntas abiertas.
 - **Solo PiTest y Stryker.** El JSON de Stryker es el esquema estándar de mutation-testing-elements, así que los reportes de Stryker.NET y Stryker4s entran igual.
 - **Los reportes se procesan en memoria del navegador.** Con ficheros muy grandes (decenas de MB) el consumo lo paga tu pestaña. A cambio, nadie compite por la memoria de un servidor compartido.
 
 ## Calidad
 
-El proyecto se somete a su propio tipo de análisis: mutation testing con Stryker sobre `packages/core` y la lógica de `packages/web/src/lib`, con el corte en 95 y el score actual en **98,45 %** (`core` al 99,70 % y `web/src/lib` al 95,68 %; los quince mutantes vivos que quedan son equivalentes documentados). La suite tiene, a día de hoy, 514 tests unitarios/integración y 13 e2e en navegador: seis sobre el flujo real, tres sobre el **artefacto ya construido** —servido como lo sirve un servidor de ficheros, desde un subpath y sin reescribir rutas, que es exactamente lo que se publica en la release— y cuatro de **accesibilidad** con axe-core sobre WCAG 2.1 AA. CI ejecuta lint, typecheck, tests y e2e en cada PR; Stryker va en un workflow aparte que se lanza al fusionar en `master` cualquier cambio en el código que mide, y la release no se publica sin pasar la misma barra. Dependabot agrupa las actualizaciones de dependencias y se lanza bajo demanda, no en un ciclo fijo.
+El proyecto se somete a su propio tipo de análisis: mutation testing con Stryker sobre `packages/core` y la lógica de `packages/web/src/lib`, con el corte en 95 y el score actual en **98,45 %** (`core` al 99,70 % y `web/src/lib` al 95,68 %; los quince mutantes vivos que quedan son equivalentes documentados). La suite tiene, a día de hoy, 479 tests unitarios/integración y 13 e2e en navegador: seis sobre el flujo real, tres sobre el **artefacto ya construido** —servido como lo sirve un servidor de ficheros, desde un subpath y sin reescribir rutas, que es exactamente lo que se publica en la release— y cuatro de **accesibilidad** con axe-core sobre WCAG 2.1 AA. CI ejecuta lint, typecheck, tests y e2e en cada PR; Stryker va en un workflow aparte que se lanza al fusionar en `master` cualquier cambio en el código que mide, y la release no se publica sin pasar la misma barra. Dependabot agrupa las actualizaciones de dependencias y se lanza bajo demanda, no en un ciclo fijo.
 
 ## Documentación
 
 - [`docs/constitution.md`](docs/constitution.md) — principios innegociables.
 - [`docs/spec.md`](docs/spec.md) — historias de usuario y criterios de aceptación.
-- [`docs/plan.md`](docs/plan.md) — arquitectura, modelo de dominio, API y UI.
+- [`docs/plan.md`](docs/plan.md) — arquitectura, modelo de dominio y UI.
 - [`docs/tasks.md`](docs/tasks.md) — backlog y estado.
 
 ## Licencia

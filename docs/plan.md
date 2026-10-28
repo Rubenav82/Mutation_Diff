@@ -6,11 +6,11 @@
 
 | Capa | Tecnología |
 |---|---|
-| Backend | Node 22+, Express 5, TypeScript, Zod (validación), fast-xml-parser (PiTest), multer (upload) |
+| Core | TypeScript, fast-xml-parser (PiTest). Sin backend desde T-120: el servidor Express (Zod, multer) se retiró y es recuperable desde la etiqueta `archive/packages-server` |
 | Frontend | Vite + React 18 + TypeScript, TanStack Table (tablas), Recharts (gráficos), CSS modules o Tailwind, Zod vía `zod/mini` (validar la comparación importada, T-103) |
-| Persistencia (fase 2) | SQLite vía better-sqlite3 |
-| Tests | Vitest (unit back y front), React Testing Library, Supertest (API), Playwright (e2e, fase 4), axe-core vía `@axe-core/playwright` (accesibilidad dentro de los e2e, T-100), Stryker (mutation testing del propio proyecto) |
-| Monorepo | npm workspaces: `packages/core`, `packages/server`, `packages/web` |
+| Persistencia (fase 2, aplazada por T-096) | SQLite vía better-sqlite3 |
+| Tests | Vitest (unit de `core` y `web`), React Testing Library, Playwright (e2e, fase 4), axe-core vía `@axe-core/playwright` (accesibilidad dentro de los e2e, T-100), Stryker (mutation testing del propio proyecto) |
+| Monorepo | npm workspaces: `packages/core`, `packages/web` |
 
 ### 2.2 Arquitectura
 
@@ -21,22 +21,23 @@ packages/
     domain/    modelos, cálculo de métricas
     compare/   motor de comparación → ComparisonResult
     report/    generador de HTML autocontenido (plantilla + datos inline)
-  server/      ← Express: upload, orquestación, endpoints, (fase 2: SQLite)
   web/         ← React SPA: wizard de subida, dashboard, tablas, export
 ```
 
-Flujo: `upload ficheros → detectar herramienta → parser → NormalizedRun (x2) → ComparisonEngine → ComparisonResult → UI / HTML export`.
+Flujo: `ficheros elegidos en el navegador → parser → NormalizedRun (x2) → ComparisonEngine → ComparisonResult → UI / HTML export`.
 
 Decisión clave (trade-off): el motor de comparación vive en `core` sin dependencias de Express ni React → se testea de forma aislada, se puede reutilizar como CLI en el futuro, y es el objetivo perfecto para el mutation testing del propio proyecto.
 
-#### 2.2.1 Dos consumidores de `core` (desde la Fase 4.6)
+#### 2.2.1 Consumidores de `core` (desde la Fase 4.6)
 
-Esa decisión acabó dando un retorno que no se había previsto: **`core` corre igual en el navegador**, porque no importa nada de `node:` y su única dependencia (`fast-xml-parser`) tampoco. Así que hay dos formas de consumir el mismo dominio, sin duplicar una línea de lógica de comparación:
+Esa decisión acabó dando un retorno que no se había previsto: **`core` corre igual en el navegador**, porque no importa nada de `node:` y su única dependencia (`fast-xml-parser`) tampoco. Así que el mismo dominio se consume desde sitios distintos sin duplicar una línea de lógica de comparación:
 
 | Consumidor | Quién lo usa | Estado |
 | --- | --- | --- |
 | `web` llamando a `core` en el navegador | el despliegue real: `packages/web/dist` servido como ficheros estáticos | **es lo que se publica** |
-| `server` exponiendo `core` por HTTP | integraciones desde CI que prefieran `curl` | opcional, se autoaloja |
+| CLI (`packages/cli`, T-094) | pipelines de CI | planificado, pendiente de decidir su distribución |
+
+Hasta T-120 hubo un tercero, `packages/server`, que exponía `core` por HTTP para quien prefiriera `curl` desde CI. Se retiró porque no se desplegaba, nadie usaba su API y la Fase 5, que era su razón de ser, quedó aplazada (T-096); el código está en la etiqueta `archive/packages-server`.
 
 Motivo del cambio: la aplicación se consume dentro de una empresa por varios equipos y no necesita histórico todavía (eso es la Fase 5). Un servicio Node compartido solo habría aportado coste operativo — el store en memoria obliga a instancia única y pierde los resultados de todos en cada reinicio — mientras que un artefacto estático escala sin operar nada.
 
@@ -138,9 +139,11 @@ Notas de mapeo:
 
 ### 2.3.1 Ingesta de ficheros PiTest
 
-Estrategia de subida en cascada: (a) un solo `mutations.xml` (recomendado); (b) un `.zip` que el servidor descomprime y del que extrae todos los `mutations.xml`, fusionando sus mutaciones (útil si hay subcarpetas con timestamp); (c) selección de carpeta desde el navegador (`webkitdirectory`), donde el frontend filtra ya en cliente los ficheros `*.xml` antes de enviarlos, para no subir HTML/CSS innecesarios. La UI mostrará un aviso didáctico: "¿Sabías que con `-DoutputFormats=HTML,XML` PiTest genera un único fichero XML con toda la información?".
+Estrategia de subida en cascada: (a) un solo `mutations.xml` (recomendado); (b) un `.zip` que se descomprime en el navegador y del que se extraen todos los `mutations.xml`, fusionando sus mutaciones (útil si hay subcarpetas con timestamp); (c) selección de carpeta desde el navegador (`webkitdirectory`), donde el frontend filtra ya en cliente los ficheros `*.xml` antes de enviarlos, para no subir HTML/CSS innecesarios. La UI mostrará un aviso didáctico: "¿Sabías que con `-DoutputFormats=HTML,XML` PiTest genera un único fichero XML con toda la información?".
 
 ### 2.3.2 Modelo de persistencia (fase 2, opt-in)
+
+> **Aplazado** por T-096 (2026-10-28): de momento no se almacena histórico. Se conserva el diseño como referencia; si se retoma, antes hay que elegir entre las opciones (a) y (b) de T-096, porque este modelo asume un servidor que ya no existe.
 
 SQLite (better-sqlite3), un fichero local. La comparación puntual nunca escribe en BBDD.
 
@@ -164,6 +167,8 @@ CREATE TABLE runs (
 Decisiones: el `tool` se fija a nivel de proyecto (evita mezclar PiTest y Stryker en un mismo histórico); se guarda el `NormalizedRun` ya normalizado, no el fichero original (comparaciones futuras instantáneas y BBDD más ligera); `global_metrics` desnormalizado para pintar la evolución sin deserializar runs completos.
 
 ### 2.4 API REST
+
+> **Retirada en T-120.** `packages/server` implementó los tres endpoints de `/api/comparisons` (T-020 a T-024) y se retiró junto con el paquete; el código está en la etiqueta `archive/packages-server`. Los de `/api/projects` nunca se implementaron. El diseño se conserva como referencia por si la Fase 5 vuelve por la opción (b) de T-096.
 
 ```
 POST /api/comparisons            multipart: baseFile, headFile, tool ('pitest'|'stryker'), opciones
@@ -203,15 +208,14 @@ Rediseño basado en el sistema **Modernist**: flat, arquitectónico, radio de bo
 - **El acento rojo vivo (`#ec3013`) no toca ningún dato**: da 3.76:1 sobre el fondo, insuficiente para texto. Queda solo en el anillo de foco y en el logotipo.
 - **Sin webfonts**: el handoff carga Archivo desde Google Fonts; se descarta por lo ya fijado en T-037 (la app corre en local, a veces sin salida a internet). Se mantienen los stacks de sistema, con monoespaciada para toda medida. Se pierde el carácter tipográfico exacto de Modernist; se gana que la app nunca dependa de la red.
 - **Sin modo oscuro**: el bloque `prefers-color-scheme` de T-037 se retira. Modernist no define rampa oscura y no merece inventarla por ahora.
-- **El rail no recalcula**: muestra herramienta, ficheros y umbrales en solo lectura, y su botón lleva al wizard. No puede reejecutar con otros umbrales porque el servidor nunca guarda los ficheros subidos (`memoryStorage`, T-020) — habría que volver a subirlos.
+- **El rail no recalcula**: muestra herramienta, ficheros y umbrales en solo lectura, y su botón lleva al wizard. No puede reejecutar con otros umbrales porque los ficheros subidos no se conservan, solo el resultado de compararlos — habría que volver a subirlos.
 
 ### 2.6 Estrategia de testing
 
 - **core**: unit tests con fixtures reales (XML PiTest y JSON Stryker de ejemplo, casos borde: vacío, una clase, ignored, error, ficheros enormes truncados). Property-based opcional (fast-check) para el motor de comparación (p. ej. comparar un run consigo mismo ⇒ 0 deltas).
-- **server**: Supertest para endpoints, incluidos errores 422 y límite de tamaño.
-- **web**: RTL para componentes (tabla, tarjetas de delta, wizard) mockeando la API.
+- **web**: RTL para componentes (tabla, tarjetas de delta, wizard) y Vitest para la lógica de `src/lib`.
 - **mutation testing del proyecto**: Stryker sobre `packages/core` en CI; el resultado se puede… comparar con la propia app 🙂
-- **e2e**: Playwright (solo Chromium) sobre el flujo real wizard → API → dashboard → export, usando las mismas fixtures que los tests de `core`.
+- **e2e**: Playwright (solo Chromium) sobre el flujo real wizard → dashboard → export, y sobre el artefacto construido, usando las mismas fixtures que los tests de `core`.
 - **accesibilidad**: axe-core sobre el DOM real en los mismos e2e (WCAG 2.1 AA). Cubre las regresiones estructurales —contraste, nombres accesibles, `aria-*` que apunta a la nada—, no sustituye a una revisión manual.
 - **CI** (GitHub Actions): lint + typecheck + tests + e2e; stryker en un workflow aparte, disparado al fusionar en `master` un cambio que toque lo que se muta (antes era un job nightly: el reloj repetía la pasada sin código nuevo que medir).
 

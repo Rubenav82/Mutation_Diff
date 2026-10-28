@@ -28,7 +28,7 @@ export default tseslint.config(
   {
     // `e2e` corre bajo Node (fs, Buffer, import.meta), no en el navegador:
     // el código de página vive dentro de los locators de Playwright.
-    files: ['packages/core/**/*.ts', 'packages/server/**/*.ts', 'e2e/**/*.ts'],
+    files: ['packages/core/**/*.ts', 'e2e/**/*.ts'],
     languageOptions: {
       globals: { ...globals.node },
     },
