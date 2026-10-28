@@ -17,7 +17,7 @@
 #   que un PR de React 19 no puede pasar. Migrar es una tarea, no un bump.
 #
 # El monorepo usa workspaces con un único package-lock.json en la raíz, así que
-# un solo directorio cubre core/server/web. `.github/**` está en el
+# un solo directorio cubre core y web. `.github/**` está en el
 # paths-ignore de release.yml: cambiar este fichero no dispara una release, pero
 # fusionar un PR que toque package.json/package-lock.json sí.
 version: 2

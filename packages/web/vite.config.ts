@@ -7,9 +7,4 @@ export default defineConfig({
   // from a subpath, without knowing which at build time.
   base: './',
   plugins: [react(), tailwindcss()],
-  server: {
-    proxy: {
-      '/api': 'http://localhost:3000',
-    },
-  },
 });

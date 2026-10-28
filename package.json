@@ -28,7 +28,7 @@
     "typecheck": "npm run typecheck --workspaces --if-present && tsc --noEmit -p e2e/tsconfig.json",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
-    "dev": "concurrently -n server,web -c blue,magenta \"npm run dev -w server\" \"npm run dev -w web\"",
+    "dev": "npm run dev -w web",
     "premutation": "tsc -b",
     "mutation": "stryker run"
   },
@@ -40,11 +40,11 @@
     "@stryker-mutator/vitest-runner": "^10.0.0",
     "@types/node": "^26.6.1",
     "@vitest/coverage-v8": "^4.1.12",
-    "concurrently": "^10.0.3",
     "eslint": "^10.10.0",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.12.0",
     "prettier": "^3.9.7",
+    "tsx": "^4.23.15",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.70.0",
     "vitest": "^4.1.12"
