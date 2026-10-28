@@ -124,6 +124,20 @@ describe('UnitsTable', () => {
     expect(screen.getByRole('button', { name: /ordenar por δ score/i })).toBeInTheDocument();
   });
 
+  it('keeps the visible header text inside every sort button name (WCAG 2.5.3)', () => {
+    render(<UnitsTable units={UNITS} tool="pitest" />);
+
+    // Quien maneja la app por voz dice lo que ve («pulsa Nueva»): si el nombre
+    // accesible no contiene ese texto, la orden no encuentra el botón. axe-core
+    // 4.14 lo comprueba con `label-content-name-mismatch`.
+    const sortButtons = screen.getAllByRole('button', { name: /^ordenar por/i });
+    expect(sortButtons).toHaveLength(8);
+    for (const button of sortButtons) {
+      const visible = (button.textContent ?? '').replace(/[↑↓]/g, '').trim().toLowerCase();
+      expect(button.getAttribute('aria-label')?.toLowerCase()).toContain(visible);
+    }
+  });
+
   it('shows an em dash for the missing side of added and removed units', () => {
     render(<UnitsTable units={UNITS} tool="pitest" />);
 
@@ -415,7 +429,7 @@ describe('UnitsTable — cambios de mutantes', () => {
     render(<UnitsTable units={units} tool="pitest" />);
 
     expect(
-      screen.queryByRole('button', { name: 'Cambios de mutantes · com.example.StringUtils' }),
+      screen.queryByRole('button', { name: /cambios? de mutantes · com\.example\.StringUtils/ }),
     ).not.toBeInTheDocument();
     expect(screen.queryByText('Nuevo superviviente')).not.toBeInTheDocument();
   });

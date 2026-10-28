@@ -48,6 +48,8 @@ interface MutantChangesToggleProps {
 /**
  * Botón que abre el panel desde una fila. El nombre accesible lleva la clave de
  * la unidad: en una tabla hay uno por fila y «botón, contraído» no dice cuál.
+ * Empieza por el número que se ve (WCAG 2.5.3): quien maneja la app por voz
+ * dice «pulsa 3», y un nombre sin ese 3 no lo encontraría.
  */
 export function MutantChangesToggle({
   unitKey,
@@ -59,7 +61,7 @@ export function MutantChangesToggle({
     <button
       type="button"
       aria-expanded={expanded}
-      aria-label={`Cambios de mutantes · ${unitKey}`}
+      aria-label={`${count} ${count === 1 ? 'cambio' : 'cambios'} de mutantes · ${unitKey}`}
       onClick={onToggle}
       className="inline-flex items-center gap-1 border border-line px-2 py-0.5 font-mono text-xs text-ink transition-colors hover:border-line-strong"
     >

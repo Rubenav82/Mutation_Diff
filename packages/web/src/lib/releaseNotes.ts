@@ -19,6 +19,13 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.10.1',
+    date: '2026-10-28',
+    changes: [
+      'Accesibilidad: los botones de ordenar de la tabla completa y el botón que despliega los mutantes de cada clase incluyen en su nombre el texto que se ve en pantalla («Nueva», el número de cambios). Quien maneja la aplicación por voz ya puede pulsarlos diciendo lo que ve.',
+    ],
+  },
+  {
     version: '1.10.0',
     date: '2026-10-22',
     changes: [

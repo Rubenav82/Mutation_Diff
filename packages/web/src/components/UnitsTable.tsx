@@ -34,14 +34,16 @@ const KIND_LABEL_CLASS: Record<UnitChangeKind, string> = {
  * Nombre completo de cada columna, para el `aria-label` del botón de ordenar.
  * Dentro de un grupo el encabezado visible es «Base»/«Nueva»/«Δ», que fuera de
  * su columna no dice nada: un lector de pantalla anunciaría «botón Δ».
+ * Cada nombre contiene además el texto visible (WCAG 2.5.3): por eso «ejecución
+ * nueva» y no «Score nuevo», que no contiene el «Nueva» que se ve.
  */
 const SORT_LABELS: Record<string, string> = {
   key: 'Clase / fichero',
   baseScore: 'Score base',
-  headScore: 'Score nuevo',
+  headScore: 'Score, ejecución nueva',
   scoreDelta: 'Δ Score',
   baseCovered: 'Cubiertos base',
-  headCovered: 'Cubiertos nuevos',
+  headCovered: 'Cubiertos, ejecución nueva',
   coverageDelta: 'Δ Cubiertos',
   kind: 'Estado',
 };

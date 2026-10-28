@@ -265,8 +265,10 @@ describe('UnitSection — cambios de mutantes', () => {
       <UnitSection title="Retrocesos" units={[withChanges, withoutChanges]} emptyMessage="—" />,
     );
 
+    // El número visible va dentro del nombre (WCAG 2.5.3): «pulsa 1» tiene que
+    // encontrar el botón. En singular cuando es uno.
     const toggle = screen.getByRole('button', {
-      name: 'Cambios de mutantes · com.example.TaxCalculator',
+      name: '1 cambio de mutantes · com.example.TaxCalculator',
     });
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
     expect(screen.queryByText('Nuevo superviviente')).not.toBeInTheDocument();
@@ -279,13 +281,28 @@ describe('UnitSection — cambios de mutantes', () => {
     expect(screen.queryByText('Nuevo superviviente')).not.toBeInTheDocument();
   });
 
+  it('names the toggle in plural when several mutants changed', () => {
+    const second = { ...withChanges.mutantChanges![0]!, line: 12 };
+    render(
+      <UnitSection
+        title="Retrocesos"
+        units={[{ ...withChanges, mutantChanges: [...withChanges.mutantChanges!, second] }]}
+        emptyMessage="—"
+      />,
+    );
+
+    expect(
+      screen.getByRole('button', { name: '2 cambios de mutantes · com.example.TaxCalculator' }),
+    ).toBeInTheDocument();
+  });
+
   it('offers no toggle for a unit without changed mutants', () => {
     render(
       <UnitSection title="Retrocesos" units={[withChanges, withoutChanges]} emptyMessage="—" />,
     );
 
     expect(
-      screen.queryByRole('button', { name: 'Cambios de mutantes · com.example.StringUtils' }),
+      screen.queryByRole('button', { name: /cambios? de mutantes · com\.example\.StringUtils/ }),
     ).not.toBeInTheDocument();
   });
 });
