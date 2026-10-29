@@ -19,6 +19,13 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.10.2',
+    date: '2026-10-29',
+    changes: [
+      'El detalle de mutantes de cada clase ya no se llena de ruido cuando el código solo se ha desplazado: si se añaden o se quitan líneas más arriba, los mutantes que siguen igual ya no aparecen como «Eliminado» y «Nuevo». Así, el filtro «Solo mutantes sin detectar» y el informe exportado ya no muestran como nuevo un superviviente que solo cambió de línea.',
+    ],
+  },
+  {
     version: '1.10.1',
     date: '2026-10-28',
     changes: [

@@ -1,0 +1,3050 @@
+{
+  "schemaVersion": "1.0",
+  "thresholds": {
+    "high": 98,
+    "low": 95,
+    "break": 95
+  },
+  "files": {
+    "packages/core/src/compare/mutantComparison.ts": {
+      "language": "typescript",
+      "mutants": [
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 35
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 16
+            }
+          }
+        },
+        {
+          "mutatorName": "CallExpression",
+          "replacement": ";",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 17
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 46
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 78
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "change.head !== 'no_coverage'",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 46
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 46
+            }
+          }
+        },
+        {
+          "mutatorName": "ObjectLiteral",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 81
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 81
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 87
+            }
+          }
+        },
+        {
+          "mutatorName": "ObjectLiteral",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 90
+            }
+          }
+        },
+        {
+          "mutatorName": "ArrayDeclaration",
+          "replacement": "[\"Stryker was here\"]",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 110
+            }
+          }
+        },
+        {
+          "mutatorName": "ArrayDeclaration",
+          "replacement": "[\"Stryker was here\"]",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 110
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 114
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 114
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 90
+            }
+          }
+        },
+        {
+          "mutatorName": "ArithmeticOperator",
+          "replacement": "a.line + b.line",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 114
+            }
+          }
+        },
+        {
+          "mutatorName": "LogicalOperator",
+          "replacement": "a.line - b.line && a.mutator.localeCompare(b.mutator)",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 114
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 11
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 7
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 13
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "``",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 8
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 16
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 16
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 18
+            }
+          }
+        },
+        {
+          "mutatorName": "ArrayDeclaration",
+          "replacement": "[]",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 19
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 25
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 26
+            }
+          }
+        },
+        {
+          "mutatorName": "LogicalOperator",
+          "replacement": "status === 'killed' && status === 'timeout'",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 26
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 26
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 26
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 26
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "status !== 'killed'",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 26
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "status !== 'timeout'",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 26
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 26
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 31
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 26
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 32
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 32
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 32
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 32
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "head !== 'survived'",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 32
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 33
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 33
+            }
+          }
+        },
+        {
+          "mutatorName": "LogicalOperator",
+          "replacement": "isDetected(head) || !isDetected(base)",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 33
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 33
+            }
+          }
+        },
+        {
+          "mutatorName": "BooleanLiteral",
+          "replacement": "isDetected(base)",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 33
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 34
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 34
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "head !== 'no_coverage'",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 34
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 34
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 45
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 46
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 46
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 34
+            }
+          }
+        },
+        {
+          "mutatorName": "LogicalOperator",
+          "replacement": "change.head === 'survived' && change.head === 'no_coverage'",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 46
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 46
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "change.head !== 'survived'",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 46
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 46
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 52
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 53
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 53
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "description === undefined",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 53
+            }
+          }
+        },
+        {
+          "mutatorName": "ObjectLiteral",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 53
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 56
+            }
+          }
+        },
+        {
+          "mutatorName": "ArrayDeclaration",
+          "replacement": "[\"Stryker was here\"]",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 57
+            }
+          }
+        },
+        {
+          "mutatorName": "MethodExpression",
+          "replacement": "Math.max(base.length, head.length)",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 58
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 60
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "i <= paired",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 60
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "i >= paired",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 60
+            }
+          }
+        },
+        {
+          "mutatorName": "UpdateOperator",
+          "replacement": "i--",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 60
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 60
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 63
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 63
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "b.status !== h.status",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 63
+            }
+          }
+        },
+        {
+          "mutatorName": "ObjectLiteral",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 66
+            }
+          }
+        },
+        {
+          "mutatorName": "LogicalOperator",
+          "replacement": "h.description && b.description",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 73
+            }
+          }
+        },
+        {
+          "mutatorName": "MethodExpression",
+          "replacement": "base",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 78
+            }
+          }
+        },
+        {
+          "mutatorName": "MethodExpression",
+          "replacement": "head",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 87
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 103
+            }
+          }
+        },
+        {
+          "mutatorName": "ArrayDeclaration",
+          "replacement": "[]",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 106
+            }
+          }
+        },
+        {
+          "mutatorName": "ArrayDeclaration",
+          "replacement": "[\"Stryker was here\"]",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 108
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 109
+            }
+          }
+        },
+        {
+          "mutatorName": "LogicalOperator",
+          "replacement": "baseGroups.get(key) && []",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 110
+            }
+          }
+        },
+        {
+          "mutatorName": "LogicalOperator",
+          "replacement": "headGroups.get(key) && []",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 110
+            }
+          }
+        },
+        {
+          "mutatorName": "MethodExpression",
+          "replacement": "changes",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 114
+            }
+          }
+        },
+        {
+          "mutatorName": "ArrowFunction",
+          "replacement": "() => undefined",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 114
+            }
+          }
+        }
+      ]
+    },
+    "packages/core/src/report/htmlReportGenerator.ts": {
+      "language": "typescript",
+      "mutants": [
+        {
+          "mutatorName": "ArrayDeclaration",
+          "replacement": "[\"Stryker was here\"]",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 239
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"Stryker was here!\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 245
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 199
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"Stryker was here!\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 253
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "``",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 256
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "``",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 316
+            }
+          }
+        },
+        {
+          "mutatorName": "ArrowFunction",
+          "replacement": "() => undefined",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 316
+            }
+          }
+        },
+        {
+          "mutatorName": "ArithmeticOperator",
+          "replacement": "sum - undetectedMutants(unit).length",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 316
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"Stryker was here!\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 328
+            }
+          }
+        },
+        {
+          "mutatorName": "ObjectLiteral",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 13
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 14
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 16
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 15
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 17
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 18
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 150
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "``",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 35
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 152
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 153
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 154
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 155
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 159
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 163
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 156
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "``",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 160
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 164
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "value !== null",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 164
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 164
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 164
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 165
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 165
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "value >= 0",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 165
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "value <= 0",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 165
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"Stryker was here!\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 165
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 165
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "``",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 166
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 177
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 181
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 181
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "value >= 0",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 181
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "value <= 0",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 181
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 181
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 181
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 181
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "value <= 0",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 181
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"Stryker was here!\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 181
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "value >= 0",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 181
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 181
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "``",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 182
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 190
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "``",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 191
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 194
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "``",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 195
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 198
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 199
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 199
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "value >= 0",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 199
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 200
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "value <= 0",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 199
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "value <= 0",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 200
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 200
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 200
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 211
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "value >= 0",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 200
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"Stryker was here!\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 201
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 212
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 213
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "``",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 214
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 217
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 218
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 223
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "``",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 220
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 219
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 224
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 224
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 224
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "metric !== 'covered'",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 224
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"Stryker was here!\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 224
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 225
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 225
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "metric !== 'score'",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 225
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 225
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "``",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 226
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 238
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"Stryker was here!\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 225
+            }
+          }
+        },
+        {
+          "mutatorName": "OptionalChaining",
+          "replacement": "unit.mutantChanges.filter",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 239
+            }
+          }
+        },
+        {
+          "mutatorName": "LogicalOperator",
+          "replacement": "unit.mutantChanges?.filter(isUndetected) && []",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 239
+            }
+          }
+        },
+        {
+          "mutatorName": "MethodExpression",
+          "replacement": "unit.mutantChanges",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 239
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 242
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 244
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 244
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "change.description !== undefined",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 244
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "``",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 246
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "``",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 247
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 251
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 253
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 253
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "undetected.length !== 0",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 253
+            }
+          }
+        },
+        {
+          "mutatorName": "MethodExpression",
+          "replacement": "undetected",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 254
+            }
+          }
+        },
+        {
+          "mutatorName": "ArithmeticOperator",
+          "replacement": "undetected.length + MAX_UNDETECTED_PER_UNIT",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 255
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"Stryker was here!\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 254
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 256
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "hidden >= 0",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 256
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "hidden <= 0",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 256
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 256
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"Stryker was here!\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 256
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 261
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 264
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "``",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 257
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 271
+            }
+          }
+        },
+        {
+          "mutatorName": "ObjectLiteral",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 273
+            }
+          }
+        },
+        {
+          "mutatorName": "ObjectLiteral",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 280
+            }
+          }
+        },
+        {
+          "mutatorName": "BooleanLiteral",
+          "replacement": "true",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 293
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 294
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 295
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 295
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "units.length !== 0",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 295
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 295
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "``",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 296
+            }
+          }
+        },
+        {
+          "mutatorName": "ArrowFunction",
+          "replacement": "() => undefined",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 303
+            }
+          }
+        },
+        {
+          "mutatorName": "ArithmeticOperator",
+          "replacement": "sum - Math.min(undetectedMutants(unit).length, MAX_UNDETECTED_PER_UNIT)",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 303
+            }
+          }
+        },
+        {
+          "mutatorName": "MethodExpression",
+          "replacement": "Math.max(undetectedMutants(unit).length, MAX_UNDETECTED_PER_UNIT)",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 303
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 307
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 307
+            }
+          }
+        },
+        {
+          "mutatorName": "LogicalOperator",
+          "replacement": "withUndetected || rowsToRender <= MAX_UNDETECTED_ROWS",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 307
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "rowsToRender < MAX_UNDETECTED_ROWS",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 307
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 307
+            }
+          }
+        },
+        {
+          "mutatorName": "ArrowFunction",
+          "replacement": "() => undefined",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 310
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "rowsToRender > MAX_UNDETECTED_ROWS",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 307
+            }
+          }
+        },
+        {
+          "mutatorName": "ArithmeticOperator",
+          "replacement": "renderUnitRow(unit, metric) - (detail ? renderUndetectedRow(unit, COLUMNS[metric]) : '')",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 311
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"Stryker was here!\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 311
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"Stryker was here!\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 313
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 315
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 315
+            }
+          }
+        },
+        {
+          "mutatorName": "LogicalOperator",
+          "replacement": "withUndetected || !detail",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 315
+            }
+          }
+        },
+        {
+          "mutatorName": "BooleanLiteral",
+          "replacement": "detail",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 315
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"Stryker was here!\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 317
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "``",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 318
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 321
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 322
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 322
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "value !== undefined",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 322
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 322
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 326
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 327
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 327
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "delta !== null",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 327
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 328
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 327
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 328
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "delta >= 0",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 328
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "delta <= 0",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 328
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 328
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 328
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 328
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "delta <= 0",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 328
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "delta >= 0",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 328
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 328
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "``",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 329
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 332
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 333
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "``",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 334
+            }
+          }
+        },
+        {
+          "mutatorName": "OptionalChaining",
+          "replacement": "entry.head.total",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 334
+            }
+          }
+        },
+        {
+          "mutatorName": "OptionalChaining",
+          "replacement": "entry.base.survived",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 334
+            }
+          }
+        },
+        {
+          "mutatorName": "OptionalChaining",
+          "replacement": "entry.head.survived",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 334
+            }
+          }
+        },
+        {
+          "mutatorName": "OptionalChaining",
+          "replacement": "entry.head.noCoverage",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 334
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 338
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 346
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 345
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 347
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"Stryker was here!\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 348
+            }
+          }
+        },
+        {
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 347
+            }
+          }
+        },
+        {
+          "mutatorName": "EqualityOperator",
+          "replacement": "mutators.length !== 0",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 347
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "``",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 347
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 352
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "``",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 354
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "``",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 349
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 355
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 355
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 356
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 356
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 357
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 357
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 358
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 358
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 359
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 359
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 360
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 369
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 360
+            }
+          }
+        },
+        {
+          "mutatorName": "LogicalOperator",
+          "replacement": "baseLabel && 'Sin nombre'",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 371
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 371
+            }
+          }
+        },
+        {
+          "mutatorName": "LogicalOperator",
+          "replacement": "headLabel && 'Sin nombre'",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 372
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 372
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "``",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 376
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 378
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 378
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 378
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 378
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 388
+            }
+          }
+        },
+        {
+          "mutatorName": "ArrowFunction",
+          "replacement": "() => undefined",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 390
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "``",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 390
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"Stryker was here!\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 391
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "``",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 392
+            }
+          }
+        },
+        {
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 395
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "``",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 396
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 410
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 410
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 410
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 411
+            }
+          }
+        },
+        {
+          "mutatorName": "BooleanLiteral",
+          "replacement": "false",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 410
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 411
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 412
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 411
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 412
+            }
+          }
+        },
+        {
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Killed",
+          "location": {
+            "start": {
+              "line": 412
+            }
+          }
+        }
+      ]
+    }
+  }
+}
