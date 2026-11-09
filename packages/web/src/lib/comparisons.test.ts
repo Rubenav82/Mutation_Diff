@@ -1,7 +1,13 @@
 import type { Tool } from 'core';
 import { describe, expect, it } from 'vitest';
 import { serializeComparison } from './comparisonFile';
-import { ComparisonError, createComparison, getComparison, importComparison } from './comparisons';
+import {
+  ComparisonError,
+  createComparison,
+  getComparison,
+  importComparison,
+  survivesReload,
+} from './comparisons';
 // Las mismas fixtures que usan los tests de `core` y los e2e: si cambian las
 // clases esperadas, salta en los tres sitios a la vez. Se cargan con `?raw` en
 // vez de `node:fs` porque bajo jsdom `import.meta.url` llega como URL `/@fs/`
@@ -110,6 +116,19 @@ describe('createComparison', () => {
   });
 });
 
+describe('survivesReload', () => {
+  it('tells apart a stored comparison from an unknown id', async () => {
+    const { comparisonId } = await createComparison({
+      tool: 'pitest',
+      baseFile: reportFile('pitest', 'base'),
+      headFile: reportFile('pitest', 'head'),
+    });
+
+    expect(survivesReload(comparisonId)).toBe(true);
+    expect(survivesReload('desconocido')).toBe(false);
+  });
+});
+
 describe('getComparison', () => {
   it('returns a comparison stored by createComparison', async () => {
     const { comparisonId, result } = await createComparison({
@@ -130,7 +149,9 @@ describe('getComparison', () => {
       status: 404,
       code: 'COMPARISON_NOT_FOUND',
     });
-    await expect(promise).rejects.toThrow('No comparison found for id "desconocido"');
+    await expect(promise).rejects.toThrow(
+      'Esta comparación no está disponible. Las comparaciones se guardan solo en la pestaña del navegador donde se crearon, así que un enlace no sirve en otra pestaña ni en otro equipo, y al recargar se pierden las que no cupieron. Si tienes su fichero .mutadiff.json, impórtalo desde la pantalla inicial.',
+    );
   });
 });
 

@@ -118,7 +118,15 @@ export async function importComparison(file: File): Promise<CreateComparisonResp
 export async function getComparison(id: string): Promise<ComparisonResult> {
   const result = comparisonStore.load(id);
   if (!result) {
-    throw new ComparisonError(404, 'COMPARISON_NOT_FOUND', `No comparison found for id "${id}"`);
+    throw new ComparisonError(
+      404,
+      'COMPARISON_NOT_FOUND',
+      'Esta comparación no está disponible. Las comparaciones se guardan solo en la pestaña del navegador donde se crearon, así que un enlace no sirve en otra pestaña ni en otro equipo, y al recargar se pierden las que no cupieron. Si tienes su fichero .mutadiff.json, impórtalo desde la pantalla inicial.',
+    );
   }
   return Promise.resolve(result);
+}
+
+export function survivesReload(id: string): boolean {
+  return comparisonStore.survivesReload(id);
 }

@@ -3,14 +3,14 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ComparisonResult, UnitComparison, UnitMetrics } from 'core';
-import { ComparisonError, getComparison } from '../lib/comparisons';
+import { ComparisonError, getComparison, survivesReload } from '../lib/comparisons';
 import { serializeComparison } from '../lib/comparisonFile';
 import { printReport } from '../lib/printReport';
 import { ComparisonDashboardPage } from './ComparisonDashboardPage';
 
 vi.mock('../lib/comparisons', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../lib/comparisons')>();
-  return { ...actual, getComparison: vi.fn() };
+  return { ...actual, getComparison: vi.fn(), survivesReload: vi.fn(() => true) };
 });
 
 // La impresión real abre el diálogo del navegador, que jsdom no tiene: lo que
@@ -19,6 +19,7 @@ vi.mock('../lib/printReport', () => ({ printReport: vi.fn() }));
 
 const getComparisonMock = vi.mocked(getComparison);
 const printReportMock = vi.mocked(printReport);
+const survivesReloadMock = vi.mocked(survivesReload);
 
 /**
  * jsdom no implementa la Object URL API, así que no basta con espiarla: hay que
@@ -306,6 +307,52 @@ describe('ComparisonDashboardPage', () => {
     renderDashboard();
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Comparison not found');
+  });
+
+  it('offers the way back to import instead of a retry when the comparison is gone', async () => {
+    getComparisonMock.mockRejectedValue(
+      new ComparisonError(404, 'COMPARISON_NOT_FOUND', 'Comparison not found'),
+    );
+    renderDashboard();
+    await screen.findByRole('alert');
+
+    expect(screen.getByRole('link', { name: 'Importar o crear una comparación' })).toHaveAttribute(
+      'href',
+      '/',
+    );
+    expect(screen.queryByRole('button', { name: /reintentar/i })).not.toBeInTheDocument();
+  });
+
+  it('does not offer the way back on any other load error', async () => {
+    getComparisonMock.mockRejectedValue(
+      new ComparisonError(500, 'INTERNAL_ERROR', 'Unexpected error'),
+    );
+    renderDashboard();
+    await screen.findByRole('alert');
+
+    expect(
+      screen.queryByRole('link', { name: 'Importar o crear una comparación' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('warns that a reload would lose a comparison that could not be stored', async () => {
+    getComparisonMock.mockResolvedValue(makeResult());
+    survivesReloadMock.mockReturnValueOnce(false);
+    renderDashboard('abc-123');
+    await screen.findByText('Mutation score');
+
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Esta comparación no cabe en el almacenamiento de la pestaña: si recargas la página, se perderá. Para conservarla, usa «Exportar JSON».',
+    );
+    expect(survivesReloadMock).toHaveBeenCalledWith('abc-123');
+  });
+
+  it('shows no warning when the comparison survives a reload', async () => {
+    getComparisonMock.mockResolvedValue(makeResult());
+    renderDashboard();
+    await screen.findByText('Mutation score');
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 
   it('refetches the comparison when the user retries after a failed load', async () => {
