@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { countUnits, generateHtmlReport, type ComparisonResult } from 'core';
-import { ComparisonError, getComparison } from '../lib/comparisons';
+import { ComparisonError, getComparison, survivesReload } from '../lib/comparisons';
 import { COMPARISON_FILE_EXTENSION, serializeComparison } from '../lib/comparisonFile';
 import { downloadFile } from '../lib/download';
 import { printReport } from '../lib/printReport';
@@ -18,6 +18,9 @@ export function ComparisonDashboardPage() {
   const { id } = useParams<{ id: string }>();
   const [result, setResult] = useState<ComparisonResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Reintentar no puede devolver una comparación que ya no existe.
+  const [isGone, setIsGone] = useState(false);
+  const [isReloadSafe, setIsReloadSafe] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   // Bumped by the retry button; re-runs the effect without duplicating the fetch.
   const [reloadToken, setReloadToken] = useState(0);
@@ -29,10 +32,14 @@ export function ComparisonDashboardPage() {
     setError(null);
     getComparison(id)
       .then((res) => {
-        if (!cancelled) setResult(res);
+        if (!cancelled) {
+          setResult(res);
+          setIsReloadSafe(survivesReload(id));
+        }
       })
       .catch((err: unknown) => {
         if (!cancelled) {
+          setIsGone(err instanceof ComparisonError && err.code === 'COMPARISON_NOT_FOUND');
           setError(
             err instanceof ComparisonError
               ? err.message
@@ -50,6 +57,16 @@ export function ComparisonDashboardPage() {
 
   if (isLoading) {
     return <LoadingIndicator label="Cargando comparación…" />;
+  }
+  if (error && isGone) {
+    return (
+      <div className="flex flex-col gap-4">
+        <ErrorMessage message={error} />
+        <Link to="/" className="self-start text-sm font-semibold text-ink underline">
+          Importar o crear una comparación
+        </Link>
+      </div>
+    );
   }
   if (error) {
     return <ErrorMessage message={error} onRetry={() => setReloadToken((token) => token + 1)} />;
@@ -94,6 +111,12 @@ export function ComparisonDashboardPage() {
           la columna y desborda la página entera en vez de scrollear dentro de su
           propio contenedor. */}
       <main className="flex min-w-0 flex-col gap-10">
+        {!isReloadSafe && (
+          <p role="status" className="border border-line bg-raised p-4 text-sm text-ink">
+            Esta comparación no cabe en el almacenamiento de la pestaña: si recargas la página, se
+            perderá. Para conservarla, usa «Exportar JSON».
+          </p>
+        )}
         <SummaryBand
           tool={result.tool}
           global={result.global}

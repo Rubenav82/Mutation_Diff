@@ -19,6 +19,15 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.11.0',
+    date: '2026-11-09',
+    changes: [
+      'Recargar la página ya no pierde la última comparación por haber hecho otras antes en la misma pestaña: si no cabe, se liberan las anteriores para hacerle sitio.',
+      'Si una comparación es tan grande que no cabe ni sola, el dashboard avisa de que se perdería al recargar y sugiere «Exportar JSON».',
+      'Al abrir una comparación que ya no está disponible, por ejemplo con un enlace de otra persona, un mensaje explica por qué y lleva a la pantalla para importarla.',
+    ],
+  },
+  {
     version: '1.10.2',
     date: '2026-10-29',
     changes: [

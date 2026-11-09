@@ -30,11 +30,17 @@ function result(tool: Tool = 'pitest'): ComparisonResult {
 }
 
 /** Storage en memoria, para no depender del sessionStorage real de jsdom. */
-function fakeStorage(): Storage {
+function fakeStorage(quota = Infinity): Storage {
   const entries = new Map<string, string>();
   return {
     getItem: (key) => entries.get(key) ?? null,
-    setItem: (key, value) => void entries.set(key, value),
+    setItem: (key, value) => {
+      const used = [...entries.values()].reduce((total, entry) => total + entry.length, 0);
+      if (used + value.length > quota) {
+        throw new DOMException('QuotaExceededError');
+      }
+      entries.set(key, value);
+    },
     removeItem: (key) => void entries.delete(key),
     clear: () => entries.clear(),
     key: (index) => [...entries.keys()][index] ?? null,
@@ -121,6 +127,130 @@ describe('createComparisonStore', () => {
     storage.setItem('mutadiff:comparison:abc', '{ not json');
 
     expect(createComparisonStore(storage).load('abc')).toBeUndefined();
+  });
+
+  describe('when the new comparison does not fit', () => {
+    // La entrada más larga de las dos que usan estos tests.
+    const entrySize = JSON.stringify(result('stryker')).length;
+
+    it('frees the earlier comparisons, so the latest one survives a reload', () => {
+      // Cabe una sola: F5 solo necesita la última.
+      const storage = fakeStorage(entrySize);
+      const store = createComparisonStore(storage);
+      store.save('old', result('pitest'));
+
+      expect(store.save('new', result('stryker'))).toBe(true);
+
+      const afterReload = createComparisonStore(storage);
+      expect(afterReload.load('new')).toEqual(result('stryker'));
+      expect(afterReload.load('old')).toBeUndefined();
+    });
+
+    it('keeps the freed comparison available within the tab', () => {
+      const store = createComparisonStore(fakeStorage(entrySize));
+      store.save('old', result('pitest'));
+
+      store.save('new', result('stryker'));
+
+      expect(store.load('old')).toEqual(result('pitest'));
+    });
+
+    it('frees every earlier comparison, not just the first one found', () => {
+      // El borrado cambia los índices de `storage.key`: recorrerlo mientras se
+      // borra se saltaría entradas.
+      const storage = fakeStorage();
+      const store = createComparisonStore(storage);
+      store.save('a', result());
+      store.save('b', result());
+      store.save('c', result());
+      vi.spyOn(storage, 'setItem').mockImplementationOnce(() => {
+        throw new DOMException('QuotaExceededError');
+      });
+
+      store.save('new', result());
+
+      expect(storage.length).toBe(1);
+      expect(storage.getItem('mutadiff:comparison:new')).toBe(JSON.stringify(result()));
+    });
+
+    it('leaves the entries of other owners alone', () => {
+      const storage = fakeStorage();
+      storage.setItem('other', 'keep me');
+      const store = createComparisonStore(storage);
+      store.save('old', result());
+      vi.spyOn(storage, 'setItem').mockImplementationOnce(() => {
+        throw new DOMException('QuotaExceededError');
+      });
+
+      store.save('new', result());
+
+      expect(storage.getItem('other')).toBe('keep me');
+    });
+
+    it('frees nothing while there is room', () => {
+      const storage = fakeStorage(entrySize * 2);
+      const store = createComparisonStore(storage);
+      store.save('old', result());
+
+      expect(store.save('new', result())).toBe(true);
+
+      expect(storage.length).toBe(2);
+    });
+
+    it('reports failure when it does not fit even alone, and still works in memory', () => {
+      const store = createComparisonStore(fakeStorage(entrySize - 1));
+
+      expect(store.save('big', result('stryker'))).toBe(false);
+
+      expect(store.load('big')).toEqual(result('stryker'));
+    });
+  });
+
+  it('reports failure when there is no storage at all', () => {
+    expect(createComparisonStore(undefined).save('abc', result())).toBe(false);
+  });
+
+  describe('survivesReload', () => {
+    it('is true for a comparison that reached storage', () => {
+      const store = createComparisonStore(fakeStorage());
+      store.save('abc', result());
+
+      expect(store.survivesReload('abc')).toBe(true);
+    });
+
+    it('is false for a comparison that only lives in memory', () => {
+      const store = createComparisonStore(fakeStorage(1));
+      store.save('abc', result());
+
+      expect(store.survivesReload('abc')).toBe(false);
+    });
+
+    it('is false once a later comparison has freed it', () => {
+      const store = createComparisonStore(fakeStorage(JSON.stringify(result()).length));
+      store.save('old', result());
+      store.save('new', result());
+
+      expect(store.survivesReload('old')).toBe(false);
+      expect(store.survivesReload('new')).toBe(true);
+    });
+
+    it('is false when there is no storage at all', () => {
+      const store = createComparisonStore(undefined);
+      store.save('abc', result());
+
+      expect(store.survivesReload('abc')).toBe(false);
+    });
+
+    it('is false when storage cannot be read', () => {
+      const storage = fakeStorage();
+      const store = createComparisonStore(storage);
+      store.save('abc', result());
+      vi.spyOn(storage, 'getItem').mockImplementation(() => {
+        throw new DOMException('SecurityError');
+      });
+
+      expect(store.survivesReload('abc')).toBe(false);
+    });
   });
 });
 
