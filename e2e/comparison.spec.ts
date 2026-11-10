@@ -147,19 +147,24 @@ test.describe('flujo completo de comparación', () => {
 
   test('muestra un error legible cuando el fichero no es un reporte válido', async ({ page }) => {
     await page.goto('/');
-    await page.getByLabel('Ejecución base').setInputFiles({
-      name: 'roto.xml',
+    // El error más probable del primer uso: el XML de JUnit en vez de mutations.xml.
+    await page.getByLabel('Ejecución base').setInputFiles(fixture('pitest', 'base'));
+    await page.getByLabel('Ejecución nueva').setInputFiles({
+      name: 'TEST-junit.xml',
       mimeType: 'application/xml',
-      buffer: Buffer.from('<mutations><mutation'),
+      buffer: Buffer.from('<testsuite name="CalculatorTest"></testsuite>'),
     });
-    await page.getByLabel('Ejecución nueva').setInputFiles(fixture('pitest', 'head'));
 
     await page.getByRole('button', { name: 'Comparar' }).click();
 
-    // Sin stack traces: el usuario ve el mensaje del parser, no un 500 genérico.
+    // En español, diciendo cuál de los dos falló y sin stack traces.
     const alert = page.getByRole('alert');
-    await expect(alert).toContainText('Invalid PiTest report');
+    await expect(alert).toContainText(
+      'La ejecución nueva («TEST-junit.xml») no es un informe de PiTest válido',
+    );
     await expect(alert).not.toContainText('node_modules');
+    await alert.getByRole('button', { name: 'Ver instrucciones' }).click();
+    await expect(page.getByText('target/pit-reports')).toBeVisible();
     // Se queda en el wizard. Se comprueba por lo que importa —que no navegó a
     // ninguna comparación— y no por la forma exacta de la URL: `HashRouter` no
     // reescribe la entrada inicial, así que `/` sigue sin `#/` hasta navegar.

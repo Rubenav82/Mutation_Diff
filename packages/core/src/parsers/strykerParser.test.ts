@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { beforeAll, describe, expect, it } from 'vitest';
+import { InvalidReportError } from './reportError.js';
 import { parseStrykerReport } from './strykerParser.js';
 
 const fixturesDir = fileURLToPath(new URL('../../test/fixtures/stryker/', import.meta.url));
@@ -334,5 +335,60 @@ describe('parseStrykerReport — invalid input', () => {
     });
     const run = parseStrykerReport(report, { createdAt: '2026-01-01T00:00:00.000Z' });
     expect(run.units.map((u) => u.key)).toEqual(['src/billing/invoice.js']);
+  });
+});
+
+describe('parseStrykerReport — error reasons', () => {
+  function errorOf(json: string): unknown {
+    try {
+      parseStrykerReport(json, { createdAt: '2026-01-01T00:00:00.000Z' });
+    } catch (error) {
+      return error;
+    }
+    throw new Error('expected the parser to throw');
+  }
+
+  it('flags malformed JSON', () => {
+    const error = errorOf('{ not json');
+
+    expect(error).toBeInstanceOf(InvalidReportError);
+    expect(error).toMatchObject({
+      name: 'InvalidReportError',
+      tool: 'stryker',
+      reason: { code: 'malformed-json' },
+    });
+  });
+
+  it('flags a JSON without schemaVersion, like a package.json', () => {
+    expect(errorOf(JSON.stringify({ name: 'app' }))).toMatchObject({
+      tool: 'stryker',
+      reason: { code: 'missing-schema-version' },
+    });
+  });
+
+  it('flags an unsupported schemaVersion with the version found', () => {
+    expect(errorOf(JSON.stringify({ schemaVersion: '3.0', files: {} }))).toMatchObject({
+      tool: 'stryker',
+      reason: { code: 'unsupported-schema-version', schemaVersion: '3.0' },
+    });
+  });
+
+  it('flags a report without "files"', () => {
+    expect(errorOf(JSON.stringify({ schemaVersion: '2.0' }))).toMatchObject({
+      tool: 'stryker',
+      reason: { code: 'missing-files' },
+    });
+  });
+
+  it('flags an unknown status with the status and the file', () => {
+    const report = JSON.stringify({
+      schemaVersion: '2.0',
+      files: { 'src\\a.js': { mutants: [{ status: 'New' }] } },
+    });
+
+    expect(errorOf(report)).toMatchObject({
+      tool: 'stryker',
+      reason: { code: 'unknown-status', status: 'New', unit: 'src/a.js' },
+    });
   });
 });

@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { parsePitestReport } from './pitestParser.js';
+import { InvalidReportError } from './reportError.js';
 
 const fixturesDir = fileURLToPath(new URL('../../test/fixtures/pitest/', import.meta.url));
 
@@ -201,6 +202,55 @@ describe('parsePitestReport — invalid input', () => {
     expect(() => parsePitestReport(xml, { createdAt: '2026-01-01T00:00:00.000Z' })).toThrow(
       'Invalid PiTest report: a <mutation> is missing <mutatedClass>',
     );
+  });
+});
+
+describe('parsePitestReport — error reasons', () => {
+  // El mensaje es para API y CLI; `web` traduce a partir del motivo, sin
+  // comparar strings.
+  function errorOf(xml: string): unknown {
+    try {
+      parsePitestReport(xml, { createdAt: '2026-01-01T00:00:00.000Z' });
+    } catch (error) {
+      return error;
+    }
+    throw new Error('expected the parser to throw');
+  }
+
+  it('flags malformed XML with the line where it breaks', () => {
+    const error = errorOf('<?xml version="1.0"?>\n<mutations>\n</mutation>');
+
+    expect(error).toBeInstanceOf(InvalidReportError);
+    expect(error).toMatchObject({
+      name: 'InvalidReportError',
+      tool: 'pitest',
+      reason: { code: 'malformed-xml', line: 3 },
+    });
+  });
+
+  it('flags a document without the <mutations> root', () => {
+    expect(errorOf('<?xml version="1.0"?><testsuite></testsuite>')).toMatchObject({
+      tool: 'pitest',
+      reason: { code: 'missing-root' },
+    });
+  });
+
+  it('flags a <mutation> without <mutatedClass>', () => {
+    const xml = `<mutations><mutation status='KILLED'><mutator>m</mutator></mutation></mutations>`;
+
+    expect(errorOf(xml)).toMatchObject({
+      tool: 'pitest',
+      reason: { code: 'missing-unit' },
+    });
+  });
+
+  it('flags an unknown status with the status and the class', () => {
+    const xml = `<mutations><mutation status='NEW'><mutatedClass>a.B</mutatedClass></mutation></mutations>`;
+
+    expect(errorOf(xml)).toMatchObject({
+      tool: 'pitest',
+      reason: { code: 'unknown-status', status: 'NEW', unit: 'a.B' },
+    });
   });
 });
 

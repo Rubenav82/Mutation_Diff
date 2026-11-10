@@ -1,5 +1,6 @@
 import { aggregateMetrics, calculateUnitMetrics } from '../domain/metrics.js';
 import type { Mutant, MutantStatus, NormalizedRun, UnitResult } from '../domain/types.js';
+import { InvalidReportError, type InvalidReportReason } from './reportError.js';
 
 export interface ParseStrykerOptions {
   createdAt: string;
@@ -35,8 +36,8 @@ interface RawReport {
   files?: Record<string, RawFile>;
 }
 
-function fail(reason: string): never {
-  throw new Error(`Invalid Stryker report: ${reason}`);
+function fail(reason: InvalidReportReason, detail: string): never {
+  throw new InvalidReportError('stryker', reason, detail);
 }
 
 function normalizePath(path: string): string {
@@ -45,18 +46,25 @@ function normalizePath(path: string): string {
 
 function mapStatus(rawStatus: string | undefined, filePath: string): MutantStatus {
   if (!rawStatus || !(rawStatus in STATUS_MAP)) {
-    fail(`unrecognized mutant status "${String(rawStatus)}" in file "${filePath}"`);
+    const status = String(rawStatus);
+    fail(
+      { code: 'unknown-status', status, unit: filePath },
+      `unrecognized mutant status "${status}" in file "${filePath}"`,
+    );
   }
   return STATUS_MAP[rawStatus] as MutantStatus;
 }
 
 function assertSupportedSchemaVersion(schemaVersion: unknown): void {
   if (typeof schemaVersion !== 'string') {
-    fail('missing or non-string "schemaVersion"');
+    fail({ code: 'missing-schema-version' }, 'missing or non-string "schemaVersion"');
   }
   const major = schemaVersion.split('.')[0];
   if (!major || !SUPPORTED_SCHEMA_MAJOR_VERSIONS.has(major)) {
-    fail(`unsupported schemaVersion "${schemaVersion}" (only 1.x and 2.x are supported)`);
+    fail(
+      { code: 'unsupported-schema-version', schemaVersion },
+      `unsupported schemaVersion "${schemaVersion}" (only 1.x and 2.x are supported)`,
+    );
   }
 }
 
@@ -65,13 +73,13 @@ export function parseStrykerReport(json: string, options: ParseStrykerOptions): 
   try {
     parsed = JSON.parse(json) as RawReport;
   } catch {
-    fail('malformed JSON');
+    fail({ code: 'malformed-json' }, 'malformed JSON');
   }
 
   assertSupportedSchemaVersion(parsed.schemaVersion);
 
   if (!parsed.files || typeof parsed.files !== 'object') {
-    fail('missing "files" object');
+    fail({ code: 'missing-files' }, 'missing "files" object');
   }
 
   const units: UnitResult[] = Object.entries(parsed.files).map(([rawPath, file]) => {

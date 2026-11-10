@@ -19,6 +19,14 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.12.0',
+    date: '2026-11-10',
+    changes: [
+      'Si uno de los dos ficheros no es un informe válido, el error ya está en español y dice cuál ha fallado (la ejecución base o la nueva) y por qué; por ejemplo, que se ha subido otro XML, como el de JUnit, en lugar de mutations.xml.',
+      'Ese mismo error ofrece «Ver instrucciones», que abre la ayuda con el fichero que hay que subir para cada herramienta.',
+    ],
+  },
+  {
     version: '1.11.0',
     date: '2026-11-09',
     changes: [

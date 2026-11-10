@@ -9,6 +9,7 @@ import {
 import { parseComparisonFile } from './comparisonFile';
 import { comparisonStore } from './comparisonStore';
 import { newComparisonId } from './id';
+import { reportErrorMessage, type ReportErrorContext } from './reportErrorMessage';
 
 /**
  * A failure the user can act on, kept in the shape the pages already handle.
@@ -56,18 +57,20 @@ interface ParseOptions {
  * the timestamp and the label. The server used `file.originalname`; here the
  * equivalent is `file.name`, and it is what the context rail displays.
  */
-async function parseReport(tool: Tool, file: File, createdAt: string): Promise<NormalizedRun> {
+async function parseReport(
+  tool: Tool,
+  side: ReportErrorContext['side'],
+  file: File,
+  createdAt: string,
+): Promise<NormalizedRun> {
   const text = await file.text();
   try {
     return PARSERS[tool](text, { createdAt, label: file.name });
   } catch (error) {
-    // The parser messages already name the tool and what is wrong with the
-    // file ("Invalid PiTest report: ..."), which is exactly what the server
-    // forwarded as a 422.
     throw new ComparisonError(
       422,
       'INVALID_REPORT',
-      error instanceof Error ? error.message : 'Report could not be parsed',
+      reportErrorMessage(error, { tool, side, fileName: file.name }),
     );
   }
 }
@@ -77,8 +80,8 @@ export async function createComparison(
 ): Promise<CreateComparisonResponse> {
   const createdAt = new Date().toISOString();
   const [base, head] = await Promise.all([
-    parseReport(input.tool, input.baseFile, createdAt),
-    parseReport(input.tool, input.headFile, createdAt),
+    parseReport(input.tool, 'base', input.baseFile, createdAt),
+    parseReport(input.tool, 'head', input.headFile, createdAt),
   ]);
 
   const result = compareRuns(base, head, {

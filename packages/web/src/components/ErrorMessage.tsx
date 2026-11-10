@@ -2,9 +2,11 @@ interface ErrorMessageProps {
   message: string;
   /** Omitted where the surrounding UI already offers a way to retry (e.g. a form's submit button). */
   onRetry?: () => void;
+  /** Where the error comes from a file that is not the expected report: the setup instructions say which one is. */
+  onShowHelp?: () => void;
 }
 
-export function ErrorMessage({ message, onRetry }: ErrorMessageProps) {
+export function ErrorMessage({ message, onRetry, onShowHelp }: ErrorMessageProps) {
   return (
     <div
       role="alert"
@@ -14,6 +16,15 @@ export function ErrorMessage({ message, onRetry }: ErrorMessageProps) {
         ⚠
       </span>
       <p className="flex-1">{message}</p>
+      {onShowHelp && (
+        <button
+          type="button"
+          onClick={onShowHelp}
+          className="shrink-0 underline underline-offset-2 hover:text-ink"
+        >
+          Ver instrucciones
+        </button>
+      )}
       {onRetry && (
         <button
           type="button"
