@@ -99,10 +99,10 @@ describe('createComparison', () => {
     expect(result.context.uncoveredThreshold).toBe(100);
   });
 
-  it('rejects a file that is not a valid report for the selected tool', async () => {
+  it('rejects a base file that is not a valid report, saying which one and why', async () => {
     const promise = createComparison({
       tool: 'pitest',
-      baseFile: new File(['<mutations><mutation'], 'roto.xml'),
+      baseFile: new File(['<testsuite></testsuite>'], 'TEST-junit.xml'),
       headFile: reportFile('pitest', 'head'),
     });
 
@@ -112,7 +112,22 @@ describe('createComparison', () => {
       status: 422,
       code: 'INVALID_REPORT',
     });
-    await expect(promise).rejects.toThrow(/Invalid PiTest report/);
+    await expect(promise).rejects.toThrow(
+      'La ejecución base («TEST-junit.xml») no es un informe de PiTest válido: no tiene el elemento raíz <mutations>.',
+    );
+  });
+
+  it('rejects a head file that is not a valid report, saying it was the new one', async () => {
+    const promise = createComparison({
+      tool: 'stryker',
+      baseFile: reportFile('stryker', 'base'),
+      headFile: new File(['{ roto'], 'mutation.json'),
+    });
+
+    await expect(promise).rejects.toMatchObject({ code: 'INVALID_REPORT' });
+    await expect(promise).rejects.toThrow(
+      'La ejecución nueva («mutation.json») no es un informe de Stryker válido: el JSON está mal formado.',
+    );
   });
 });
 

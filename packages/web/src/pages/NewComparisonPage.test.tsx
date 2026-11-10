@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -169,6 +169,39 @@ describe('NewComparisonPage', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Invalid PiTest report');
     expect(screen.getByRole('heading', { name: /nueva comparación/i })).toBeInTheDocument();
+  });
+
+  it('offers the setup instructions when a report could not be read', async () => {
+    // Lo más probable en el primer uso es haber subido otro fichero (el XML de
+    // JUnit): las instrucciones dicen cuál es el bueno.
+    const user = userEvent.setup();
+    createComparisonMock.mockRejectedValue(
+      new ComparisonError(422, 'INVALID_REPORT', 'La ejecución base no es un informe válido'),
+    );
+    renderWizard();
+    await selectFiles(user, 'base.xml', 'head.xml');
+    await user.click(screen.getByRole('button', { name: /comparar/i }));
+
+    await user.click(
+      within(await screen.findByRole('alert')).getByRole('button', { name: 'Ver instrucciones' }),
+    );
+
+    expect(screen.getByRole('button', { name: /ayuda de configuración/i })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+  });
+
+  it('offers no instructions for a failure that is not about the report', async () => {
+    const user = userEvent.setup();
+    createComparisonMock.mockRejectedValue(new Error('boom'));
+    renderWizard();
+    await selectFiles(user, 'base.xml', 'head.xml');
+    await user.click(screen.getByRole('button', { name: /comparar/i }));
+
+    expect(
+      within(await screen.findByRole('alert')).queryByRole('button', { name: 'Ver instrucciones' }),
+    ).not.toBeInTheDocument();
   });
 
   it('toggles the configuration help panel with the ⓘ button', async () => {

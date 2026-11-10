@@ -34,7 +34,10 @@ export function NewComparisonPage() {
   const [regressionThreshold, setRegressionThreshold] = useState(remembered.regressionThreshold);
   const [uncoveredThreshold, setUncoveredThreshold] = useState(remembered.uncoveredThreshold);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<{
+    message: string;
+    isInvalidReport: boolean;
+  } | null>(null);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isThresholdHelpOpen, setIsThresholdHelpOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
@@ -69,7 +72,11 @@ export function NewComparisonPage() {
       preferencesStore.save({ tool, regressionThreshold, uncoveredThreshold });
       navigate(`/comparisons/${comparisonId}`);
     } catch (err) {
-      setSubmitError(err instanceof ComparisonError ? err.message : 'Error inesperado al comparar');
+      setSubmitError(
+        err instanceof ComparisonError
+          ? { message: err.message, isInvalidReport: err.code === 'INVALID_REPORT' }
+          : { message: 'Error inesperado al comparar', isInvalidReport: false },
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -212,8 +219,15 @@ export function NewComparisonPage() {
 
         {isThresholdHelpOpen && <ThresholdHelpPanel id={THRESHOLD_HELP_PANEL_ID} />}
 
-        {/* No `onRetry`: the submit button below is the way to retry. */}
-        {submitError && <ErrorMessage message={submitError} />}
+        {/* No `onRetry`: the submit button below is the way to retry. The
+            instructions, like those of the drop zones, only when the file is
+            not the expected report: they say which one is. */}
+        {submitError && (
+          <ErrorMessage
+            message={submitError.message}
+            {...(submitError.isInvalidReport ? { onShowHelp: () => setIsHelpOpen(true) } : {})}
+          />
+        )}
 
         {/* The progress text lives here, not in the button label: a change to a
             button's own label is not reliably announced by screen readers. */}

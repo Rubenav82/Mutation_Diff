@@ -1,6 +1,7 @@
 import { XMLParser, XMLValidator } from 'fast-xml-parser';
 import { aggregateMetrics, calculateUnitMetrics } from '../domain/metrics.js';
 import type { Mutant, MutantStatus, NormalizedRun, UnitResult } from '../domain/types.js';
+import { InvalidReportError, type InvalidReportReason } from './reportError.js';
 
 export interface ParsePitestOptions {
   createdAt: string;
@@ -34,13 +35,17 @@ const parser = new XMLParser({
   isArray: (_name, jpath) => jpath === 'mutations.mutation',
 });
 
-function fail(reason: string): never {
-  throw new Error(`Invalid PiTest report: ${reason}`);
+function fail(reason: InvalidReportReason, detail: string): never {
+  throw new InvalidReportError('pitest', reason, detail);
 }
 
 function mapStatus(rawStatus: string | undefined, mutatedClass: string): MutantStatus {
   if (!rawStatus || !(rawStatus in STATUS_MAP)) {
-    fail(`unrecognized mutation status "${String(rawStatus)}" in class "${mutatedClass}"`);
+    const status = String(rawStatus);
+    fail(
+      { code: 'unknown-status', status, unit: mutatedClass },
+      `unrecognized mutation status "${status}" in class "${mutatedClass}"`,
+    );
   }
   return STATUS_MAP[rawStatus] as MutantStatus;
 }
@@ -48,12 +53,13 @@ function mapStatus(rawStatus: string | undefined, mutatedClass: string): MutantS
 export function parsePitestReport(xml: string, options: ParsePitestOptions): NormalizedRun {
   const validation = XMLValidator.validate(xml);
   if (validation !== true) {
-    fail(`malformed XML (${validation.err.msg} at line ${validation.err.line})`);
+    const { msg, line } = validation.err;
+    fail({ code: 'malformed-xml', line }, `malformed XML (${msg} at line ${line})`);
   }
 
   const parsed = parser.parse(xml) as { mutations?: string | { mutation?: RawMutation[] } };
   if (!('mutations' in parsed)) {
-    fail('missing <mutations> root element');
+    fail({ code: 'missing-root' }, 'missing <mutations> root element');
   }
 
   // An empty or self-closed <mutations/> root parses to '' rather than an object.
@@ -66,7 +72,7 @@ export function parsePitestReport(xml: string, options: ParsePitestOptions): Nor
   for (const raw of rawMutations) {
     const mutatedClass = raw.mutatedClass;
     if (!mutatedClass) {
-      fail('a <mutation> is missing <mutatedClass>');
+      fail({ code: 'missing-unit' }, 'a <mutation> is missing <mutatedClass>');
     }
     const mutant: Mutant = {
       id: String(nextId++),
