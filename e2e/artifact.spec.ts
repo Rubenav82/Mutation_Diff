@@ -35,6 +35,8 @@ test.describe('artefacto estático', () => {
     });
     page.on('requestfailed', (request) => failedRequests.push(request.url()));
     page.on('request', (request) => requested.push(request.url()));
+    const workers: string[] = [];
+    page.on('worker', (worker) => workers.push(worker.url()));
 
     await page.goto(HOME);
     await expect(page.getByRole('heading', { name: /nueva comparación/i })).toBeVisible();
@@ -47,6 +49,13 @@ test.describe('artefacto estático', () => {
     await expect(
       page.getByRole('region', { name: 'Retrocesos' }).getByText('com.acme.billing.TaxCalculator'),
     ).toBeVisible();
+
+    // T-113: cada lado se parsea en su propio worker, que es otro asset y tiene
+    // que resolverse bajo el subpath igual que el bundle.
+    expect(workers).toHaveLength(2);
+    for (const url of workers) {
+      expect(url).toMatch(new RegExp(`${HOME}assets/parseWorker-[\\w-]+\\.js$`));
+    }
 
     const downloadPromise = page.waitForEvent('download');
     await page.getByRole('button', { name: 'Exportar HTML' }).click();

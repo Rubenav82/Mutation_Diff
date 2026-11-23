@@ -1,6 +1,7 @@
 import type { Tool } from 'core';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { serializeComparison } from './comparisonFile';
+import { parseReportFile, type ParseRequest, type ParseResponse } from './reportParser';
 import {
   ComparisonError,
   createComparison,
@@ -31,11 +32,52 @@ function reportFile(tool: Tool, side: 'base' | 'head'): File {
   return new File([fixture(tool, side)], `${side}.${extension}`);
 }
 
+/**
+ * jsdom no tiene workers: este hace en el propio proceso lo que hace
+ * `parseWorker.ts` en el navegador, y cuenta cuántos se arrancaron.
+ */
+class InProcessWorker {
+  static started = 0;
+  onmessage: ((event: MessageEvent<ParseResponse>) => void) | null = null;
+  onerror: ((event: ErrorEvent) => void) | null = null;
+
+  constructor() {
+    InProcessWorker.started += 1;
+  }
+
+  postMessage(request: ParseRequest) {
+    void parseReportFile(request).then((data) => {
+      this.onmessage?.({ data } as MessageEvent<ParseResponse>);
+    });
+  }
+
+  terminate() {}
+}
+
+beforeEach(() => {
+  InProcessWorker.started = 0;
+  vi.stubGlobal('Worker', InProcessWorker);
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
 function keysOf(units: { key: string }[]): string[] {
   return units.map((unit) => unit.key);
 }
 
 describe('createComparison', () => {
+  it('parses each side in a worker of its own', async () => {
+    await createComparison({
+      tool: 'pitest',
+      baseFile: reportFile('pitest', 'base'),
+      headFile: reportFile('pitest', 'head'),
+    });
+
+    expect(InProcessWorker.started).toBe(2);
+  });
+
   it('compares two PiTest reports without any network call', async () => {
     const { comparisonId, result } = await createComparison({
       tool: 'pitest',

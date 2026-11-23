@@ -10,7 +10,8 @@
     "!packages/core/src/**/*.test.ts",
     "packages/web/src/lib/**/*.ts",
     "!packages/web/src/lib/**/*.test.ts",
-    "!packages/web/src/lib/releaseNotes.ts"
+    "!packages/web/src/lib/releaseNotes.ts",
+    "!packages/web/src/lib/parseWorker.ts"
   ],
   "thresholds": {
     "high": 98,

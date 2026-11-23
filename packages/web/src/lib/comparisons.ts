@@ -1,14 +1,8 @@
-import {
-  compareRuns,
-  parsePitestReport,
-  parseStrykerReport,
-  type ComparisonResult,
-  type NormalizedRun,
-  type Tool,
-} from 'core';
+import { compareRuns, type ComparisonResult, type NormalizedRun, type Tool } from 'core';
 import { parseComparisonFile } from './comparisonFile';
 import { comparisonStore } from './comparisonStore';
 import { newComparisonId } from './id';
+import { parseInWorker } from './parseInWorker';
 import { reportErrorMessage, type ReportErrorContext } from './reportErrorMessage';
 
 /**
@@ -42,20 +36,10 @@ export interface CreateComparisonResponse {
   result: ComparisonResult;
 }
 
-const PARSERS: Record<Tool, (report: string, options: ParseOptions) => NormalizedRun> = {
-  pitest: parsePitestReport,
-  stryker: parseStrykerReport,
-};
-
-interface ParseOptions {
-  createdAt: string;
-  label?: string;
-}
-
 /**
- * `core` never reads the clock or the filesystem, so the caller supplies both
- * the timestamp and the label. The server used `file.originalname`; here the
- * equivalent is `file.name`, and it is what the context rail displays.
+ * Parsing runs in a worker per side (T-113): with a large report it takes
+ * seconds, and on the main thread the page froze for all of them. The label
+ * the context rail displays is the file name, set inside the worker.
  */
 async function parseReport(
   tool: Tool,
@@ -63,16 +47,15 @@ async function parseReport(
   file: File,
   createdAt: string,
 ): Promise<NormalizedRun> {
-  const text = await file.text();
-  try {
-    return PARSERS[tool](text, { createdAt, label: file.name });
-  } catch (error) {
+  const response = await parseInWorker({ tool, file, createdAt });
+  if (!response.ok) {
     throw new ComparisonError(
       422,
       'INVALID_REPORT',
-      reportErrorMessage(error, { tool, side, fileName: file.name }),
+      reportErrorMessage(response.reason, { tool, side, fileName: file.name }),
     );
   }
+  return response.run;
 }
 
 export async function createComparison(

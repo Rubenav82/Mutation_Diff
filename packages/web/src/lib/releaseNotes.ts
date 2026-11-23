@@ -19,6 +19,13 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.13.0',
+    date: '2026-11-23',
+    changes: [
+      'Con informes grandes, la página ya no se queda congelada mientras se analizan las ejecuciones: los dos ficheros se procesan en segundo plano y a la vez, así que el indicador «Comparando…» sigue vivo y la comparación tarda lo que tarde el más lento, no la suma de los dos.',
+    ],
+  },
+  {
     version: '1.12.0',
     date: '2026-11-10',
     changes: [

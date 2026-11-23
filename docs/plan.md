@@ -221,6 +221,6 @@ Rediseño basado en el sistema **Modernist**: flat, arquitectónico, radio de bo
 
 ### 2.7 Riesgos y decisiones abiertas
 
-- Reportes muy grandes (>20k mutantes): parsear en streaming si hace falta; v1 asume carga en memoria con límite 50 MB.
+- Reportes muy grandes (>20k mutantes): parsear en streaming si hace falta; v1 asume carga en memoria. Desde T-113 cada lado se parsea en un Web Worker (`lib/parseInWorker.ts`), así que el coste ya no bloquea la página, y el límite de 50 MB, que era del servidor, se retiró del spec.
 - PiTest trabaja por clase y Stryker por fichero: el modelo usa `key` genérico y la UI etiqueta la columna según la herramienta.
 - Atribución de desarrollador (HU-09): v2, vía fichero `git log --format` subido o ruta a repo local; nunca llamadas a GitHub/GitLab en v1.

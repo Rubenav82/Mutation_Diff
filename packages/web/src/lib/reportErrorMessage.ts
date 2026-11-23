@@ -1,4 +1,4 @@
-import { InvalidReportError, type InvalidReportReason, type Tool } from 'core';
+import type { InvalidReportReason, Tool } from 'core';
 
 export interface ReportErrorContext {
   tool: Tool;
@@ -41,14 +41,18 @@ const EXPLANATIONS: Explanations = {
  * The wizard's message for a report that could not be read: which of the two
  * files, and why, in Spanish. `core` keeps its messages in English for the API
  * and the CLI, so this translates from the reason code, never from the text.
+ * `null` is a failure the parsers did not anticipate.
  */
-export function reportErrorMessage(error: unknown, { tool, side, fileName }: ReportErrorContext) {
+export function reportErrorMessage(
+  reason: InvalidReportReason | null,
+  { tool, side, fileName }: ReportErrorContext,
+) {
   const subject = `${SIDE_NAMES[side]} («${fileName}»)`;
-  if (!(error instanceof InvalidReportError)) {
+  if (reason === null) {
     return `${subject} no se pudo leer como informe de ${TOOL_NAMES[tool]}.`;
   }
   // TypeScript no correlaciona la clave con el tipo del argumento; el mapa
   // tipado de arriba es lo que garantiza que casan.
-  const explain = EXPLANATIONS[error.reason.code] as (reason: InvalidReportReason) => string;
-  return `${subject} no es un informe de ${TOOL_NAMES[tool]} válido: ${explain(error.reason)}`;
+  const explain = EXPLANATIONS[reason.code] as (reason: InvalidReportReason) => string;
+  return `${subject} no es un informe de ${TOOL_NAMES[tool]} válido: ${explain(reason)}`;
 }
