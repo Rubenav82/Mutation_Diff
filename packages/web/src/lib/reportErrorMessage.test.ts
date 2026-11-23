@@ -1,9 +1,9 @@
-import { InvalidReportError, type InvalidReportReason, type Tool } from 'core';
+import type { InvalidReportReason, Tool } from 'core';
 import { describe, expect, it } from 'vitest';
 import { reportErrorMessage } from './reportErrorMessage';
 
 function message(tool: Tool, reason: InvalidReportReason): string {
-  return reportErrorMessage(new InvalidReportError(tool, reason, 'detail'), {
+  return reportErrorMessage(reason, {
     tool,
     side: 'base',
     fileName: 'informe',
@@ -12,12 +12,12 @@ function message(tool: Tool, reason: InvalidReportReason): string {
 
 describe('reportErrorMessage', () => {
   it('names the side and the file that failed', () => {
-    const error = new InvalidReportError('pitest', { code: 'missing-unit' }, 'detail');
+    const reason: InvalidReportReason = { code: 'missing-unit' };
 
-    expect(reportErrorMessage(error, { tool: 'pitest', side: 'base', fileName: 'a.xml' })).toBe(
+    expect(reportErrorMessage(reason, { tool: 'pitest', side: 'base', fileName: 'a.xml' })).toBe(
       'La ejecución base («a.xml») no es un informe de PiTest válido: hay un <mutation> sin <mutatedClass>.',
     );
-    expect(reportErrorMessage(error, { tool: 'pitest', side: 'head', fileName: 'b.xml' })).toBe(
+    expect(reportErrorMessage(reason, { tool: 'pitest', side: 'head', fileName: 'b.xml' })).toBe(
       'La ejecución nueva («b.xml») no es un informe de PiTest válido: hay un <mutation> sin <mutatedClass>.',
     );
   });
@@ -51,9 +51,9 @@ describe('reportErrorMessage', () => {
 
   it('falls back to a generic message for anything the parsers did not anticipate', () => {
     // Un informe con la forma justa para pasar las comprobaciones pero no el
-    // recorrido acaba en un `TypeError` del propio parser.
+    // recorrido acaba en un `TypeError` del propio parser, que llega sin motivo.
     expect(
-      reportErrorMessage(new TypeError('x is null'), {
+      reportErrorMessage(null, {
         tool: 'stryker',
         side: 'head',
         fileName: 'mutation.json',
